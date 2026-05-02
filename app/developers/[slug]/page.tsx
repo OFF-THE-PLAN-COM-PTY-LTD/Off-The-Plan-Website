@@ -1,14 +1,13 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { PropertyCard } from "@/components/property-card";
-import { createClient } from "@/lib/supabase/server";
+import { supabase } from "@/lib/supabase/public";
 import type { Developer } from "@/types/developer";
 import type { Development } from "@/types/development";
 
 interface Props { params: { slug: string } }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const supabase = createClient();
   const { data: dev } = await supabase
     .from("developers")
     .select("name, description")
@@ -19,7 +18,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function DeveloperProfilePage({ params }: Props) {
-  const supabase = createClient();
 
   const { data: rawDev } = await supabase
     .from("developers")

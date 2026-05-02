@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { supabase } from "@/lib/supabase/public";
 import type { Developer } from "@/types/developer";
 
 export const metadata: Metadata = {
@@ -9,7 +9,6 @@ export const metadata: Metadata = {
 };
 
 export default async function DevelopersPage() {
-  const supabase = createClient();
 
   const [{ data: devsData }, { data: devsDevsData }] = await Promise.all([
     supabase.from("developers").select("*").eq("is_published", true).order("name"),

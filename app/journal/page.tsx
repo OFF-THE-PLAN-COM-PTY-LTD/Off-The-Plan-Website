@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { JournalCard } from "@/components/journal-card";
-import { createClient } from "@/lib/supabase/server";
+import { supabase } from "@/lib/supabase/public";
 import type { JournalArticle, JournalCategory } from "@/types/journal";
 
 export const metadata: Metadata = {
@@ -16,7 +16,6 @@ interface JournalPageProps {
 }
 
 export default async function JournalPage({ searchParams }: JournalPageProps) {
-  const supabase = createClient();
   const activeCategory = searchParams.category as JournalCategory | undefined;
 
   let query = supabase

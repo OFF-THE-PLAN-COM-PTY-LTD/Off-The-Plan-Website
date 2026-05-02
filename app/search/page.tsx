@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { PropertyCard } from "@/components/property-card";
-import { createClient } from "@/lib/supabase/server";
+import { supabase } from "@/lib/supabase/public";
 import type { Development } from "@/types/development";
 
 export const metadata: Metadata = {
@@ -26,7 +26,6 @@ interface SearchPageProps {
 const PAGE_SIZE = 24;
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
-  const supabase = createClient();
 
   let query = supabase
     .from("developments")

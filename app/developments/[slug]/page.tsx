@@ -6,7 +6,7 @@ import { PropertyCard } from "@/components/property-card";
 import { EnquiryForm } from "@/components/enquiry-form";
 import { Pill } from "@/components/pill";
 import { CheckIcon } from "@/components/icons";
-import { createClient } from "@/lib/supabase/server";
+import { supabase } from "@/lib/supabase/public";
 import { formatPrice } from "@/lib/utils";
 import type { Development, DevelopmentFloorPlan } from "@/types/development";
 
@@ -15,7 +15,6 @@ interface Props {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const supabase = createClient();
   const { data: dev } = await supabase
     .from("developments")
     .select("name, suburb, state, summary, hero_image_url, images:development_images(*)")
@@ -35,7 +34,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function DossierPage({ params }: Props) {
-  const supabase = createClient();
 
   const { data: rawDev } = await supabase
     .from("developments")

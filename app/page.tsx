@@ -5,12 +5,11 @@ import { JournalCard } from "@/components/journal-card";
 import { HeroSearch } from "@/components/hero-search";
 import { MemberSignupForm } from "@/components/member-signup-form";
 import { ChevronRightIcon } from "@/components/icons";
-import { createClient } from "@/lib/supabase/server";
+import { supabase } from "@/lib/supabase/public";
 import type { Development } from "@/types/development";
 import type { JournalArticle } from "@/types/journal";
 
 export default async function HomePage() {
-  const supabase = createClient();
 
   const [{ data: featuredData }, { data: trendingData }, { data: articlesData }] = await Promise.all([
     supabase
