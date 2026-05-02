@@ -1,0 +1,35 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+
+export const metadata: Metadata = { title: "Sign in" };
+
+export default function LoginPage({ searchParams }: { searchParams: { redirect?: string } }) {
+  return (
+    <div className="min-h-screen bg-cream flex items-center justify-center px-4 pt-16">
+      <div className="w-full max-w-sm">
+        <h1 className="font-display font-light text-navy text-section-lg mb-2">Sign in</h1>
+        <p className="font-sans text-body-md text-ink/60 mb-8">Welcome back to Off The Plan.</p>
+
+        <form action="/api/auth/login" method="POST" className="flex flex-col gap-3">
+          {searchParams.redirect && (
+            <input type="hidden" name="redirect" value={searchParams.redirect} />
+          )}
+          <div>
+            <label htmlFor="email" className="section-label block mb-1.5">Email</label>
+            <input id="email" name="email" type="email" required autoComplete="email" className="w-full border border-line px-3 py-2.5 bg-white font-sans text-body-md outline-none focus:border-orange/60" />
+          </div>
+          <div>
+            <label htmlFor="password" className="section-label block mb-1.5">Password</label>
+            <input id="password" name="password" type="password" required autoComplete="current-password" className="w-full border border-line px-3 py-2.5 bg-white font-sans text-body-md outline-none focus:border-orange/60" />
+          </div>
+          <button type="submit" className="btn-primary w-full mt-2">Sign in</button>
+        </form>
+
+        <p className="font-sans text-body-md text-ink/50 mt-6 text-center">
+          New to Off The Plan?{" "}
+          <Link href="/signup" className="text-orange hover:underline">Create an account</Link>
+        </p>
+      </div>
+    </div>
+  );
+}

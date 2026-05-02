@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx create-next-app@14 . --typescript --tailwind --eslint --app --no-src-dir --import-alias=\"@/*\" --yes)",
+      "Bash(where node *)",
+      "Bash(where npm *)",
+      "Bash(where npx *)",
+      "PowerShell(Get-Command node, npm, npx -ErrorAction SilentlyContinue)",
+      "Bash(npx tsc *)",
+      "PowerShell($env:PATH += \";C:\\\\Program Files\\\\nodejs\"; cd \"E:\\\\Apex AI Projects\\\\Prac Session\"; npx tsc --noEmit 2>&1 | Select-Object -First 40)",
+      "PowerShell(Get-Command node -ErrorAction SilentlyContinue; Get-Command npm -ErrorAction SilentlyContinue; [System.Environment]::GetEnvironmentVariable\\(\"PATH\",\"Machine\"\\) -split \";\" | Select-String \"node\")",
+      "Bash(npm --version)",
+      "mcp__Claude_in_Chrome__tabs_context_mcp",
+      "WebFetch(domain:offtheplan.com.au)",
+      "WebSearch",
+      "WebFetch(domain:www.offtheplan.com.au)"
+    ]
+  }
+}
