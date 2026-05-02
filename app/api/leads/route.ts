@@ -1,55 +1,36 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 
-const leadSchema = z.object({
-  contact_name: z.string().min(1).max(200),
-  email: z.string().email(),
-  company: z.string().max(200).optional().nullable(),
-  phone: z.string().max(30).optional().nullable(),
-  development_name: z.string().min(1).max(300),
-  suburb: z.string().max(200).optional().nullable(),
-  state: z.string().max(10).optional().nullable(),
-  residence_count: z.number().int().positive().optional().nullable(),
-  expected_completion: z.string().max(50).optional().nullable(),
-  notes: z.string().max(2000).optional().nullable(),
-});
-
-export async function POST(request: Request) {
+export async function POST(req: Request) {
   try {
-    const body = await request.json();
-    const parsed = leadSchema.safeParse(body);
+    const formData = await req.formData();
 
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: "Validation failed", details: parsed.error.flatten().fieldErrors },
-        { status: 400 }
-      );
+    const data = {
+      contact_name: (formData.get("contact_name") as string)?.trim(),
+      email: (formData.get("email") as string)?.trim(),
+      company: (formData.get("company") as string)?.trim() || null,
+      phone: (formData.get("phone") as string)?.trim() || null,
+      development_name: (formData.get("development_name") as string)?.trim(),
+      suburb: (formData.get("suburb") as string)?.trim() || null,
+      state: (formData.get("state") as string) || null,
+      residence_count: formData.get("residence_count") ? Number(formData.get("residence_count")) : null,
+      expected_completion: (formData.get("expected_completion") as string)?.trim() || null,
+      notes: (formData.get("notes") as string)?.trim() || null,
+    };
+
+    if (!data.contact_name || !data.email || !data.development_name) {
+      return NextResponse.redirect(new URL("/list-a-development?error=1", req.url));
     }
 
-    if (
-      !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-      process.env.NEXT_PUBLIC_SUPABASE_URL.includes("placeholder")
-    ) {
-      console.log("[DEV] Developer lead:", parsed.data);
-      return NextResponse.json({ success: true, dev: true }, { status: 201 });
-    }
-
-    const { createClient } = await import("@supabase/supabase-js");
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
-
-    const { error } = await supabase.from("developer_leads").insert(parsed.data);
-
+    const { error } = await supabaseAdmin.from("developer_leads").insert(data);
     if (error) {
-      console.error("Supabase lead insert error:", error);
-      return NextResponse.json({ error: "Failed to save lead" }, { status: 500 });
+      console.error("Developer lead insert error:", error);
+      return NextResponse.redirect(new URL("/list-a-development?error=1", req.url));
     }
 
-    return NextResponse.json({ success: true }, { status: 201 });
+    return NextResponse.redirect(new URL("/list-a-development?submitted=1", req.url));
   } catch (err) {
-    console.error("Lead route error:", err);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    console.error("Leads route error:", err);
+    return NextResponse.redirect(new URL("/list-a-development?error=1", req.url));
   }
 }

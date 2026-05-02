@@ -1,11 +1,19 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "List a Development",
   description: "Get your off-the-plan development in front of 24,000+ qualified buyers.",
 };
 
-export default function ListADevelopmentPage() {
+interface Props {
+  searchParams: { submitted?: string; error?: string };
+}
+
+export default function ListADevelopmentPage({ searchParams }: Props) {
+  const submitted = searchParams.submitted === "1";
+  const hasError = searchParams.error === "1";
+
   return (
     <div className="min-h-screen bg-cream pt-16">
       <section className="bg-navy py-16">
@@ -19,7 +27,22 @@ export default function ListADevelopmentPage() {
       </section>
 
       <div className="container-padded py-14 max-w-2xl">
-        <form action="/api/leads" method="POST" className="flex flex-col gap-4">
+        {submitted ? (
+          <div className="border border-line bg-white p-10 text-center">
+            <p className="font-display font-light text-navy text-section-lg mb-3">Thanks — we'll be in touch.</p>
+            <p className="font-sans text-body-md text-ink/60 mb-8">
+              We've received your enquiry and will reach out within one business day.
+            </p>
+            <Link href="/" className="btn-primary inline-block">Back to home</Link>
+          </div>
+        ) : (
+          <>
+            {hasError && (
+              <p className="mb-6 font-sans text-body-md text-red-600 bg-red-50 border border-red-200 px-4 py-3">
+                Something went wrong. Please try again.
+              </p>
+            )}
+            <form action="/api/leads" method="POST" className="flex flex-col gap-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label htmlFor="contact_name" className="section-label block mb-1.5">Contact name *</label>
@@ -73,6 +96,8 @@ export default function ListADevelopmentPage() {
           </div>
           <button type="submit" className="btn-primary self-start">Submit enquiry</button>
         </form>
+          </>
+        )}
       </div>
     </div>
   );
