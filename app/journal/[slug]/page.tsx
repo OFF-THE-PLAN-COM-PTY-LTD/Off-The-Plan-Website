@@ -2,31 +2,49 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Image from "next/image";
 import { JournalCard } from "@/components/journal-card";
-import { mockJournalArticles } from "@/lib/mock-data";
+import { supabase } from "@/lib/supabase/public";
 import { formatDate } from "@/lib/utils";
+import type { JournalArticle } from "@/types/journal";
 
 interface Props { params: { slug: string } }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const article = mockJournalArticles.find((a) => a.slug === params.slug);
-  if (!article) return { title: "Not Found" };
+  const { data } = await supabase
+    .from("journal_articles")
+    .select("title, body_html, hero_image_url")
+    .eq("slug", params.slug)
+    .single();
+  if (!data) return { title: "Not Found" };
   return {
-    title: article.title,
-    description: article.body_html?.replace(/<[^>]+>/g, "").slice(0, 160),
+    title: data.title,
+    description: data.body_html?.replace(/<[^>]+>/g, "").slice(0, 160),
     openGraph: {
-      title: article.title,
-      images: article.hero_image_url ? [article.hero_image_url] : [],
+      title: data.title,
+      images: data.hero_image_url ? [data.hero_image_url] : [],
     },
   };
 }
 
-export default function ArticlePage({ params }: Props) {
-  const article = mockJournalArticles.find((a) => a.slug === params.slug && a.is_published);
-  if (!article) notFound();
+export default async function ArticlePage({ params }: Props) {
+  const { data: rawArticle } = await supabase
+    .from("journal_articles")
+    .select("*")
+    .eq("slug", params.slug)
+    .eq("is_published", true)
+    .single();
 
-  const related = mockJournalArticles
-    .filter((a) => a.id !== article.id && a.category === article.category && a.is_published)
-    .slice(0, 3);
+  if (!rawArticle) notFound();
+  const article = rawArticle as unknown as JournalArticle;
+
+  const { data: relatedData } = await supabase
+    .from("journal_articles")
+    .select("*")
+    .eq("is_published", true)
+    .eq("category", article.category)
+    .neq("id", article.id)
+    .limit(3);
+
+  const related = (relatedData ?? []) as unknown as JournalArticle[];
 
   const jsonLd = {
     "@context": "https://schema.org",

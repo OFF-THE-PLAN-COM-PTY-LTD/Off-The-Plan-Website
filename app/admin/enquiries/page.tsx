@@ -1,6 +1,13 @@
-export default function AdminEnquiriesPage() {
-  // Swap for real Supabase query when connected
-  const enquiries: { id: string; full_name: string; email: string; development_name: string; status: string; created_at: string }[] = [];
+import { supabaseAdmin } from "@/lib/supabase/admin";
+import { formatDate } from "@/lib/utils";
+
+export default async function AdminEnquiriesPage() {
+  const { data } = await supabaseAdmin
+    .from("enquiries")
+    .select("*, development:developments(name)")
+    .order("created_at", { ascending: false });
+
+  const enquiries = data ?? [];
 
   return (
     <div>
@@ -8,19 +15,22 @@ export default function AdminEnquiriesPage() {
       {enquiries.length > 0 ? (
         <div className="bg-white border border-line overflow-hidden">
           <table className="w-full text-left">
-            <thead><tr className="border-b border-line">
-              {["Development","Name","Email","Date","Status"].map((h) => (
-                <th key={h} className="font-mono text-label-sm uppercase tracking-widest text-ink/40 px-4 py-3">{h}</th>
-              ))}
-            </tr></thead>
+            <thead>
+              <tr className="border-b border-line">
+                {["Development", "Name", "Email", "Mobile", "Date", "Status"].map((h) => (
+                  <th key={h} className="font-mono text-label-sm uppercase tracking-widest text-ink/40 px-4 py-3">{h}</th>
+                ))}
+              </tr>
+            </thead>
             <tbody>
-              {enquiries.map((e) => (
-                <tr key={e.id} className="border-b border-line last:border-0">
-                  <td className="px-4 py-3 font-sans text-body-md">{e.development_name}</td>
+              {enquiries.map((e: any) => (
+                <tr key={e.id} className="border-b border-line last:border-0 hover:bg-cream-alt transition-colors">
+                  <td className="px-4 py-3 font-sans text-body-md text-navy">{e.development?.name ?? "—"}</td>
                   <td className="px-4 py-3 font-sans text-body-md">{e.full_name}</td>
                   <td className="px-4 py-3 font-mono text-label-sm text-ink/60">{e.email}</td>
-                  <td className="px-4 py-3 font-mono text-label-sm text-ink/60">{e.created_at}</td>
-                  <td className="px-4 py-3 font-mono text-label-sm text-orange">{e.status}</td>
+                  <td className="px-4 py-3 font-mono text-label-sm text-ink/60">{e.mobile ?? "—"}</td>
+                  <td className="px-4 py-3 font-mono text-label-sm text-ink/60">{formatDate(e.created_at)}</td>
+                  <td className="px-4 py-3 font-mono text-label-sm text-orange capitalize">{e.status ?? "New"}</td>
                 </tr>
               ))}
             </tbody>

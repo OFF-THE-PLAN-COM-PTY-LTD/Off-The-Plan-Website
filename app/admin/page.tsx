@@ -1,12 +1,27 @@
 import Link from "next/link";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 
-export default function AdminDashboard() {
+export default async function AdminDashboard() {
+  const [
+    { count: devCount },
+    { count: articleCount },
+    { count: enquiryCount },
+    { count: memberCount },
+    { count: leadCount },
+  ] = await Promise.all([
+    supabaseAdmin.from("developments").select("*", { count: "exact", head: true }),
+    supabaseAdmin.from("journal_articles").select("*", { count: "exact", head: true }),
+    supabaseAdmin.from("enquiries").select("*", { count: "exact", head: true }),
+    supabaseAdmin.from("circle_signups").select("*", { count: "exact", head: true }),
+    supabaseAdmin.from("developer_leads").select("*", { count: "exact", head: true }),
+  ]);
+
   const cards = [
-    { label: "Developments", count: 8, href: "/admin/developments", action: "Manage listings" },
-    { label: "Journal Articles", count: 4, href: "/admin/journal", action: "Manage articles" },
-    { label: "Enquiries", count: 0, href: "/admin/enquiries", action: "View enquiries" },
-    { label: "Circle Members", count: 0, href: "/admin/members", action: "View members" },
-    { label: "Developer Leads", count: 0, href: "/admin/leads", action: "View leads" },
+    { label: "Developments", count: devCount ?? 0, href: "/admin/developments", action: "Manage listings" },
+    { label: "Journal Articles", count: articleCount ?? 0, href: "/admin/journal", action: "Manage articles" },
+    { label: "Enquiries", count: enquiryCount ?? 0, href: "/admin/enquiries", action: "View enquiries" },
+    { label: "Circle Members", count: memberCount ?? 0, href: "/admin/members", action: "View members" },
+    { label: "Developer Leads", count: leadCount ?? 0, href: "/admin/leads", action: "View leads" },
   ];
 
   return (

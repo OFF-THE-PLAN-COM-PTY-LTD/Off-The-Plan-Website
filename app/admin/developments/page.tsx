@@ -1,8 +1,13 @@
 import Link from "next/link";
-import { mockDevelopments } from "@/lib/mock-data";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 
-export default function AdminDevelopmentsPage() {
-  const developments = mockDevelopments;
+export default async function AdminDevelopmentsPage() {
+  const { data } = await supabaseAdmin
+    .from("developments")
+    .select("id, name, suburb, state, status, is_published")
+    .order("name");
+
+  const developments = data ?? [];
 
   return (
     <div>

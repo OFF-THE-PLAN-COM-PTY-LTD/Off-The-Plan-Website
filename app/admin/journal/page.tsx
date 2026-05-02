@@ -1,8 +1,15 @@
 import Link from "next/link";
-import { mockJournalArticles } from "@/lib/mock-data";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import { formatDate } from "@/lib/utils";
 
-export default function AdminJournalPage() {
+export default async function AdminJournalPage() {
+  const { data } = await supabaseAdmin
+    .from("journal_articles")
+    .select("id, title, category, is_published, published_at")
+    .order("published_at", { ascending: false });
+
+  const articles = data ?? [];
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -15,17 +22,25 @@ export default function AdminJournalPage() {
             <tr className="border-b border-line">
               <th className="font-mono text-label-sm uppercase tracking-widest text-ink/40 px-4 py-3">Title</th>
               <th className="font-mono text-label-sm uppercase tracking-widest text-ink/40 px-4 py-3">Category</th>
+              <th className="font-mono text-label-sm uppercase tracking-widest text-ink/40 px-4 py-3">Status</th>
               <th className="font-mono text-label-sm uppercase tracking-widest text-ink/40 px-4 py-3">Published</th>
               <th className="font-mono text-label-sm uppercase tracking-widest text-ink/40 px-4 py-3">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {mockJournalArticles.map((article) => (
+            {articles.map((article: any) => (
               <tr key={article.id} className="border-b border-line last:border-0 hover:bg-cream-alt transition-colors">
                 <td className="px-4 py-3 font-sans text-body-md text-navy max-w-xs truncate">{article.title}</td>
                 <td className="px-4 py-3 font-mono text-label-sm text-ink/60">{article.category}</td>
+                <td className="px-4 py-3">
+                  <span className={`font-mono text-label-sm ${article.is_published ? "text-green-600" : "text-ink/30"}`}>
+                    {article.is_published ? "Live" : "Draft"}
+                  </span>
+                </td>
                 <td className="px-4 py-3 font-mono text-label-sm text-ink/60">{article.published_at ? formatDate(article.published_at) : "—"}</td>
-                <td className="px-4 py-3"><Link href={`/admin/journal/${article.id}`} className="font-mono text-label-sm text-orange hover:underline">Edit</Link></td>
+                <td className="px-4 py-3">
+                  <Link href={`/admin/journal/${article.id}`} className="font-mono text-label-sm text-orange hover:underline">Edit</Link>
+                </td>
               </tr>
             ))}
           </tbody>

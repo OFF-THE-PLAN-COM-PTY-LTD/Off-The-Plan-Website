@@ -1,13 +1,45 @@
-export default function AdminMembersPage() {
+import { supabaseAdmin } from "@/lib/supabase/admin";
+import { formatDate } from "@/lib/utils";
+
+export default async function AdminMembersPage() {
+  const { data } = await supabaseAdmin
+    .from("circle_signups")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  const members = data ?? [];
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-display font-light text-navy text-section-lg">Circle Members</h1>
-        <button className="btn-ghost">Export CSV</button>
+        <p className="font-mono text-label-sm text-ink/40 uppercase tracking-widest">{members.length} total</p>
       </div>
-      <p className="font-sans text-body-md text-ink/40">
-        Member signups will appear here. Connect Supabase to see live data.
-      </p>
+      {members.length > 0 ? (
+        <div className="bg-white border border-line overflow-hidden">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="border-b border-line">
+                {["Name", "Email", "Interest", "Joined"].map((h) => (
+                  <th key={h} className="font-mono text-label-sm uppercase tracking-widest text-ink/40 px-4 py-3">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {members.map((m: any) => (
+                <tr key={m.id} className="border-b border-line last:border-0 hover:bg-cream-alt transition-colors">
+                  <td className="px-4 py-3 font-sans text-body-md">{m.full_name}</td>
+                  <td className="px-4 py-3 font-mono text-label-sm text-ink/60">{m.email}</td>
+                  <td className="px-4 py-3 font-mono text-label-sm text-ink/60 capitalize">{m.interest_type ?? "—"}</td>
+                  <td className="px-4 py-3 font-mono text-label-sm text-ink/60">{formatDate(m.created_at)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <p className="font-sans text-body-md text-ink/40">No members yet. They'll appear here when buyers sign up.</p>
+      )}
     </div>
   );
 }
