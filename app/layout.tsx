@@ -4,6 +4,7 @@ import "./globals.css";
 import { NavBar } from "@/components/nav-bar";
 import { SideRail } from "@/components/side-rail";
 import { Footer } from "@/components/footer";
+import { createClient } from "@/lib/supabase/server";
 
 const fraunces = Fraunces({
   subsets: ["latin"],
@@ -40,7 +41,14 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const authUser = user
+    ? { name: user.user_metadata?.full_name ?? user.email ?? "Account" }
+    : null;
+
   return (
     <html
       lang="en-AU"
@@ -53,7 +61,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         >
           Skip to main content
         </a>
-        <NavBar />
+        <NavBar user={authUser} />
         <SideRail />
         <main id="main-content">{children}</main>
         <Footer />

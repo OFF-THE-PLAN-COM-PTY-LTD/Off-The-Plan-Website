@@ -16,9 +16,10 @@ const navLinks = [
 interface NavBarProps {
   tone?: "light" | "dark";
   position?: "fixed" | "absolute" | "sticky";
+  user?: { name: string } | null;
 }
 
-export function NavBar({ tone = "light", position = "fixed" }: NavBarProps) {
+export function NavBar({ tone = "light", position = "fixed", user = null }: NavBarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const isDark = tone === "dark";
@@ -72,15 +73,40 @@ export function NavBar({ tone = "light", position = "fixed" }: NavBarProps) {
           >
             List a development
           </Link>
-          <Link
-            href="/login"
-            className={cn(
-              "font-mono text-label-lg uppercase tracking-widest transition-opacity hover:opacity-60",
-              isDark ? "text-ink-light" : "text-ink"
-            )}
-          >
-            Sign in
-          </Link>
+          {user ? (
+            <div className="flex items-center gap-4">
+              <Link
+                href="/saved"
+                className={cn("font-mono text-label-lg uppercase tracking-widest transition-opacity hover:opacity-60", isDark ? "text-ink-light" : "text-ink")}
+              >
+                Saved
+              </Link>
+              <Link
+                href="/account"
+                className={cn("font-mono text-label-lg uppercase tracking-widest transition-opacity hover:opacity-60", isDark ? "text-ink-light" : "text-ink")}
+              >
+                Account
+              </Link>
+              <form action="/api/auth/logout" method="POST">
+                <button
+                  type="submit"
+                  className={cn("font-mono text-label-lg uppercase tracking-widest transition-opacity hover:opacity-60", isDark ? "text-ink-light" : "text-ink")}
+                >
+                  Sign out
+                </button>
+              </form>
+            </div>
+          ) : (
+            <Link
+              href="/login"
+              className={cn(
+                "font-mono text-label-lg uppercase tracking-widest transition-opacity hover:opacity-60",
+                isDark ? "text-ink-light" : "text-ink"
+              )}
+            >
+              Sign in
+            </Link>
+          )}
         </div>
 
         {/* Mobile hamburger */}
@@ -149,13 +175,29 @@ export function NavBar({ tone = "light", position = "fixed" }: NavBarProps) {
           >
             List a development
           </Link>
-          <Link
-            href="/login"
-            onClick={() => setMenuOpen(false)}
-            className="font-mono text-label-lg uppercase tracking-widest text-center py-3 border border-ink/20 text-ink"
-          >
-            Sign in
-          </Link>
+          {user ? (
+            <>
+              <Link href="/saved" onClick={() => setMenuOpen(false)} className="font-mono text-label-lg uppercase tracking-widest text-center py-3 border border-ink/20 text-ink">
+                Saved
+              </Link>
+              <Link href="/account" onClick={() => setMenuOpen(false)} className="font-mono text-label-lg uppercase tracking-widest text-center py-3 border border-ink/20 text-ink">
+                Account
+              </Link>
+              <form action="/api/auth/logout" method="POST">
+                <button type="submit" className="w-full font-mono text-label-lg uppercase tracking-widest text-center py-3 border border-ink/20 text-ink">
+                  Sign out
+                </button>
+              </form>
+            </>
+          ) : (
+            <Link
+              href="/login"
+              onClick={() => setMenuOpen(false)}
+              className="font-mono text-label-lg uppercase tracking-widest text-center py-3 border border-ink/20 text-ink"
+            >
+              Sign in
+            </Link>
+          )}
         </div>
       </div>
     </>

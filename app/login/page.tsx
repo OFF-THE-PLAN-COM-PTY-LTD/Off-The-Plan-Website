@@ -3,12 +3,18 @@ import Link from "next/link";
 
 export const metadata: Metadata = { title: "Sign in" };
 
-export default function LoginPage({ searchParams }: { searchParams: { redirect?: string } }) {
+export default function LoginPage({ searchParams }: { searchParams: { redirect?: string; error?: string } }) {
   return (
     <div className="min-h-screen bg-cream flex items-center justify-center px-4 pt-16">
       <div className="w-full max-w-sm">
         <h1 className="font-display font-light text-navy text-section-lg mb-2">Sign in</h1>
         <p className="font-sans text-body-md text-ink/60 mb-8">Welcome back to Off The Plan.</p>
+
+        {searchParams.error && (
+          <p className="mb-4 font-sans text-body-md text-red-600 bg-red-50 border border-red-200 px-3 py-2.5">
+            Incorrect email or password.
+          </p>
+        )}
 
         <form action="/api/auth/login" method="POST" className="flex flex-col gap-3">
           {searchParams.redirect && (
