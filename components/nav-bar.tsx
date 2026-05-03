@@ -17,7 +17,7 @@ const navLinks = [
 interface NavBarProps {
   tone?: "light" | "dark";
   position?: "fixed" | "absolute" | "sticky";
-  user?: { name: string } | null;
+  user?: { name: string; isAdmin?: boolean } | null;
 }
 
 export function NavBar({ tone = "light", position = "fixed", user = null }: NavBarProps) {
@@ -81,6 +81,14 @@ export function NavBar({ tone = "light", position = "fixed", user = null }: NavB
           </Link>
           {user ? (
             <div className="flex items-center gap-4">
+              {user.isAdmin && (
+                <Link
+                  href="/admin"
+                  className={cn("font-mono text-label-lg uppercase tracking-widest transition-opacity hover:opacity-60", isDark ? "text-orange" : "text-orange")}
+                >
+                  Admin
+                </Link>
+              )}
               <Link
                 href="/saved"
                 className={cn("font-mono text-label-lg uppercase tracking-widest transition-opacity hover:opacity-60", isDark ? "text-ink-light" : "text-ink")}
@@ -183,6 +191,11 @@ export function NavBar({ tone = "light", position = "fixed", user = null }: NavB
           </Link>
           {user ? (
             <>
+              {user.isAdmin && (
+                <Link href="/admin" onClick={() => setMenuOpen(false)} className="font-mono text-label-lg uppercase tracking-widest text-center py-3 border border-orange/40 text-orange">
+                  Admin Dashboard
+                </Link>
+              )}
               <Link href="/saved" onClick={() => setMenuOpen(false)} className="font-mono text-label-lg uppercase tracking-widest text-center py-3 border border-ink/20 text-ink">
                 Saved
               </Link>
