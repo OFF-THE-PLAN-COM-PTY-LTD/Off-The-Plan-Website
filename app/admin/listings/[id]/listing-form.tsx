@@ -1052,6 +1052,7 @@ export function ListingForm({
   const g2 = "grid grid-cols-2 gap-4";
   const g3 = "grid grid-cols-3 gap-4";
   const g4 = "grid grid-cols-4 gap-4";
+  const g5 = "grid grid-cols-5 gap-4";
   const smallInp = "w-full border border-line px-2 py-1.5 bg-white font-sans text-sm text-ink outline-none focus:border-orange/60 transition-colors";
 
   // ─── Render ───────────────────────────────────────────────────────────────
@@ -1075,7 +1076,7 @@ export function ListingForm({
         </p>
       )}
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-2 max-w-3xl">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-2">
 
         {/* ── 1. Category ─────────────────────────────────────────────────── */}
         <AccordionSection title="Category" defaultOpen>
@@ -1152,7 +1153,7 @@ export function ListingForm({
 
           {/* ── Address ── */}
           <SectionDivider label="Address" />
-          <div className={`${g2} mb-4`}>
+          <div className={`${g4} mb-4`}>
             <div>
               <label className={lbl}>Street Address *</label>
               <input type="text" value={streetAddress} onChange={(e) => setStreetAddress(e.target.value)} placeholder="e.g. 35" className={inp} />
@@ -1162,8 +1163,12 @@ export function ListingForm({
               <input type="text" value={streetAddress2} onChange={(e) => setStreetAddress2(e.target.value)} placeholder="e.g. Northumberland Road" className={inp} />
             </div>
             <div>
-              <label className={lbl}>Country</label>
-              <input type="text" value={country} onChange={(e) => setCountry(e.target.value)} placeholder="Australia" className={inp} />
+              <label className={lbl}>Suburb</label>
+              <input type="text" value={suburb} onChange={(e) => setSuburb(e.target.value)} className={inp} />
+            </div>
+            <div>
+              <label className={lbl}>City</label>
+              <input type="text" value={city} onChange={(e) => setCity(e.target.value)} className={inp} />
             </div>
             <div>
               <label className={lbl}>State</label>
@@ -1173,16 +1178,12 @@ export function ListingForm({
               </select>
             </div>
             <div>
-              <label className={lbl}>City</label>
-              <input type="text" value={city} onChange={(e) => setCity(e.target.value)} className={inp} />
-            </div>
-            <div>
               <label className={lbl}>PostCode</label>
               <input type="text" value={postcode} onChange={(e) => setPostcode(e.target.value)} className={inp} />
             </div>
             <div>
-              <label className={lbl}>Suburb</label>
-              <input type="text" value={suburb} onChange={(e) => setSuburb(e.target.value)} className={inp} />
+              <label className={lbl}>Country</label>
+              <input type="text" value={country} onChange={(e) => setCountry(e.target.value)} placeholder="Australia" className={inp} />
             </div>
           </div>
           <div>
@@ -1192,7 +1193,7 @@ export function ListingForm({
 
           {/* ── Sale Office Address ── */}
           <SectionDivider label="Sale Office Address (if different to above)" />
-          <div className={g2}>
+          <div className={g4}>
             <div>
               <label className={lbl}>Street Address</label>
               <input type="text" value={saleOfficeStreet} onChange={(e) => setSaleOfficeStreet(e.target.value)} className={inp} />
@@ -1202,8 +1203,8 @@ export function ListingForm({
               <input type="text" value={saleOfficeStreet2} onChange={(e) => setSaleOfficeStreet2(e.target.value)} className={inp} />
             </div>
             <div>
-              <label className={lbl}>Country</label>
-              <input type="text" value={saleOfficeCountry} onChange={(e) => setSaleOfficeCountry(e.target.value)} placeholder="Australia" className={inp} />
+              <label className={lbl}>City</label>
+              <input type="text" value={saleOfficeCity} onChange={(e) => setSaleOfficeCity(e.target.value)} className={inp} />
             </div>
             <div>
               <label className={lbl}>State</label>
@@ -1213,12 +1214,12 @@ export function ListingForm({
               </select>
             </div>
             <div>
-              <label className={lbl}>City</label>
-              <input type="text" value={saleOfficeCity} onChange={(e) => setSaleOfficeCity(e.target.value)} className={inp} />
-            </div>
-            <div>
               <label className={lbl}>PostCode</label>
               <input type="text" value={saleOfficePostcode} onChange={(e) => setSaleOfficePostcode(e.target.value)} className={inp} />
+            </div>
+            <div>
+              <label className={lbl}>Country</label>
+              <input type="text" value={saleOfficeCountry} onChange={(e) => setSaleOfficeCountry(e.target.value)} placeholder="Australia" className={inp} />
             </div>
           </div>
 
@@ -1247,7 +1248,7 @@ export function ListingForm({
 
           {/* ── Pricing & dates ── */}
           <SectionDivider label="Pricing &amp; Dates" />
-          <div className={`${g3} mb-4`}>
+          <div className={`${g5} mb-4`}>
             <div>
               <label className={lbl}>Search Price Minimum ($) *</label>
               <input type="number" value={priceFrom} onChange={(e) => setPriceFrom(e.target.value === "" ? "" : Number(e.target.value))} placeholder="450000" className={inp} />
@@ -1260,8 +1261,6 @@ export function ListingForm({
               <label className={lbl}>Completion Date *</label>
               <input type="text" value={completionQuarter} onChange={(e) => setCompletionQuarter(e.target.value)} placeholder="e.g. Q1 2028" className={inp} />
             </div>
-          </div>
-          <div className={`${g2} mb-4`}>
             <div>
               <label className={lbl}>Lead In Pricing</label>
               <input type="text" value={priceDisplay} onChange={(e) => setPriceDisplay(e.target.value)} placeholder="e.g. From $650,000" className={inp} />
