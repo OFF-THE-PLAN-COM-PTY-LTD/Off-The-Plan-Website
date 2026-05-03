@@ -18,8 +18,8 @@ export default async function AdminDashboard() {
     supabaseAdmin.from("circle_signups").select("*", { count: "exact", head: true }),
     supabaseAdmin.from("developer_leads").select("*", { count: "exact", head: true }),
     supabaseAdmin.from("journal_articles").select("*", { count: "exact", head: true }),
-    supabaseAdmin.from("circle_signups").select("name, email, phone, interest_type, state, created_at").order("created_at", { ascending: false }).limit(10),
-    supabaseAdmin.from("enquiries").select("name, email, phone, development_id, created_at, status").order("created_at", { ascending: false }).limit(5),
+    supabaseAdmin.from("circle_signups").select("full_name, email, interest_type, state, created_at").order("created_at", { ascending: false }).limit(10),
+    supabaseAdmin.from("enquiries").select("full_name, email, mobile, development_id, created_at, status").order("created_at", { ascending: false }).limit(5),
   ]);
 
   const statCards = [
@@ -73,9 +73,9 @@ export default async function AdminDashboard() {
               ) : (
                 (recentEnquiries ?? []).map((e, i) => (
                   <tr key={i} className="border-b border-line last:border-0 hover:bg-cream-alt transition-colors">
-                    <td className="px-4 py-3 font-sans text-body-md text-navy">{e.name}</td>
-                    <td className="px-4 py-3 font-sans text-sm text-ink/60">{e.email}</td>
-                    <td className="px-4 py-3 font-sans text-sm text-ink/60">{e.phone ?? "—"}</td>
+                    <td className="px-4 py-3 font-sans text-sm text-navy">{e.full_name}</td>
+                    <td className="px-4 py-3 font-sans text-sm text-ink/70">{e.email}</td>
+                    <td className="px-4 py-3 font-sans text-sm text-ink/70">{e.mobile ?? "—"}</td>
                     <td className="px-4 py-3">
                       <span className={`font-sans text-sm uppercase tracking-widest ${e.status === "new" ? "text-orange" : "text-ink/40"}`}>
                         {e.status ?? "New"}
@@ -117,9 +117,9 @@ export default async function AdminDashboard() {
               ) : (
                 (recentSignups ?? []).map((s, i) => (
                   <tr key={i} className="border-b border-line last:border-0 hover:bg-cream-alt transition-colors">
-                    <td className="px-4 py-3 font-sans text-body-md text-navy">{s.name}</td>
-                    <td className="px-4 py-3 font-sans text-sm text-ink/60">{s.email}</td>
-                    <td className="px-4 py-3 font-sans text-sm text-ink/60">{s.phone ?? "—"}</td>
+                    <td className="px-4 py-3 font-sans text-sm text-navy">{s.full_name}</td>
+                    <td className="px-4 py-3 font-sans text-sm text-ink/70">{s.email}</td>
+                    <td className="px-4 py-3 font-sans text-sm text-ink/70">—</td>
                     <td className="px-4 py-3 font-sans text-sm text-ink/60">{s.interest_type ?? "—"}</td>
                     <td className="px-4 py-3 font-sans text-sm text-ink/60">{s.state ?? "—"}</td>
                     <td className="px-4 py-3 font-sans text-sm text-ink/40">
