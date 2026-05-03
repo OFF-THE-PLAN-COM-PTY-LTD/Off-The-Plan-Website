@@ -246,6 +246,8 @@ export function ListingForm({ id, existing }: Props) {
             <option value="Selling now">Selling now</option>
             <option value="Final release">Final release</option>
             <option value="Register interest">Register interest</option>
+            <option value="Cancelled">Cancelled</option>
+            <option value="Archived">Archived</option>
           </select>
         </div>
 

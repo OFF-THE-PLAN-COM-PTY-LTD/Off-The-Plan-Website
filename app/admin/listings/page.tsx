@@ -23,15 +23,21 @@ export default async function AdminListingsPage({ searchParams }: { searchParams
   const pendingCount = all.filter((l) => !l.is_published).length;
   const publishedCount = all.filter((l) => l.is_published).length;
 
-  const featured = filtered.filter((l) => l.is_featured && l.is_published);
-  const regular = filtered.filter((l) => !l.is_featured && l.is_published);
-  const pending = filtered.filter((l) => !l.is_published);
+  const cancelled = filtered.filter((l) => l.status === "Cancelled");
+  const archived = filtered.filter((l) => l.status === "Archived");
+  const active = filtered.filter((l) => l.status !== "Cancelled" && l.status !== "Archived");
+  const featured = active.filter((l) => l.is_featured && l.is_published);
+  const regular = active.filter((l) => !l.is_featured && l.is_published);
+  const pending = active.filter((l) => !l.is_published);
+
+  const cancelledCount = all.filter((l) => l.status === "Cancelled").length;
+  const archivedCount = all.filter((l) => l.status === "Archived").length;
 
   const stats = [
     { label: "All Listing", count: totalCount },
     { label: "Pending", count: pendingCount },
     { label: "Published", count: publishedCount },
-    { label: "Archived", count: 0 },
+    { label: "Archived", count: archivedCount },
   ];
 
   return (
@@ -130,6 +136,16 @@ export default async function AdminListingsPage({ searchParams }: { searchParams
       {/* Pending */}
       {pending.length > 0 && (
         <ListingSection title="PENDING" listings={pending} />
+      )}
+
+      {/* Cancelled */}
+      {cancelled.length > 0 && (
+        <ListingSection title="CANCELLED" listings={cancelled} />
+      )}
+
+      {/* Archived */}
+      {archived.length > 0 && (
+        <ListingSection title="ARCHIVED" listings={archived} />
       )}
 
       {filtered.length === 0 && (
