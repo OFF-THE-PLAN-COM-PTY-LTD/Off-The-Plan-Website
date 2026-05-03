@@ -46,3 +46,22 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unexpected error." }, { status: 500 });
   }
 }
+
+export async function DELETE(req: Request) {
+  try {
+    const { id } = await req.json();
+    if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
+
+    const { error } = await supabaseAdmin.from("developments").delete().eq("id", id);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+    revalidatePath("/");
+    revalidatePath("/search");
+    revalidatePath("/map");
+
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error("Development delete error:", err);
+    return NextResponse.json({ error: "Unexpected error." }, { status: 500 });
+  }
+}

@@ -45,6 +45,7 @@ export function DevelopmentForm({ id, existing }: Props) {
   const [isFeatured, setIsFeatured] = useState(existing?.is_featured ?? false);
   const [heroImageUrl, setHeroImageUrl] = useState(existing?.hero_image_url ?? "");
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -82,6 +83,24 @@ export function DevelopmentForm({ id, existing }: Props) {
       return;
     }
 
+    router.push("/admin/developments");
+    router.refresh();
+  }
+
+  async function handleDelete() {
+    if (!confirm(`Are you sure you want to delete "${existing?.name ?? "this development"}"? This cannot be undone.`)) return;
+    setDeleting(true);
+    const res = await fetch("/api/admin/developments", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      setError(json.error ?? "Delete failed. Please try again.");
+      setDeleting(false);
+      return;
+    }
     router.push("/admin/developments");
     router.refresh();
   }
@@ -210,11 +229,23 @@ export function DevelopmentForm({ id, existing }: Props) {
           </label>
         </div>
 
-        <div className="flex gap-3 pt-2">
-          <button type="submit" disabled={saving} className="btn-primary">
-            {saving ? "Saving…" : isNew ? "Create development" : "Save changes"}
-          </button>
-          <Link href="/admin/developments" className="btn-ghost">Cancel</Link>
+        <div className="flex items-center justify-between pt-2">
+          <div className="flex gap-3">
+            <button type="submit" disabled={saving || deleting} className="btn-primary">
+              {saving ? "Saving…" : isNew ? "Create development" : "Save changes"}
+            </button>
+            <Link href="/admin/developments" className="btn-ghost">Cancel</Link>
+          </div>
+          {!isNew && (
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={deleting || saving}
+              className="font-mono text-label-sm uppercase tracking-widest text-red-500 hover:text-red-700 transition-colors disabled:opacity-50"
+            >
+              {deleting ? "Deleting…" : "Delete development"}
+            </button>
+          )}
         </div>
       </form>
     </div>
