@@ -3,38 +3,40 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 
 export async function POST(req: Request) {
   try {
-    const formData = await req.formData();
-    const method = formData.get("_method") as string;
-    const id = formData.get("id") as string;
+    const body = await req.json();
+    const { _method, id, ...fields } = body;
 
     const data = {
-      name: formData.get("name") as string,
-      slug: formData.get("slug") as string,
-      suburb: (formData.get("suburb") as string) || null,
-      state: (formData.get("state") as string) || null,
-      price_display: (formData.get("price_display") as string) || null,
-      completion_quarter: (formData.get("completion_quarter") as string) || null,
-      beds_min: formData.get("beds_min") ? Number(formData.get("beds_min")) : null,
-      beds_max: formData.get("beds_max") ? Number(formData.get("beds_max")) : null,
-      summary: (formData.get("summary") as string) || null,
-      status: (formData.get("status") as string) || "Selling now",
-      is_published: formData.get("is_published") === "true",
-      is_featured: formData.get("is_featured") === "true",
+      name: fields.name,
+      slug: fields.slug,
+      suburb: fields.suburb ?? null,
+      state: fields.state ?? null,
+      price_display: fields.price_display ?? null,
+      completion_quarter: fields.completion_quarter ?? null,
+      beds_min: fields.beds_min ?? null,
+      beds_max: fields.beds_max ?? null,
+      summary: fields.summary ?? null,
+      status: fields.status ?? "Selling now",
+      is_published: fields.is_published ?? false,
+      is_featured: fields.is_featured ?? false,
+      hero_image_url: fields.hero_image_url ?? null,
     };
 
     if (!data.name || !data.slug) {
-      return NextResponse.redirect(new URL("/admin/developments", req.url));
+      return NextResponse.json({ error: "Name and slug are required." }, { status: 400 });
     }
 
-    if (method === "PATCH" && id) {
-      await supabaseAdmin.from("developments").update(data).eq("id", id);
+    if (_method === "PATCH" && id) {
+      const { error } = await supabaseAdmin.from("developments").update(data).eq("id", id);
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     } else {
-      await supabaseAdmin.from("developments").insert(data);
+      const { error } = await supabaseAdmin.from("developments").insert(data);
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.redirect(new URL("/admin/developments", req.url));
+    return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("Development save error:", err);
-    return NextResponse.redirect(new URL("/admin/developments", req.url));
+    return NextResponse.json({ error: "Unexpected error." }, { status: 500 });
   }
 }

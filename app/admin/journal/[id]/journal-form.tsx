@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { JournalArticle, JournalCategory } from "@/types/journal";
+import { ImageUpload } from "@/components/admin/image-upload";
 
 const CATEGORIES: JournalCategory[] = ["Editorial", "Market", "Interview", "Guide"];
 
@@ -137,10 +138,12 @@ export function JournalForm({ id, existing }: Props) {
           </div>
         </div>
 
-        <div>
-          <label htmlFor="hero_image_url" className={labelClass}>Hero Image URL</label>
-          <input id="hero_image_url" type="text" value={heroImageUrl} onChange={(e) => setHeroImageUrl(e.target.value)} placeholder="https://..." className={inputClass} />
-        </div>
+        <ImageUpload
+          label="Hero Image"
+          value={heroImageUrl}
+          onChange={setHeroImageUrl}
+          bucket="journal-images"
+        />
 
         <div className="grid grid-cols-2 gap-4">
           <div>
