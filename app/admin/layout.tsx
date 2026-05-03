@@ -21,7 +21,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   // if (!profile?.is_admin) redirect("/");
 
   return (
-    <div className="min-h-screen bg-cream flex">
+    <div className="min-h-screen bg-cream flex pt-16">
       {/* Sidebar */}
       <aside className="w-56 bg-navy flex-shrink-0 flex flex-col">
         <div className="p-6 border-b border-line-dark">
