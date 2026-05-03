@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { PropertyCard } from "@/components/property-card";
 import { JournalCard } from "@/components/journal-card";
 import { HeroSearch } from "@/components/hero-search";
@@ -43,39 +42,27 @@ export default async function HomePage() {
   return (
     <>
       {/* ─── Hero ─────────────────────────────────────────────── */}
-      <section className="relative min-h-[90vh] flex flex-col justify-end bg-navy overflow-hidden">
-        {/* Hero background image */}
-        <Image
-          src="https://images.unsplash.com/photo-1486325212027-8081e485255e?w=2000&q=85"
-          alt="Modern residential architecture"
-          fill
-          priority
-          className="object-cover opacity-40"
-          sizes="100vw"
-        />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(232,114,44,0.08),_transparent_60%)]" />
+      <section className="relative h-screen flex items-center justify-center bg-navy overflow-hidden">
+        {/* Background video */}
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover"
+          aria-hidden="true"
+        >
+          <source src="/hero-video.mp4" type="video/mp4" />
+        </video>
 
-        {/* Gradient overlays */}
-        <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-navy-deep to-transparent" />
+        {/* Dark overlay */}
+        <div className="absolute inset-0 bg-navy/60" />
 
-        <div className="relative z-10 container-padded pb-10 sm:pb-16 pt-24 sm:pt-32">
-          {/* Headline */}
-          <div className="max-w-4xl mb-8 sm:mb-10">
-            <p className="section-label text-ink-light/40 mb-6">
-              Volume 04 · Est. 2014 · 24,000+ Members
-            </p>
-            <h1 className="font-display font-light text-ink-light leading-none tracking-tight text-[clamp(52px,8vw,120px)]">
-              The next address,{" "}
-              <em className="not-italic text-orange">discovered early.</em>
-            </h1>
-            <p className="mt-6 font-sans text-body-lg text-ink-light/60 max-w-xl">
-              Australia's curated marketplace for off-the-plan residential real estate.
-              Hand-picked developments, editorial insight, and early access for members.
-            </p>
-          </div>
-
-          {/* Hero Search */}
-          <HeroSearch tone="dark" />
+        {/* Centered title */}
+        <div className="relative z-10 text-center px-6">
+          <h1 className="font-display font-light text-ink-light leading-none tracking-tight text-[clamp(64px,10vw,160px)]">
+            Off The Plan
+          </h1>
         </div>
       </section>
 
