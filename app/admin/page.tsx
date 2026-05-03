@@ -39,7 +39,7 @@ export default async function AdminDashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
         {statCards.map((card) => (
           <div key={card.label} className="bg-white border border-line p-6">
-            <p className="font-mono text-label-sm uppercase tracking-widest text-ink/30 mb-1">{card.label}</p>
+            <p className="font-sans text-sm uppercase tracking-widest text-ink/30 mb-1">{card.label}</p>
             <p className="font-display text-[48px] font-light text-navy leading-none mb-4">{card.count}</p>
             <Link href={card.href} className="font-mono text-label-lg uppercase tracking-widest text-orange hover:underline">
               {card.action} →
@@ -52,7 +52,7 @@ export default async function AdminDashboard() {
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-display font-light text-navy text-section-md">Recent Enquiries</h2>
-          <Link href="/admin/enquiries" className="font-mono text-label-sm uppercase tracking-widest text-orange hover:underline">
+          <Link href="/admin/enquiries" className="font-sans text-sm uppercase tracking-widest text-orange hover:underline">
             View all →
           </Link>
         </div>
@@ -61,7 +61,7 @@ export default async function AdminDashboard() {
             <thead>
               <tr className="border-b border-line">
                 {["Name", "Email", "Phone", "Status", "Date"].map((h) => (
-                  <th key={h} className="font-mono text-label-sm uppercase tracking-widest text-ink/40 px-4 py-3">{h}</th>
+                  <th key={h} className="font-sans text-sm font-semibold text-ink/60 px-4 py-4">{h}</th>
                 ))}
               </tr>
             </thead>
@@ -74,14 +74,14 @@ export default async function AdminDashboard() {
                 (recentEnquiries ?? []).map((e, i) => (
                   <tr key={i} className="border-b border-line last:border-0 hover:bg-cream-alt transition-colors">
                     <td className="px-4 py-3 font-sans text-body-md text-navy">{e.name}</td>
-                    <td className="px-4 py-3 font-mono text-label-sm text-ink/60">{e.email}</td>
-                    <td className="px-4 py-3 font-mono text-label-sm text-ink/60">{e.phone ?? "—"}</td>
+                    <td className="px-4 py-3 font-sans text-sm text-ink/60">{e.email}</td>
+                    <td className="px-4 py-3 font-sans text-sm text-ink/60">{e.phone ?? "—"}</td>
                     <td className="px-4 py-3">
-                      <span className={`font-mono text-label-sm uppercase tracking-widest ${e.status === "new" ? "text-orange" : "text-ink/40"}`}>
+                      <span className={`font-sans text-sm uppercase tracking-widest ${e.status === "new" ? "text-orange" : "text-ink/40"}`}>
                         {e.status ?? "New"}
                       </span>
                     </td>
-                    <td className="px-4 py-3 font-mono text-label-sm text-ink/40">
+                    <td className="px-4 py-3 font-sans text-sm text-ink/40">
                       {new Date(e.created_at).toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" })}
                     </td>
                   </tr>
@@ -96,7 +96,7 @@ export default async function AdminDashboard() {
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-display font-light text-navy text-section-md">Member Sign Ups</h2>
-          <Link href="/admin/members" className="font-mono text-label-sm uppercase tracking-widest text-orange hover:underline">
+          <Link href="/admin/members" className="font-sans text-sm uppercase tracking-widest text-orange hover:underline">
             View all →
           </Link>
         </div>
@@ -105,7 +105,7 @@ export default async function AdminDashboard() {
             <thead>
               <tr className="border-b border-line">
                 {["Name", "Email", "Phone", "Interest", "State", "Date"].map((h) => (
-                  <th key={h} className="font-mono text-label-sm uppercase tracking-widest text-ink/40 px-4 py-3">{h}</th>
+                  <th key={h} className="font-sans text-sm font-semibold text-ink/60 px-4 py-4">{h}</th>
                 ))}
               </tr>
             </thead>
@@ -118,11 +118,11 @@ export default async function AdminDashboard() {
                 (recentSignups ?? []).map((s, i) => (
                   <tr key={i} className="border-b border-line last:border-0 hover:bg-cream-alt transition-colors">
                     <td className="px-4 py-3 font-sans text-body-md text-navy">{s.name}</td>
-                    <td className="px-4 py-3 font-mono text-label-sm text-ink/60">{s.email}</td>
-                    <td className="px-4 py-3 font-mono text-label-sm text-ink/60">{s.phone ?? "—"}</td>
-                    <td className="px-4 py-3 font-mono text-label-sm text-ink/60">{s.interest_type ?? "—"}</td>
-                    <td className="px-4 py-3 font-mono text-label-sm text-ink/60">{s.state ?? "—"}</td>
-                    <td className="px-4 py-3 font-mono text-label-sm text-ink/40">
+                    <td className="px-4 py-3 font-sans text-sm text-ink/60">{s.email}</td>
+                    <td className="px-4 py-3 font-sans text-sm text-ink/60">{s.phone ?? "—"}</td>
+                    <td className="px-4 py-3 font-sans text-sm text-ink/60">{s.interest_type ?? "—"}</td>
+                    <td className="px-4 py-3 font-sans text-sm text-ink/60">{s.state ?? "—"}</td>
+                    <td className="px-4 py-3 font-sans text-sm text-ink/40">
                       {new Date(s.created_at).toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" })}
                     </td>
                   </tr>

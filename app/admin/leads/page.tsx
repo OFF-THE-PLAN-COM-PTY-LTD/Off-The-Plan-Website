@@ -18,18 +18,18 @@ export default async function AdminLeadsPage() {
             <thead>
               <tr className="border-b border-line">
                 {["Name", "Email", "Company", "Message", "Date"].map((h) => (
-                  <th key={h} className="font-mono text-label-sm uppercase tracking-widest text-ink/40 px-4 py-3">{h}</th>
+                  <th key={h} className="font-sans text-sm font-semibold text-ink/60 px-4 py-4">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {leads.map((l: any) => (
                 <tr key={l.id} className="border-b border-line last:border-0 hover:bg-cream-alt transition-colors">
-                  <td className="px-4 py-3 font-sans text-body-md">{l.full_name}</td>
-                  <td className="px-4 py-3 font-mono text-label-sm text-ink/60">{l.email}</td>
-                  <td className="px-4 py-3 font-sans text-body-md text-ink/60">{l.company ?? "—"}</td>
-                  <td className="px-4 py-3 font-sans text-body-md text-ink/60 max-w-xs truncate">{l.message ?? "—"}</td>
-                  <td className="px-4 py-3 font-mono text-label-sm text-ink/60">{formatDate(l.created_at)}</td>
+                  <td className="px-4 py-4 font-sans text-sm">{l.full_name}</td>
+                  <td className="px-4 py-3 font-sans text-sm text-ink/60">{l.email}</td>
+                  <td className="px-4 py-4 font-sans text-sm text-ink/60">{l.company ?? "—"}</td>
+                  <td className="px-4 py-4 font-sans text-sm text-ink/60 max-w-xs truncate">{l.message ?? "—"}</td>
+                  <td className="px-4 py-3 font-sans text-sm text-ink/60">{formatDate(l.created_at)}</td>
                 </tr>
               ))}
             </tbody>
