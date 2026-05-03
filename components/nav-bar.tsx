@@ -43,9 +43,12 @@ export function NavBar({ tone = "light", position = "fixed", user = null }: NavB
           <Image
             src="/logo.png"
             alt="Off The Plan"
-            width={120}
-            height={32}
-            className={cn("h-7 w-auto object-contain", isDark && "brightness-0 invert")}
+            width={180}
+            height={48}
+            className={cn(
+              "h-11 w-auto object-contain",
+              isDark ? "brightness-0 invert" : "mix-blend-multiply"
+            )}
             priority
           />
         </Link>
