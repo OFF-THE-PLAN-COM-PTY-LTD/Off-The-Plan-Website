@@ -21,6 +21,8 @@ export async function POST(req: Request) {
       is_published: fields.is_published ?? false,
       is_featured: fields.is_featured ?? false,
       hero_image_url: fields.hero_image_url ?? null,
+      lat: fields.lat ?? null,
+      lng: fields.lng ?? null,
     };
 
     if (!data.name || !data.slug) {

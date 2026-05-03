@@ -20,6 +20,8 @@ interface DevelopmentData {
   is_published?: boolean;
   is_featured?: boolean;
   hero_image_url?: string;
+  lat?: number | null;
+  lng?: number | null;
 }
 
 interface Props {
@@ -44,6 +46,8 @@ export function DevelopmentForm({ id, existing }: Props) {
   const [isPublished, setIsPublished] = useState(existing?.is_published ?? false);
   const [isFeatured, setIsFeatured] = useState(existing?.is_featured ?? false);
   const [heroImageUrl, setHeroImageUrl] = useState(existing?.hero_image_url ?? "");
+  const [lat, setLat] = useState<number | "">(existing?.lat ?? "");
+  const [lng, setLng] = useState<number | "">(existing?.lng ?? "");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -68,6 +72,8 @@ export function DevelopmentForm({ id, existing }: Props) {
       is_published: isPublished,
       is_featured: isFeatured,
       hero_image_url: heroImageUrl || null,
+      lat: lat === "" ? null : lat,
+      lng: lng === "" ? null : lng,
     };
 
     const res = await fetch("/api/admin/developments", {
@@ -197,7 +203,32 @@ export function DevelopmentForm({ id, existing }: Props) {
               className={inputClass}
             />
           </div>
+          <div>
+            <label className={labelClass}>Latitude</label>
+            <input
+              type="number"
+              step="any"
+              value={lat}
+              onChange={(e) => setLat(e.target.value === "" ? "" : Number(e.target.value))}
+              placeholder="e.g. -31.9344"
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Longitude</label>
+            <input
+              type="number"
+              step="any"
+              value={lng}
+              onChange={(e) => setLng(e.target.value === "" ? "" : Number(e.target.value))}
+              placeholder="e.g. 115.7908"
+              className={inputClass}
+            />
+          </div>
         </div>
+        <p className="font-sans text-xs text-ink/40 -mt-3">
+          Tip: right-click any location in Google Maps → copy the coordinates shown at the top.
+        </p>
 
         <div>
           <label className={labelClass}>Summary</label>
