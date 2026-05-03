@@ -129,10 +129,43 @@ const STATUSES = [
 const LISTING_DURATIONS = ["3 Months", "6 Months", "12 Months", "24 Months"];
 
 const LIFESTYLE_OPTIONS = [
-  "Pool", "Gymnasium", "Concierge", "Rooftop Terrace", "BBQ Area",
-  "Lobby", "Storage", "Security", "Garden", "Tennis Court",
-  "Sauna", "Spa", "Yoga Studio", "Theatre Room", "Wine Storage",
-  "Co-working Space", "Dog Wash", "Bike Storage",
+  "Bar area",
+  "BBQ Facilities",
+  "Bike share",
+  "Bin Chute",
+  "Book Retreat and Library",
+  "Building manager / Concierge",
+  "Business center",
+  "Cabanas",
+  "Car share",
+  "City views",
+  "Co working options",
+  "Consultation Room",
+  "Delivery Room",
+  "Dining room(s)",
+  "EV charging capability",
+  "Fireplaces",
+  "Fully Equipped Gym",
+  "Guest apartment",
+  "Jacuzzi/Spa(s)",
+  "Kids Play Area",
+  "Lounge and Casual dining",
+  "Massage Room",
+  "Music Room",
+  "Outdoor fireplace",
+  "Outdoor Gym",
+  "Outdoor Theatre",
+  "Putting Green",
+  "Rooftop Garden",
+  "Sauna and Steam Rooms",
+  "Sky Deck",
+  "Swimming Pool(s)",
+  "Tennis Courts",
+  "Teppanyaki Grill",
+  "Theatre",
+  "Waterfront",
+  "Wine Cellar",
+  "Yoga Studio",
 ];
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
@@ -243,6 +276,80 @@ function TagInput({
           Add
         </button>
       </div>
+    </div>
+  );
+}
+
+function AddYourOwn({
+  lifestyle,
+  setLifestyle,
+}: {
+  lifestyle: string[];
+  setLifestyle: React.Dispatch<React.SetStateAction<string[]>>;
+}) {
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState("");
+
+  function add() {
+    const trimmed = value.trim();
+    if (trimmed && !lifestyle.includes(trimmed)) {
+      setLifestyle((prev) => [...prev, trimmed]);
+    }
+    setValue("");
+    setOpen(false);
+  }
+
+  const custom = lifestyle.filter((item) => !LIFESTYLE_OPTIONS.includes(item));
+
+  return (
+    <div className="mt-4">
+      {custom.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-3">
+          {custom.map((item) => (
+            <span
+              key={item}
+              className="inline-flex items-center gap-1 font-sans text-sm text-ink/80"
+            >
+              <input type="checkbox" checked readOnly className="w-4 h-4 accent-orange flex-shrink-0" />
+              {item}
+              <button
+                type="button"
+                onClick={() => setLifestyle((prev) => prev.filter((x) => x !== item))}
+                className="text-ink/30 hover:text-red-500 ml-1 leading-none"
+              >
+                ×
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+      {open ? (
+        <div className="flex items-center gap-2 mt-2">
+          <input
+            type="text"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); add(); } }}
+            placeholder="Enter feature name"
+            autoFocus
+            className="border border-line px-3 py-2 bg-white font-sans text-sm text-ink outline-none focus:border-orange/60 transition-colors w-64"
+          />
+          <button type="button" onClick={add} className="font-mono text-[10px] uppercase tracking-widest px-3 py-2 border border-orange text-orange hover:bg-orange hover:text-white transition-colors">
+            Add
+          </button>
+          <button type="button" onClick={() => { setOpen(false); setValue(""); }} className="font-mono text-[10px] uppercase tracking-widest text-ink/40 hover:text-ink transition-colors">
+            Cancel
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="font-sans text-sm text-orange hover:underline mt-1"
+        >
+          + Add your own
+        </button>
+      )}
     </div>
   );
 }
@@ -953,40 +1060,24 @@ export function ListingForm({
 
         {/* ── 4. Property Features ─────────────────────────────────────────── */}
         <AccordionSection title="Property Features">
-          <div className="mb-6">
-            <label className={lbl}>Lifestyle &amp; Amenities</label>
-            <div className="grid grid-cols-3 gap-y-3 gap-x-2 mt-2">
-              {LIFESTYLE_OPTIONS.map((item) => (
-                <label key={item} className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" checked={lifestyle.includes(item)} onChange={() => toggleLifestyle(item)} className="w-4 h-4 accent-orange flex-shrink-0" />
-                  <span className="font-sans text-sm text-ink/80">{item}</span>
-                </label>
-              ))}
-            </div>
+          <p className="font-sans text-sm text-ink/50 mb-4">
+            ( At least select one property feature is required ){" "}
+            <span className="text-red-500">*</span>
+          </p>
+          <div className="grid grid-cols-3 gap-y-3 gap-x-4">
+            {LIFESTYLE_OPTIONS.map((item) => (
+              <label key={item} className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={lifestyle.includes(item)}
+                  onChange={() => toggleLifestyle(item)}
+                  className="w-4 h-4 accent-orange flex-shrink-0"
+                />
+                <span className="font-sans text-sm text-ink/80">{item}</span>
+              </label>
+            ))}
           </div>
-          <div className="mb-6">
-            <label className={lbl}>Additional Features</label>
-            <p className="font-sans text-xs text-ink/40 mb-2">Type a feature and press Enter.</p>
-            <TagInput value={features} onChange={setFeatures} placeholder="e.g. Ducted AC" />
-          </div>
-          <div className={g2}>
-            <div>
-              <label className={lbl}>Architect</label>
-              <input type="text" value={architect} onChange={(e) => setArchitect(e.target.value)} className={inp} />
-            </div>
-            <div>
-              <label className={lbl}>Interior Designer</label>
-              <input type="text" value={interiors} onChange={(e) => setInteriors(e.target.value)} className={inp} />
-            </div>
-            <div>
-              <label className={lbl}>Landscape Designer</label>
-              <input type="text" value={landscape} onChange={(e) => setLandscape(e.target.value)} className={inp} />
-            </div>
-            <div>
-              <label className={lbl}>Builder</label>
-              <input type="text" value={builder} onChange={(e) => setBuilder(e.target.value)} className={inp} />
-            </div>
-          </div>
+          <AddYourOwn lifestyle={lifestyle} setLifestyle={setLifestyle} />
         </AccordionSection>
 
         {/* ── 5. Nearby Amenities ──────────────────────────────────────────── */}
