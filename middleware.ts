@@ -38,7 +38,7 @@ export async function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
-  // Protected routes
+  // Protected routes — must be logged in
   const protectedPaths = ["/saved", "/account", "/admin"];
   const isProtected = protectedPaths.some((p) => pathname.startsWith(p));
 
@@ -46,6 +46,19 @@ export async function middleware(request: NextRequest) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", pathname);
     return NextResponse.redirect(loginUrl);
+  }
+
+  // Admin routes — must also have is_admin = true
+  if (pathname.startsWith("/admin") && user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("is_admin")
+      .eq("id", user.id)
+      .single();
+
+    if (!profile?.is_admin) {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
   }
 
   return response;
