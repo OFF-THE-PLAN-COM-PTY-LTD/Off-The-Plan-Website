@@ -18,7 +18,7 @@ export default async function AdminDashboard() {
     supabaseAdmin.from("circle_signups").select("*", { count: "exact", head: true }),
     supabaseAdmin.from("developer_leads").select("*", { count: "exact", head: true }),
     supabaseAdmin.from("journal_articles").select("*", { count: "exact", head: true }),
-    supabaseAdmin.from("circle_signups").select("full_name, email, interest_type, state, created_at").order("created_at", { ascending: false }).limit(10),
+    supabaseAdmin.from("circle_signups").select("full_name, email, interest_type, created_at").order("created_at", { ascending: false }).limit(10),
     supabaseAdmin.from("enquiries").select("full_name, email, mobile, development_id, created_at, status").order("created_at", { ascending: false }).limit(5),
   ]);
 
@@ -104,7 +104,7 @@ export default async function AdminDashboard() {
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-line">
-                {["Name", "Email", "Phone", "Interest", "State", "Date"].map((h) => (
+                {["Name", "Email", "Interest", "Date"].map((h) => (
                   <th key={h} className="font-sans text-sm font-semibold text-ink/60 px-4 py-4">{h}</th>
                 ))}
               </tr>
@@ -112,16 +112,14 @@ export default async function AdminDashboard() {
             <tbody>
               {(recentSignups ?? []).length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-6 font-sans text-body-md text-ink/40 text-center">No sign ups yet</td>
+                  <td colSpan={4} className="px-4 py-6 font-sans text-body-md text-ink/40 text-center">No sign ups yet</td>
                 </tr>
               ) : (
                 (recentSignups ?? []).map((s, i) => (
                   <tr key={i} className="border-b border-line last:border-0 hover:bg-cream-alt transition-colors">
                     <td className="px-4 py-3 font-sans text-sm text-navy">{s.full_name}</td>
                     <td className="px-4 py-3 font-sans text-sm text-ink/70">{s.email}</td>
-                    <td className="px-4 py-3 font-sans text-sm text-ink/70">—</td>
-                    <td className="px-4 py-3 font-sans text-sm text-ink/60">{s.interest_type ?? "—"}</td>
-                    <td className="px-4 py-3 font-sans text-sm text-ink/60">{s.state ?? "—"}</td>
+                    <td className="px-4 py-3 font-sans text-sm text-ink/70">{s.interest_type ?? "—"}</td>
                     <td className="px-4 py-3 font-sans text-sm text-ink/40">
                       {new Date(s.created_at).toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" })}
                     </td>
