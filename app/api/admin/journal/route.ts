@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { z } from "zod";
 
@@ -28,6 +29,8 @@ export async function POST(req: Request) {
       console.error("Journal insert error:", error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+    revalidatePath("/");
+    revalidatePath("/journal");
     return NextResponse.json({ success: true }, { status: 201 });
   } catch {
     return NextResponse.json({ error: "Server error" }, { status: 500 });
@@ -53,6 +56,8 @@ export async function PATCH(req: Request) {
       console.error("Journal update error:", error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+    revalidatePath("/");
+    revalidatePath("/journal");
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: "Server error" }, { status: 500 });

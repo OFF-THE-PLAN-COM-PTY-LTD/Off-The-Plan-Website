@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
 export async function POST(req: Request) {
@@ -33,6 +34,11 @@ export async function POST(req: Request) {
       const { error } = await supabaseAdmin.from("developments").insert(data);
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     }
+
+    // Invalidate cached pages so changes appear immediately
+    revalidatePath("/");
+    revalidatePath("/search");
+    revalidatePath("/map");
 
     return NextResponse.json({ ok: true });
   } catch (err) {

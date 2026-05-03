@@ -4,6 +4,8 @@ import { PropertyCard } from "@/components/property-card";
 import { supabase } from "@/lib/supabase/public";
 import type { Development } from "@/types/development";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Search Developments",
   description: "Browse off-the-plan apartments, townhouses, and houses across Australia.",

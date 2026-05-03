@@ -8,6 +8,8 @@ import { supabase } from "@/lib/supabase/public";
 import type { Development } from "@/types/development";
 import type { JournalArticle } from "@/types/journal";
 
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
 
   const [{ data: featuredData }, { data: trendingData }, { data: articlesData }] = await Promise.all([
