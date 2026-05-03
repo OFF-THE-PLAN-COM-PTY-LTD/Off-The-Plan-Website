@@ -1584,38 +1584,83 @@ export function ListingForm({
         {/* ── 9. Mini Stocklist (Optional) ─────────────────────────────────── */}
         <AccordionSection title="Mini Stocklist (Optional)">
           {isNew ? (
-            <p className="font-sans text-sm text-ink/40 italic">Save the listing first to add floor plans.</p>
-          ) : floorPlans.length === 0 ? (
-            <p className="font-sans text-sm text-ink/40">Add unit configurations in the Configuration Summary section above, then add plan details and floor plan images here.</p>
+            <p className="font-sans text-sm text-ink/40 italic">Save the listing first to add unit entries.</p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border border-line">
-                <thead>
-                  <tr className="border-b border-orange/30 bg-cream-alt">
-                    {["Beds", "Plan Type / Label", "Config Description", "Floor Plan Image URL"].map((h) => (
-                      <th key={h} className="font-mono text-[10px] uppercase tracking-widest text-orange px-3 py-2 whitespace-nowrap">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {floorPlans.map((fp, i) => (
-                    <tr key={i} className="border-b border-line last:border-0">
-                      <td className="px-3 py-2 font-sans text-sm text-ink/60 whitespace-nowrap">
-                        {fp.beds ? `${fp.beds} Bed` : "—"}
-                      </td>
-                      <td className="px-3 py-2">
-                        <input type="text" value={fp.plan_type} onChange={(e) => updateFloorPlan(i, "plan_type", e.target.value)} placeholder="e.g. Type A" className={smallInp + " w-28"} />
-                      </td>
-                      <td className="px-3 py-2">
-                        <input type="text" value={fp.config} onChange={(e) => updateFloorPlan(i, "config", e.target.value)} placeholder="e.g. North-facing corner" className={smallInp + " w-48"} />
-                      </td>
-                      <td className="px-3 py-2">
-                        <input type="text" value={fp.image_url} onChange={(e) => updateFloorPlan(i, "image_url", e.target.value)} placeholder="https://..." className={smallInp + " w-56"} />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div>
+              {floorPlans.map((fp, i) => (
+                <div key={i} className="border border-line mb-4 p-4 bg-white">
+                  <div className={`${g3} mb-4`}>
+                    <div>
+                      <label className={lbl}>Number Of Bedrooms</label>
+                      <input
+                        type="number"
+                        value={fp.beds}
+                        onChange={(e) => updateFloorPlan(i, "beds", e.target.value)}
+                        className={inp}
+                      />
+                    </div>
+                    <div>
+                      <label className={lbl}>Number Of Bathrooms</label>
+                      <input
+                        type="number"
+                        value={fp.bath}
+                        onChange={(e) => updateFloorPlan(i, "bath", e.target.value)}
+                        className={inp}
+                      />
+                    </div>
+                    <div>
+                      <label className={lbl}>Parking Spaces</label>
+                      <input
+                        type="number"
+                        value={fp.garage}
+                        onChange={(e) => updateFloorPlan(i, "garage", e.target.value)}
+                        className={inp}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-end gap-4">
+                    <div className="flex-1">
+                      <label className={lbl}>Total Apartment Size</label>
+                      <input
+                        type="number"
+                        value={fp.internal_sqm}
+                        onChange={(e) => updateFloorPlan(i, "internal_sqm", e.target.value)}
+                        className={inp}
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <label className={lbl}>Price From</label>
+                      <input
+                        type="number"
+                        value={fp.price_from}
+                        onChange={(e) => updateFloorPlan(i, "price_from", e.target.value)}
+                        className={inp}
+                      />
+                    </div>
+                    <div className="flex-shrink-0 pb-0.5">
+                      <button
+                        type="button"
+                        onClick={() => removeFloorPlan(i)}
+                        className="font-mono text-[10px] uppercase tracking-widest px-4 py-2.5 border border-red-400 text-red-500 hover:bg-red-500 hover:text-white hover:border-red-500 transition-colors"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={addFloorPlan}
+                  className="font-mono text-[10px] uppercase tracking-widest px-4 py-2 border border-orange text-orange hover:bg-orange hover:text-white transition-colors"
+                >
+                  + Add
+                </button>
+              </div>
+              <p className="font-sans text-xs text-ink/40 mt-3">
+                Changes save when you click <strong>Save changes</strong> at the bottom of the form.
+              </p>
             </div>
           )}
         </AccordionSection>
