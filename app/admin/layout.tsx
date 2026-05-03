@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 // Uncomment above and the auth check below when Supabase is connected
 
 const navItems = [
+  { label: "Dashboard", href: "/admin" },
   { label: "Developments", href: "/admin/developments" },
   { label: "Journal", href: "/admin/journal" },
   { label: "Enquiries", href: "/admin/enquiries" },
