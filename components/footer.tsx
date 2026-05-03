@@ -171,9 +171,9 @@ export function Footer() {
             <Image
               src="/logo.png"
               alt="Off The Plan"
-              width={140}
-              height={40}
-              className="h-8 w-auto object-contain brightness-0 invert"
+              width={180}
+              height={52}
+              className="h-12 w-auto object-contain invert"
             />
           </Link>
           <p className="font-sans text-sm font-semibold text-ink-light tracking-wide text-right">
@@ -182,13 +182,13 @@ export function Footer() {
         </div>
 
         <div className="border-t border-ink-light/10 pt-8 grid md:grid-cols-2 gap-6 mb-10">
-          <p className="font-sans text-sm text-ink-light/60 leading-relaxed">
+          <p className="font-sans text-sm text-ink-light/80 leading-relaxed">
             Australia's Home Of New Property | Off The Plan™ is an Australian property platform for new
             apartments, new homes, developments and house & land packages available off-the-plan®.
             We connect buyers with current and upcoming property opportunities across Australia,
             providing direct access to new projects, developers and project marketing teams.
           </p>
-          <p className="font-sans text-sm text-ink-light/60 leading-relaxed">
+          <p className="font-sans text-sm text-ink-light/80 leading-relaxed">
             The platform is evolving beyond a listings portal into a more connected property ecosystem.
             Bringing together buyers, developers, agents and service providers through integrated tools,
             project insights and transaction support. Designed to be clear, user-friendly and practical,
@@ -201,13 +201,13 @@ export function Footer() {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8">
           {/* More Info */}
           <div>
-            <p className="font-mono text-label-sm uppercase tracking-widest text-ink-light/40 mb-4">
+            <p className="font-mono text-label-sm uppercase tracking-widest text-ink-light/60 mb-4">
               More Info
             </p>
             <ul className="flex flex-col gap-2.5">
               {moreInfoLinks.map((link) => (
                 <li key={link.label}>
-                  <Link href={link.href} className="font-sans text-sm text-ink-light/60 hover:text-ink-light transition-colors">
+                  <Link href={link.href} className="font-sans text-sm text-ink-light/80 hover:text-white transition-colors">
                     {link.label}
                   </Link>
                 </li>
@@ -217,13 +217,13 @@ export function Footer() {
 
           {/* Properties */}
           <div>
-            <p className="font-mono text-label-sm uppercase tracking-widest text-ink-light/40 mb-4">
+            <p className="font-mono text-label-sm uppercase tracking-widest text-ink-light/60 mb-4">
               Properties
             </p>
             <ul className="flex flex-col gap-2.5">
               {propertyLinks.map((link) => (
                 <li key={link.label}>
-                  <Link href={link.href} className="font-sans text-sm text-ink-light/60 hover:text-ink-light transition-colors">
+                  <Link href={link.href} className="font-sans text-sm text-ink-light/80 hover:text-white transition-colors">
                     {link.label}
                   </Link>
                 </li>
@@ -233,13 +233,13 @@ export function Footer() {
 
           {/* Search by State */}
           <div>
-            <p className="font-mono text-label-sm uppercase tracking-widest text-ink-light/40 mb-4">
+            <p className="font-mono text-label-sm uppercase tracking-widest text-ink-light/60 mb-4">
               Search by State
             </p>
             <ul className="flex flex-col gap-2.5">
               {stateLinks.map((link) => (
                 <li key={link.label}>
-                  <Link href={link.href} className="font-sans text-sm text-ink-light/60 hover:text-ink-light transition-colors">
+                  <Link href={link.href} className="font-sans text-sm text-ink-light/80 hover:text-white transition-colors">
                     {link.label}
                   </Link>
                 </li>
@@ -249,17 +249,17 @@ export function Footer() {
 
           {/* Talk to Us */}
           <div>
-            <p className="font-mono text-label-sm uppercase tracking-widest text-ink-light/40 mb-4">
+            <p className="font-mono text-label-sm uppercase tracking-widest text-ink-light/60 mb-4">
               Talk to Us
             </p>
             <div className="flex flex-col gap-3">
-              <a href="tel:0410313030" className="font-sans text-sm text-ink-light/60 hover:text-ink-light transition-colors">
+              <a href="tel:0410313030" className="font-sans text-sm text-ink-light/80 hover:text-white transition-colors">
                 0410 313 030
               </a>
-              <a href="mailto:info@offtheplan.com.au" className="font-sans text-sm text-ink-light/60 hover:text-ink-light transition-colors">
+              <a href="mailto:info@offtheplan.com.au" className="font-sans text-sm text-ink-light/80 hover:text-white transition-colors">
                 info@offtheplan.com.au
               </a>
-              <address className="font-sans text-sm text-ink-light/60 not-italic leading-relaxed">
+              <address className="font-sans text-sm text-ink-light/80 not-italic leading-relaxed">
                 Commercial Suite 5,<br />
                 8 Adelaide Terrace<br />
                 East Perth<br />
@@ -270,7 +270,7 @@ export function Footer() {
 
           {/* Follow */}
           <div>
-            <p className="font-mono text-label-sm uppercase tracking-widest text-ink-light/40 mb-4">
+            <p className="font-mono text-label-sm uppercase tracking-widest text-ink-light/60 mb-4">
               Follow
             </p>
             <ul className="flex flex-col gap-3">
@@ -280,9 +280,9 @@ export function Footer() {
                     href={social.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2.5 font-sans text-sm text-ink-light/60 hover:text-ink-light transition-colors"
+                    className="flex items-center gap-2.5 font-sans text-sm text-ink-light/80 hover:text-white transition-colors"
                   >
-                    <span className="text-ink-light/40">{social.icon}</span>
+                    <span className="text-ink-light/60">{social.icon}</span>
                     {social.label}
                   </a>
                 </li>
@@ -292,7 +292,7 @@ export function Footer() {
 
           {/* Newsletter */}
           <div>
-            <p className="font-mono text-label-sm uppercase tracking-widest text-ink-light/40 mb-4">
+            <p className="font-mono text-label-sm uppercase tracking-widest text-ink-light/60 mb-4">
               Newsletter
             </p>
             <NewsletterForm />
@@ -303,14 +303,14 @@ export function Footer() {
       {/* Bottom bar */}
       <div className="border-t border-ink-light/10">
         <div className="max-w-screen-xl mx-auto px-6 md:px-10 py-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
-          <div className="flex items-center gap-3 font-sans text-xs text-ink-light/30">
+          <div className="flex items-center gap-3 font-sans text-xs text-ink-light/50">
             <Link href="/sitemap.xml" className="hover:text-ink-light/60 transition-colors uppercase tracking-widest">Sitemap</Link>
             <span>|</span>
             <Link href="/privacy" className="hover:text-ink-light/60 transition-colors uppercase tracking-widest">Privacy Policy</Link>
             <span>|</span>
             <Link href="/terms" className="hover:text-ink-light/60 transition-colors uppercase tracking-widest">Terms & Conditions</Link>
           </div>
-          <p className="font-sans text-xs text-ink-light/30 uppercase tracking-widest">
+          <p className="font-sans text-xs text-ink-light/50 uppercase tracking-widest">
             Copyright {new Date().getFullYear()}
           </p>
         </div>
