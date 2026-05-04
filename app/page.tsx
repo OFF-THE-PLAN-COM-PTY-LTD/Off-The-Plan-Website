@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { PropertyCard } from "@/components/property-card";
 import { JournalCard } from "@/components/journal-card";
 import { AnimateIn } from "@/components/animate-in";
@@ -23,6 +24,7 @@ function mockDev(
   beds_max: number,
   status: "Selling now" | "Final release" | "Register interest",
   type: "Apartments" | "Townhouses" | "Houses" | "Penthouses",
+  imageUrl?: string,
 ): Development {
   return {
     id, slug, name, suburb, state, price_display, beds_min, beds_max, status, type,
@@ -30,36 +32,40 @@ function mockDev(
     price_from: null, completion_quarter: null, developer_id: null, tag: null,
     summary: null, lifestyle: null, architect: null, interiors: null, landscape: null,
     builder: null, levels: null, residence_count: null, lat: null, lng: null,
-    hero_image_url: null, brochure_url: null, is_published: true, is_featured: false,
+    hero_image_url: imageUrl ?? null, brochure_url: null, is_published: true, is_featured: false,
     created_at: "2024-01-01", updated_at: "2024-01-01",
   };
 }
 
+// Unsplash photo IDs — luxury Australian-style property imagery
+const U = (id: string) =>
+  `https://images.unsplash.com/photo-${id}?w=1200&h=800&fit=crop&auto=format&q=80`;
+
 const MOCK_TIER1: Development[] = [
-  mockDev("m1", "ellie-residences",    "Ellie Residences",    "South Yarra",  "VIC", "From $750,000",   2, 3, "Selling now", "Apartments"),
-  mockDev("m2", "wish-cove",           "Wish Cove",           "Broadbeach",   "QLD", "From $620,000",   1, 2, "Selling now", "Apartments"),
-  mockDev("m3", "arc-spa",             "Arc Spa",             "Bondi",        "NSW", "From $1,100,000", 2, 3, "Selling now", "Apartments"),
-  mockDev("m4", "saltaire-palm-beach", "Saltaire Palm Beach", "Palm Beach",   "QLD", "From $890,000",   2, 4, "Selling now", "Apartments"),
-  mockDev("m5", "jaba",                "Jaba",                "Fitzroy",      "VIC", "From $680,000",   1, 3, "Selling now", "Apartments"),
-  mockDev("m6", "lagoon-main-beach",   "Lagoon Main Beach",   "Main Beach",   "QLD", "From $820,000",   2, 3, "Selling now", "Apartments"),
+  mockDev("m1", "ellie-residences",    "Ellie Residences",    "South Yarra",  "VIC", "From $750,000",   2, 3, "Selling now", "Apartments", U("1600596542815-ffad4c1539a9")),
+  mockDev("m2", "wish-cove",           "Wish Cove",           "Broadbeach",   "QLD", "From $620,000",   1, 2, "Selling now", "Apartments", U("1613490493576-4c54b1ac4a3f")),
+  mockDev("m3", "arc-spa",             "Arc Spa",             "Bondi",        "NSW", "From $1,100,000", 2, 3, "Selling now", "Apartments", U("1560518883-ce09059eeffa")),
+  mockDev("m4", "saltaire-palm-beach", "Saltaire Palm Beach", "Palm Beach",   "QLD", "From $890,000",   2, 4, "Selling now", "Apartments", U("1600585154340-be6161a56a0c")),
+  mockDev("m5", "jaba",                "Jaba",                "Fitzroy",      "VIC", "From $680,000",   1, 3, "Selling now", "Apartments", U("1545324418-cc1a3fa10c00")),
+  mockDev("m6", "lagoon-main-beach",   "Lagoon Main Beach",   "Main Beach",   "QLD", "From $820,000",   2, 3, "Selling now", "Apartments", U("1524230572899-a752b3835840")),
 ];
 
 const MOCK_TIER2: Development[] = [
-  mockDev("m7",  "pines-blacktown",      "Pines Blacktown",      "Blacktown",   "NSW", "From $520,000", 2, 3, "Selling now", "Townhouses"),
-  mockDev("m8",  "phoenix-trust",        "Phoenix & Trust",      "Parramatta",  "NSW", "From $599,000", 1, 2, "Selling now", "Apartments"),
-  mockDev("m9",  "peligon",              "Peligon",              "West End",    "QLD", "From $489,000", 1, 2, "Selling now", "Apartments"),
-  mockDev("m10", "north-village-auburn", "North Village Auburn", "Auburn",      "NSW", "From $650,000", 1, 3, "Selling now", "Apartments"),
-  mockDev("m11", "rose-residences",      "Rose Residences",      "St Kilda",    "VIC", "From $710,000", 2, 3, "Selling now", "Apartments"),
-  mockDev("m12", "haven-collingwood",    "Haven Collingwood",    "Collingwood", "VIC", "From $580,000", 1, 2, "Selling now", "Apartments"),
-  mockDev("m13", "marina-one",           "Marina One",           "Docklands",   "VIC", "From $750,000", 1, 3, "Selling now", "Apartments"),
-  mockDev("m14", "bayview-terraces",     "Bayview Terraces",     "Manly",       "NSW", "From $980,000", 2, 4, "Selling now", "Townhouses"),
+  mockDev("m7",  "pines-blacktown",      "Pines Blacktown",      "Blacktown",   "NSW", "From $520,000", 2, 3, "Selling now", "Townhouses", U("1512917774080-9991f1c4c750")),
+  mockDev("m8",  "phoenix-trust",        "Phoenix & Trust",      "Parramatta",  "NSW", "From $599,000", 1, 2, "Selling now", "Apartments", U("1493809842364-49f25c093d1c")),
+  mockDev("m9",  "peligon",              "Peligon",              "West End",    "QLD", "From $489,000", 1, 2, "Selling now", "Apartments", U("1558618666-fcd25c85cd64")),
+  mockDev("m10", "north-village-auburn", "North Village Auburn", "Auburn",      "NSW", "From $650,000", 1, 3, "Selling now", "Apartments", U("1460317442991-0ec209397118")),
+  mockDev("m11", "rose-residences",      "Rose Residences",      "St Kilda",    "VIC", "From $710,000", 2, 3, "Selling now", "Apartments", U("1600047509807-ba8f99d2cdde")),
+  mockDev("m12", "haven-collingwood",    "Haven Collingwood",    "Collingwood", "VIC", "From $580,000", 1, 2, "Selling now", "Apartments", U("1502672260266-1c1ef2d93688")),
+  mockDev("m13", "marina-one",           "Marina One",           "Docklands",   "VIC", "From $750,000", 1, 3, "Selling now", "Apartments", U("1580587771525-78b9dba3b914")),
+  mockDev("m14", "bayview-terraces",     "Bayview Terraces",     "Manly",       "NSW", "From $980,000", 2, 4, "Selling now", "Townhouses", U("1538688525198-9b3b1c98d25d")),
 ];
 
 const CATEGORIES = [
-  { label: "Apartments",     href: "/search?type=Apartment",       gradient: "from-navy to-navy-mid"  },
-  { label: "Townhouses",     href: "/search?type=Townhouse",       gradient: "from-ink to-navy"       },
-  { label: "House & Land",   href: "/search?type=House+%26+Land",  gradient: "from-navy-mid to-ink"   },
-  { label: "New Apartments", href: "/search?type=Apartment",       gradient: "from-orange to-navy"    },
+  { label: "Apartments",     href: "/search?type=Apartment",       image: U("1460317442991-0ec209397118") },
+  { label: "Townhouses",     href: "/search?type=Townhouse",       image: U("1512917774080-9991f1c4c750") },
+  { label: "House & Land",   href: "/search?type=House+%26+Land",  image: U("1600585154340-be6161a56a0c") },
+  { label: "New Apartments", href: "/search?type=Apartment",       image: U("1545324418-cc1a3fa10c00")    },
 ];
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -184,8 +190,14 @@ export default async function HomePage() {
                 href={cat.href}
                 className="group relative h-60 overflow-hidden"
               >
-                <div className={`absolute inset-0 bg-gradient-to-br ${cat.gradient}`} />
-                <div className="absolute inset-0 bg-navy/20 group-hover:bg-navy/0 transition-colors duration-300" />
+                <Image
+                  src={cat.image}
+                  alt={cat.label}
+                  fill
+                  className="object-cover transition-transform duration-700 group-hover:scale-110"
+                  sizes="(max-width: 640px) 50vw, 25vw"
+                />
+                <div className="absolute inset-0 bg-navy/50 group-hover:bg-navy/30 transition-colors duration-500" />
                 <div className="relative h-full flex items-center justify-center">
                   <span className="font-mono text-[11px] uppercase tracking-widest text-white">
                     {cat.label}
