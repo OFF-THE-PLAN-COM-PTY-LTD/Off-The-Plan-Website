@@ -93,11 +93,8 @@ export default function CalculatorsPage() {
       {/* ── Page header ── */}
       <div className="bg-[#eeecea] border-b border-line py-14">
         <div className="container-padded">
-          <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-ink/50 mb-2">
-            Resources
-          </p>
           <h1 className="font-mono text-[2.2rem] uppercase tracking-[0.18em] text-navy font-medium">
-            Calculators
+            Resources
           </h1>
         </div>
       </div>
