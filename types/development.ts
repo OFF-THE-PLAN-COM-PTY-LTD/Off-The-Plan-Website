@@ -22,6 +22,7 @@ export interface Development {
   type: DevelopmentType | null;
   developer_id: string | null;
   tag: DevelopmentTag | null;
+  tier: string | null;
   status: DevelopmentStatus | null;
   summary: string | null;
   lifestyle: string[] | null;
