@@ -18,54 +18,43 @@ interface CalculatorMeta {
 const CALCULATORS: Record<string, CalculatorMeta> = {
   "stamp-duty": {
     title: "Stamp Duty Calculator",
-    description:
-      "Estimate stamp duty and government charges for your property purchase across all Australian states and territories, including first home buyer concessions and foreign buyer surcharges.",
+    description: "Estimate stamp duty and government charges across all Australian states and territories.",
     component: StampDutyCalculator,
   },
   "borrowing-power": {
     title: "Borrowing Power Calculator",
-    description:
-      "Find out how much you may be able to borrow based on your income, expenses, and existing financial commitments — calculated using the APRA 3% serviceability buffer.",
+    description: "Find out how much you may be able to borrow based on your income and expenses.",
     component: BorrowingPowerCalculator,
   },
   "loan-repayment": {
     title: "Loan Repayment Calculator",
-    description:
-      "Calculate your weekly, fortnightly, and monthly repayments for principal & interest or interest only loans, and see the total cost over the life of the loan.",
+    description: "Calculate your weekly, fortnightly, and monthly loan repayments.",
     component: LoanRepaymentCalculator,
   },
   "budget-planner": {
     title: "Budget Planner",
-    description:
-      "Plan your finances across income, housing, transport, living, and savings categories. See your monthly surplus or deficit at a glance.",
+    description: "Plan your finances and see your monthly surplus or deficit at a glance.",
     component: BudgetPlanner,
   },
   "loan-comparison": {
     title: "Loan Comparison Calculator",
-    description:
-      "Compare two loan products side by side — including fees — to find which option costs less over the full loan term.",
+    description: "Compare two loan products side by side to find which option costs less.",
     component: LoanComparisonCalculator,
   },
   "mortgage-switching": {
     title: "Mortgage Switching Calculator",
-    description:
-      "Calculate whether refinancing is worth it by comparing your current loan against a new one, factoring in all switching costs and your break-even point.",
+    description: "Calculate whether refinancing is worth it by comparing costs and savings.",
     component: MortgageSwitchingCalculator,
   },
 };
 
-type PageProps = {
-  params: Promise<{ slug: string }>;
-};
+type PageProps = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const calc = CALCULATORS[slug];
   if (!calc) return { title: "Not Found" };
-  return {
-    title: `${calc.title} | Resources`,
-    description: calc.description,
-  };
+  return { title: `${calc.title} | Resources`, description: calc.description };
 }
 
 export function generateStaticParams() {
@@ -75,66 +64,40 @@ export function generateStaticParams() {
 export default async function CalculatorPage({ params }: PageProps) {
   const { slug } = await params;
   const calc = CALCULATORS[slug];
-
-  if (!calc) {
-    notFound();
-  }
+  if (!calc) notFound();
 
   const Calculator = calc.component;
 
   return (
-    <div className="min-h-screen bg-cream pt-16">
-      {/* Header */}
-      <div className="bg-[#eeecea] border-b border-line py-14">
-        <div className="container-padded">
-          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink/40 mb-3">
-            Resources
-          </p>
-          <h1 className="font-mono text-[2rem] uppercase tracking-[0.14em] text-navy font-medium leading-tight">
-            {calc.title}
-          </h1>
-        </div>
+    <div className="min-h-screen bg-white pt-16">
+      {/* ── Dark navy header with orange title — matches reference ── */}
+      <div className="bg-navy px-6 md:px-16 pt-10 pb-8">
+        <h1 className="font-sans font-bold text-orange text-[1.8rem] md:text-[2.2rem] uppercase tracking-[0.1em] leading-tight">
+          {calc.title}
+        </h1>
+        <div className="border-b border-white/20 mt-6" />
       </div>
 
-      {/* Intro strip */}
-      <div className="bg-navy py-10">
-        <div className="container-padded max-w-3xl">
-          <p className="font-sans text-[16px] text-white/80 leading-relaxed">
-            {calc.description}
-          </p>
-        </div>
+      {/* ── Calculator content ── */}
+      <div className="bg-white px-6 md:px-16 py-10">
+        <Calculator />
       </div>
 
-      {/* Calculator */}
-      <div className="bg-white">
-        <div className="container-padded py-0">
-          <div className="border-x border-line">
-            <Calculator />
+      {/* ── Disclaimer ── */}
+      <div className="bg-[#f5f4f1] border-t border-line px-6 md:px-16 py-8">
+        <p className="font-sans text-[11px] text-ink/40 leading-relaxed max-w-4xl">
+          Note: The information provided by the calculator is intended to provide illustrative examples based on stated assumptions and your inputs. Calculations are meant as estimates only and it is advised that you consult with a finance broker about your specific circumstances.
+        </p>
+        <div className="mt-6 flex items-center justify-between flex-wrap gap-4">
+          <div className="flex gap-2">
+            <Link href="/resources/calculators" className="inline-flex items-center gap-1.5 bg-navy text-white font-sans text-[12px] px-4 py-2 hover:bg-navy/80 transition-colors">
+              ← Back to Calculators
+            </Link>
           </div>
-        </div>
-      </div>
-
-      {/* Disclaimer */}
-      <div className="bg-white border-t border-line">
-        <div className="container-padded py-8">
-          <p className="font-sans text-[11px] text-ink/40 leading-relaxed max-w-3xl">
-            <strong className="font-semibold text-ink/50">Disclaimer:</strong> This calculator provides estimates only and is intended as a guide. Results do not constitute financial, legal, or taxation advice. Stamp duty rates, concessions, and thresholds change regularly and may vary based on individual circumstances. Always consult a qualified professional before making financial decisions. Off The Plan accepts no liability for the accuracy or completeness of the results provided.
-          </p>
-        </div>
-      </div>
-
-      {/* Back link */}
-      <div className="bg-[#f5f4f1] border-t border-line">
-        <div className="container-padded py-8">
-          <Link
-            href="/resources/calculators"
-            className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-ink/50 hover:text-orange transition-colors"
-          >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-              <path d="M9 2L4 7l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            Back to Calculators
-          </Link>
+          <div className="border border-navy px-4 py-2">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.png" alt="Off The Plan" className="h-8 object-contain" />
+          </div>
         </div>
       </div>
     </div>

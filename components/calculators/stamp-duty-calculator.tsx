@@ -1,101 +1,83 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { cn } from "@/lib/utils";
 
-type State = "NSW" | "VIC" | "QLD" | "WA" | "SA" | "TAS" | "ACT" | "NT";
-type PropertyType = "established" | "new" | "off-the-plan" | "vacant-land";
-type BuyerType = "first-home" | "owner-occupier" | "investor";
+type State = "ACT" | "NSW" | "NT" | "QLD" | "SA" | "TAS" | "VIC" | "WA";
+type PropertyType = "established" | "new" | "vacant-land";
+type Occupancy = "primary" | "investment";
 
-interface FormState {
-  state: State;
-  purchasePrice: string;
-  propertyType: PropertyType;
-  buyerType: BuyerType;
-  foreignBuyer: boolean;
+const STATES: State[] = ["ACT", "NSW", "NT", "QLD", "SA", "TAS", "VIC", "WA"];
+
+const fmt = (n: number) =>
+  "$" + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+// ── Stamp duty bracket calculators ────────────────────────────────────────────
+
+function calcNSW(p: number) {
+  if (p <= 14000) return p * 0.0125;
+  if (p <= 30000) return 175 + (p - 14000) * 0.015;
+  if (p <= 80000) return 415 + (p - 30000) * 0.0175;
+  if (p <= 300000) return 1290 + (p - 80000) * 0.035;
+  if (p <= 1000000) return 8990 + (p - 300000) * 0.045;
+  if (p <= 3000000) return 40490 + (p - 1000000) * 0.055;
+  return 150490 + (p - 3000000) * 0.07;
+}
+function calcVIC(p: number) {
+  if (p > 960000) return p * 0.055;
+  if (p <= 25000) return p * 0.014;
+  if (p <= 130000) return 350 + (p - 25000) * 0.024;
+  return 2870 + (p - 130000) * 0.06;
+}
+function calcQLD(p: number) {
+  if (p <= 5000) return 0;
+  if (p <= 75000) return (p - 5000) * 0.015;
+  if (p <= 540000) return 1050 + (p - 75000) * 0.035;
+  if (p <= 1000000) return 17325 + (p - 540000) * 0.045;
+  return 38025 + (p - 1000000) * 0.0575;
+}
+function calcWA(p: number) {
+  if (p <= 80000) return p * 0.019;
+  if (p <= 100000) return 1520 + (p - 80000) * 0.0285;
+  if (p <= 250000) return 2090 + (p - 100000) * 0.038;
+  if (p <= 500000) return 7790 + (p - 250000) * 0.0475;
+  return 19665 + (p - 500000) * 0.0515;
+}
+function calcSA(p: number) {
+  if (p <= 12000) return p * 0.01;
+  if (p <= 30000) return 120 + (p - 12000) * 0.02;
+  if (p <= 50000) return 480 + (p - 30000) * 0.03;
+  if (p <= 100000) return 1080 + (p - 50000) * 0.035;
+  if (p <= 200000) return 2830 + (p - 100000) * 0.04;
+  if (p <= 250000) return 6830 + (p - 200000) * 0.0425;
+  if (p <= 300000) return 8955 + (p - 250000) * 0.0475;
+  if (p <= 500000) return 11330 + (p - 300000) * 0.05;
+  return 21330 + (p - 500000) * 0.055;
+}
+function calcTAS(p: number) {
+  if (p <= 3000) return 50;
+  if (p <= 25000) return 50 + (p - 3000) * 0.0175;
+  if (p <= 75000) return 435 + (p - 25000) * 0.0225;
+  if (p <= 200000) return 1560 + (p - 75000) * 0.035;
+  if (p <= 375000) return 5935 + (p - 200000) * 0.04;
+  if (p <= 725000) return 12935 + (p - 375000) * 0.0425;
+  return 27810 + (p - 725000) * 0.045;
+}
+function calcACT(p: number) {
+  if (p <= 200000) return p * 0.006;
+  if (p <= 300000) return 1200 + (p - 200000) * 0.022;
+  if (p <= 500000) return 3400 + (p - 300000) * 0.034;
+  if (p <= 750000) return 10200 + (p - 500000) * 0.0432;
+  if (p <= 1000000) return 21000 + (p - 750000) * 0.059;
+  return 35750 + (p - 1000000) * 0.064;
+}
+function calcNT(p: number) {
+  const v = p / 1000;
+  if (p <= 525000) return Math.max(0, 0.06571441 * v * v + 15 * v);
+  return p * 0.0495;
 }
 
-interface Results {
-  stampDuty: number;
-  transferFee: number;
-  mortgageFee: number;
-  total: number;
-  concessionApplied: boolean;
-  concessionNote: string;
-}
-
-function calcNSW(price: number): number {
-  if (price <= 14000) return price * 0.0125;
-  if (price <= 30000) return 175 + (price - 14000) * 0.015;
-  if (price <= 80000) return 415 + (price - 30000) * 0.0175;
-  if (price <= 300000) return 1290 + (price - 80000) * 0.035;
-  if (price <= 1000000) return 8990 + (price - 300000) * 0.045;
-  if (price <= 3000000) return 40490 + (price - 1000000) * 0.055;
-  return 150490 + (price - 3000000) * 0.07;
-}
-
-function calcVIC(price: number): number {
-  if (price > 960000) return price * 0.055;
-  if (price <= 25000) return price * 0.014;
-  if (price <= 130000) return 350 + (price - 25000) * 0.024;
-  return 2870 + (price - 130000) * 0.06;
-}
-
-function calcQLD(price: number): number {
-  if (price <= 5000) return 0;
-  if (price <= 75000) return (price - 5000) * 0.015;
-  if (price <= 540000) return 1050 + (price - 75000) * 0.035;
-  if (price <= 1000000) return 17325 + (price - 540000) * 0.045;
-  return 38025 + (price - 1000000) * 0.0575;
-}
-
-function calcWA(price: number): number {
-  if (price <= 80000) return price * 0.019;
-  if (price <= 100000) return 1520 + (price - 80000) * 0.0285;
-  if (price <= 250000) return 2090 + (price - 100000) * 0.038;
-  if (price <= 500000) return 7790 + (price - 250000) * 0.0475;
-  return 19665 + (price - 500000) * 0.0515;
-}
-
-function calcSA(price: number): number {
-  if (price <= 12000) return price * 0.01;
-  if (price <= 30000) return 120 + (price - 12000) * 0.02;
-  if (price <= 50000) return 480 + (price - 30000) * 0.03;
-  if (price <= 100000) return 1080 + (price - 50000) * 0.035;
-  if (price <= 200000) return 2830 + (price - 100000) * 0.04;
-  if (price <= 250000) return 6830 + (price - 200000) * 0.0425;
-  if (price <= 300000) return 8955 + (price - 250000) * 0.0475;
-  if (price <= 500000) return 11330 + (price - 300000) * 0.05;
-  return 21330 + (price - 500000) * 0.055;
-}
-
-function calcTAS(price: number): number {
-  if (price <= 3000) return 50;
-  if (price <= 25000) return 50 + (price - 3000) * 0.0175;
-  if (price <= 75000) return 435 + (price - 25000) * 0.0225;
-  if (price <= 200000) return 1560 + (price - 75000) * 0.035;
-  if (price <= 375000) return 5935 + (price - 200000) * 0.04;
-  if (price <= 725000) return 12935 + (price - 375000) * 0.0425;
-  return 27810 + (price - 725000) * 0.045;
-}
-
-function calcACT(price: number): number {
-  if (price <= 200000) return price * 0.006;
-  if (price <= 300000) return 1200 + (price - 200000) * 0.022;
-  if (price <= 500000) return 3400 + (price - 300000) * 0.034;
-  if (price <= 750000) return 10200 + (price - 500000) * 0.0432;
-  if (price <= 1000000) return 21000 + (price - 750000) * 0.059;
-  return 35750 + (price - 1000000) * 0.064;
-}
-
-function calcNT(price: number): number {
-  if (price <= 525000) {
-    const v = price / 1000;
-    return 0.06571441 * v * v + 15 * v;
-  }
-  return price * 0.0495;
-}
-
-function calcBaseStampDuty(state: State, price: number): number {
+function baseStampDuty(state: State, price: number): number {
   switch (state) {
     case "NSW": return calcNSW(price);
     case "VIC": return calcVIC(price);
@@ -108,232 +90,212 @@ function calcBaseStampDuty(state: State, price: number): number {
   }
 }
 
-function applyFHBConcession(
-  state: State,
-  price: number,
-  propertyType: PropertyType,
-  base: number
-): { duty: number; applied: boolean; note: string } {
-  if (state === "NSW" && price <= 650000 && (propertyType === "new" || propertyType === "off-the-plan")) {
-    return { duty: 0, applied: true, note: "NSW FHB exemption: no stamp duty on new homes up to $650k" };
-  }
-  if (state === "VIC" && price <= 600000) {
-    return { duty: 0, applied: true, note: "VIC FHB exemption: no stamp duty on properties up to $600k" };
-  }
-  if (state === "QLD" && price <= 500000 && (propertyType === "new" || propertyType === "off-the-plan")) {
-    return { duty: 0, applied: true, note: "QLD FHB exemption: no stamp duty on new homes up to $500k" };
-  }
-  if (state === "WA" && price <= 430000) {
-    return { duty: 0, applied: true, note: "WA FHB exemption: no stamp duty on properties up to $430k" };
-  }
-  if (state === "SA" && price <= 400000 && (propertyType === "new" || propertyType === "off-the-plan")) {
-    const rebate = Math.min(base, 15500);
-    return { duty: Math.max(0, base - rebate), applied: true, note: "SA FHB partial rebate applied (up to $15,500)" };
-  }
-  return { duty: base, applied: false, note: "" };
+function fhbGrant(state: State): number {
+  const grants: Partial<Record<State, number>> = {
+    NSW: 10000, VIC: 10000, QLD: 30000, WA: 10000, SA: 15000, TAS: 20000, ACT: 0, NT: 10000,
+  };
+  return grants[state] ?? 0;
 }
 
-function applyForeignSurcharge(state: State, price: number, duty: number): number {
-  switch (state) {
-    case "NSW": return duty + price * 0.08;
-    case "VIC": return duty + price * 0.08;
-    case "QLD": return duty + price * 0.07;
-    case "SA": return duty + price * 0.07;
-    case "ACT": return duty + price * 0.06;
-    default: return duty;
-  }
+// ── Toggle component ──────────────────────────────────────────────────────────
+
+function Toggle<T extends string>({
+  options, value, onChange, label,
+}: {
+  options: { label: string; value: T }[];
+  value: T;
+  onChange: (v: T) => void;
+  label: string;
+}) {
+  return (
+    <div className="flex items-center justify-between border-b border-[#e8e8e8] py-2.5">
+      <span className="font-sans text-[13px] text-navy">{label}</span>
+      <div className="flex border border-[#ccc] overflow-hidden">
+        {options.map((opt) => (
+          <button
+            key={opt.value}
+            onClick={() => onChange(opt.value)}
+            className={cn(
+              "px-5 py-1.5 font-sans text-[13px] transition-colors",
+              value === opt.value
+                ? "bg-orange text-white"
+                : "bg-white text-navy hover:bg-orange/10",
+            )}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 }
 
-function fmt(n: number): string {
-  return "$" + Math.round(n).toLocaleString("en-AU");
+function NumberButtons({
+  label, value, onChange, options,
+}: {
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+  options: number[];
+}) {
+  return (
+    <div className="flex items-center justify-between border-b border-[#e8e8e8] py-2.5">
+      <span className="font-sans text-[13px] text-navy">{label}</span>
+      <div className="flex border border-[#ccc] overflow-hidden">
+        {options.map((n) => (
+          <button
+            key={n}
+            onClick={() => onChange(n)}
+            className={cn(
+              "w-9 py-1.5 font-sans text-[13px] text-center border-r last:border-r-0 border-[#ccc] transition-colors",
+              value === n ? "bg-orange text-white" : "bg-white text-navy hover:bg-orange/10",
+            )}
+          >
+            {n === 5 ? "5+" : n}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 }
 
-const STATES: State[] = ["NSW", "VIC", "QLD", "WA", "SA", "TAS", "ACT", "NT"];
+// ── Main component ────────────────────────────────────────────────────────────
 
 export default function StampDutyCalculator() {
-  const [form, setForm] = useState<FormState>({
-    state: "NSW",
-    purchasePrice: "",
-    propertyType: "established",
-    buyerType: "owner-occupier",
-    foreignBuyer: false,
+  const [state, setState] = useState<State>("ACT");
+  const [price, setPrice] = useState("350000");
+  const [firstHome, setFirstHome] = useState<"no" | "yes">("no");
+  const [occupancy, setOccupancy] = useState<Occupancy>("primary");
+  const [purchaseType, setPurchaseType] = useState<PropertyType>("established");
+  const [pensioner, setPensioner] = useState<"no" | "yes">("no");
+  const [dependants, setDependants] = useState(0);
+
+  const [result, setResult] = useState({
+    stampDuty: 0, mortgageReg: 178, transferFee: 479, total: 0, grant: 0,
   });
-  const [results, setResults] = useState<Results | null>(null);
 
-  function calculate() {
-    const price = parseFloat(form.purchasePrice.replace(/,/g, ""));
-    if (!price || price <= 0) return;
+  useEffect(() => {
+    const p = parseFloat(price.replace(/,/g, "")) || 0;
+    if (p <= 0) return;
 
-    let base = calcBaseStampDuty(form.state, price);
-    let concessionApplied = false;
-    let concessionNote = "";
+    let duty = baseStampDuty(state, p);
 
-    if (form.buyerType === "first-home") {
-      const result = applyFHBConcession(form.state, price, form.propertyType, base);
-      base = result.duty;
-      concessionApplied = result.applied;
-      concessionNote = result.note;
+    // FHB concessions
+    if (firstHome === "yes") {
+      if (state === "NSW" && p <= 800000 && purchaseType !== "established") duty = 0;
+      else if (state === "VIC" && p <= 600000) duty = 0;
+      else if (state === "VIC" && p <= 750000) duty *= (750000 - p) / 150000;
+      else if (state === "QLD" && p <= 500000 && purchaseType !== "established") duty = 0;
+      else if (state === "WA" && p <= 430000) duty = 0;
     }
 
-    let stampDuty = base;
-    if (form.foreignBuyer) {
-      stampDuty = applyForeignSurcharge(form.state, price, base);
+    // Pensioner concession (rough - varies widely)
+    if (pensioner === "yes" && occupancy === "primary") {
+      duty = Math.max(0, duty * 0.5);
     }
 
-    const transferFee = 143 + Math.floor(price / 10000) * 2.5;
-    const mortgageFee = 143;
+    const mortgageReg = 143 + Math.min(Math.floor(p / 10000) * 2.5, 500);
+    const transferFee = 143 + Math.min(Math.floor(p / 10000) * 4, 2000);
+    const grant = firstHome === "yes" ? fhbGrant(state) : 0;
 
-    setResults({
-      stampDuty,
+    setResult({
+      stampDuty: duty,
+      mortgageReg,
       transferFee,
-      mortgageFee,
-      total: stampDuty + transferFee + mortgageFee,
-      concessionApplied,
-      concessionNote,
+      total: duty + mortgageReg + transferFee,
+      grant,
     });
-  }
+  }, [state, price, firstHome, occupancy, purchaseType, pensioner, dependants]);
+
+  const inputRowCls = "flex items-center justify-between border-b border-[#e8e8e8] py-2.5";
+  const inputCls = "bg-[#f0f0f0] border-0 font-sans text-[13px] px-3 py-1.5 text-right w-[140px] outline-none focus:ring-1 focus:ring-orange/40";
 
   return (
-    <div className="grid lg:grid-cols-2 gap-0">
-      {/* Form */}
-      <div className="p-8 border-b lg:border-b-0 lg:border-r border-line">
-        <p className="font-mono text-[11px] uppercase tracking-widest text-ink/40 mb-3 pb-2 border-b border-line">
-          Property Details
-        </p>
+    <div className="max-w-4xl">
+      <h2 className="font-sans font-semibold text-navy text-[1.1rem] mb-1">
+        Stamp Duty Calculator 2025 – 2026
+      </h2>
 
-        <div className="space-y-5">
-          <div>
-            <label className="block font-mono text-[10px] uppercase tracking-widest text-ink/60 mb-1">
-              State / Territory
-            </label>
-            <select
-              value={form.state}
-              onChange={(e) => setForm({ ...form, state: e.target.value as State })}
-              className="w-full border border-line bg-white font-sans text-[14px] px-3 py-2.5 outline-none focus:border-orange/60"
-            >
-              {STATES.map((s) => <option key={s} value={s}>{s}</option>)}
-            </select>
-          </div>
+      {/* State tabs */}
+      <div className="flex flex-wrap gap-0 mb-5 border border-[#ccc] w-fit overflow-hidden">
+        {STATES.map((s) => (
+          <button
+            key={s}
+            onClick={() => setState(s)}
+            className={cn(
+              "px-5 py-2 font-sans text-[13px] border-r last:border-r-0 border-[#ccc] transition-colors",
+              state === s ? "bg-orange text-white" : "bg-white text-navy hover:bg-orange/10",
+            )}
+          >
+            {s}
+          </button>
+        ))}
+      </div>
 
-          <div>
-            <label className="block font-mono text-[10px] uppercase tracking-widest text-ink/60 mb-1">
-              Purchase Price ($)
-            </label>
-            <input
-              type="number"
-              value={form.purchasePrice}
-              onChange={(e) => setForm({ ...form, purchasePrice: e.target.value })}
-              placeholder="750000"
-              className="w-full border border-line bg-white font-sans text-[14px] px-3 py-2.5 outline-none focus:border-orange/60"
-            />
-          </div>
-
-          <div>
-            <label className="block font-mono text-[10px] uppercase tracking-widest text-ink/60 mb-1">
-              Property Type
-            </label>
-            <select
-              value={form.propertyType}
-              onChange={(e) => setForm({ ...form, propertyType: e.target.value as PropertyType })}
-              className="w-full border border-line bg-white font-sans text-[14px] px-3 py-2.5 outline-none focus:border-orange/60"
-            >
-              <option value="established">Established Home</option>
-              <option value="new">New Home</option>
-              <option value="off-the-plan">Off-the-Plan</option>
-              <option value="vacant-land">Vacant Land</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block font-mono text-[10px] uppercase tracking-widest text-ink/60 mb-1">
-              Buyer Type
-            </label>
-            <select
-              value={form.buyerType}
-              onChange={(e) => setForm({ ...form, buyerType: e.target.value as BuyerType })}
-              className="w-full border border-line bg-white font-sans text-[14px] px-3 py-2.5 outline-none focus:border-orange/60"
-            >
-              <option value="first-home">First Home Buyer</option>
-              <option value="owner-occupier">Owner Occupier</option>
-              <option value="investor">Investor</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block font-mono text-[10px] uppercase tracking-widest text-ink/60 mb-2">
-              Foreign Buyer
-            </label>
-            <div className="flex gap-6">
-              {([false, true] as const).map((val) => (
-                <label key={String(val)} className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="foreignBuyer"
-                    checked={form.foreignBuyer === val}
-                    onChange={() => setForm({ ...form, foreignBuyer: val })}
-                    className="accent-orange"
-                  />
-                  <span className="font-sans text-[14px]">{val ? "Yes" : "No"}</span>
-                </label>
-              ))}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+        {/* ── Inputs ── */}
+        <div>
+          <p className="text-orange font-sans font-semibold text-[15px] mb-3">Enter your details</p>
+          <div className="space-y-0">
+            <Toggle label="Are you first home buyer" options={[{ label: "No", value: "no" }, { label: "Yes", value: "yes" }]} value={firstHome} onChange={setFirstHome} />
+            <div className={inputRowCls}>
+              <span className="font-sans text-[13px] text-navy">Value of Property</span>
+              <input type="number" value={price} onChange={e => setPrice(e.target.value)} className={inputCls} />
             </div>
+            <Toggle label="Property type" options={[{ label: "Primary residence", value: "primary" }, { label: "Investment", value: "investment" }]} value={occupancy} onChange={setOccupancy} />
+            <Toggle
+              label="Are you purchasing"
+              options={[
+                { label: "Established Home", value: "established" },
+                { label: "New Home", value: "new" },
+                { label: "Vacant Land", value: "vacant-land" },
+              ]}
+              value={purchaseType}
+              onChange={setPurchaseType}
+            />
+            <Toggle label="Eligible pensioner?" options={[{ label: "No", value: "no" }, { label: "Yes", value: "yes" }]} value={pensioner} onChange={setPensioner} />
+            <NumberButtons label="Number of dependent children" value={dependants} onChange={setDependants} options={[0, 1, 2, 3, 4, 5]} />
           </div>
         </div>
 
-        <button
-          onClick={calculate}
-          className="mt-8 bg-orange text-white font-mono text-[11px] uppercase tracking-widest px-8 py-3 hover:bg-orange/90 transition-colors"
-        >
-          Calculate
-        </button>
-      </div>
-
-      {/* Results */}
-      <div className="p-8 bg-navy flex flex-col justify-center min-h-[400px]">
-        {results ? (
-          <div className="space-y-6">
+        {/* ── Results ── */}
+        <div>
+          <div className="grid grid-cols-2 gap-6">
+            {/* Government Fees */}
             <div>
-              <p className="font-mono text-[10px] uppercase tracking-widest text-white/50 mb-1">Stamp Duty</p>
-              <p className="font-mono text-[2.2rem] text-orange font-medium">{fmt(results.stampDuty)}</p>
-            </div>
-
-            <div className="border-t border-white/10 pt-5 space-y-3">
-              <div className="flex justify-between">
-                <span className="font-sans text-[13px] text-white/60">Transfer Registration Fee</span>
-                <span className="font-mono text-[13px] text-white">{fmt(results.transferFee)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-sans text-[13px] text-white/60">Mortgage Registration Fee</span>
-                <span className="font-mono text-[13px] text-white">{fmt(results.mortgageFee)}</span>
-              </div>
-            </div>
-
-            <div className="border-t border-white/10 pt-5">
-              <div className="flex justify-between items-end">
-                <span className="font-mono text-[10px] uppercase tracking-widest text-white/50">Total Government Charges</span>
-                <span className="font-mono text-[1.4rem] text-white font-medium">{fmt(results.total)}</span>
+              <p className="text-orange font-sans font-semibold text-[15px] border-b border-orange pb-1 mb-3">Government Fees</p>
+              <div className="space-y-2">
+                {[
+                  { label: "Stamp Duty on Property", value: result.stampDuty },
+                  { label: "Mortgage Registration", value: result.mortgageReg },
+                  { label: "Transfer Fee", value: result.transferFee },
+                ].map(row => (
+                  <div key={row.label} className="flex justify-between text-[13px] font-sans border-b border-[#f0f0f0] pb-1.5">
+                    <span className="text-navy">{row.label}</span>
+                    <span className="text-ink font-medium">{fmt(row.value)}</span>
+                  </div>
+                ))}
+                <div className="flex justify-between text-[13px] font-sans pt-1">
+                  <span className="text-orange font-semibold">Total Government Fees</span>
+                  <span className="text-orange font-semibold">{fmt(result.total)}</span>
+                </div>
               </div>
             </div>
 
-            {results.concessionApplied && (
-              <div className="bg-orange/10 border border-orange/30 px-4 py-3 mt-2">
-                <p className="font-sans text-[12px] text-orange/90 leading-relaxed">{results.concessionNote}</p>
+            {/* Government Grant */}
+            <div>
+              <p className="text-orange font-sans font-semibold text-[15px] border-b border-orange pb-1 mb-3">Government Grant</p>
+              <div className="flex justify-between text-[13px] font-sans border-b border-[#f0f0f0] pb-1.5">
+                <span className="text-navy">First Home Owner Grant:</span>
+                <span className="text-ink font-medium">{fmt(result.grant)}</span>
               </div>
-            )}
-
-            {form.foreignBuyer && (
-              <div className="bg-white/5 border border-white/10 px-4 py-3">
-                <p className="font-sans text-[12px] text-white/50 leading-relaxed">Foreign buyer surcharge applied for {form.state}.</p>
+              <div className="flex justify-between text-[13px] font-sans pt-1">
+                <span className="text-orange font-semibold">Total Government Grant</span>
+                <span className="text-orange font-semibold">{fmt(result.grant)}</span>
               </div>
-            )}
+            </div>
           </div>
-        ) : (
-          <div className="text-center">
-            <p className="font-mono text-[11px] uppercase tracking-widest text-white/30">
-              Enter details and calculate
-            </p>
-          </div>
-        )}
+        </div>
       </div>
     </div>
   );

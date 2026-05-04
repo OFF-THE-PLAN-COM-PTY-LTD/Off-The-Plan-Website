@@ -1,226 +1,209 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-interface LoanInput {
-  amount: string;
-  interestRate: string;
-  loanTerm: string;
-  upfrontFee: string;
+const fmt = (n: number) =>
+  "$" + Math.round(Math.max(0, n)).toLocaleString("en-AU");
+
+const fmtDec = (n: number) =>
+  "$" + Math.max(0, n).toLocaleString("en-AU", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
+interface LoanParams {
+  rate: string;
+  term: string;
   monthlyFee: string;
+  upfrontFee: string;
 }
 
 interface LoanResult {
-  monthlyRepayment: number;
+  monthly: number;
   totalInterest: number;
   totalFees: number;
   totalCost: number;
 }
 
-function calcLoan(input: LoanInput): LoanResult | null {
-  const P = parseFloat(input.amount.replace(/,/g, ""));
-  const annualRate = parseFloat(input.interestRate);
-  const years = parseInt(input.loanTerm) || 30;
-  const upfront = parseFloat(input.upfrontFee) || 0;
-  const monthly = parseFloat(input.monthlyFee) || 0;
-
-  if (!P || P <= 0 || !annualRate) return null;
-
-  const r = annualRate / 12 / 100;
-  const n = years * 12;
-  const monthlyRepayment = P * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
-  const totalRepaid = monthlyRepayment * n;
-  const totalInterest = totalRepaid - P;
-  const totalFees = upfront + monthly * n;
-  const totalCost = totalRepaid + totalFees;
-
-  return { monthlyRepayment, totalInterest, totalFees, totalCost };
+function calcLoan(principal: number, params: LoanParams): LoanResult {
+  const r = (parseFloat(params.rate) || 0) / 12 / 100;
+  const n = (parseInt(params.term) || 30) * 12;
+  const monthly = r > 0 ? principal * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1) : 0;
+  const totalInterest = monthly * n - principal;
+  const upfront = parseFloat(params.upfrontFee) || 0;
+  const mFee = parseFloat(params.monthlyFee) || 0;
+  const totalFees = upfront + mFee * n;
+  return {
+    monthly,
+    totalInterest,
+    totalFees,
+    totalCost: monthly * n + totalFees,
+  };
 }
 
-function fmt(n: number): string {
-  return "$" + Math.round(n).toLocaleString("en-AU");
-}
+const inputCls =
+  "bg-[#f0f0f0] border-0 font-sans text-[13px] px-3 py-1.5 text-right w-[120px] outline-none focus:ring-1 focus:ring-orange/40";
+const rowCls = "flex items-center justify-between border-b border-[#e8e8e8] py-2.5";
 
-function fmtDec(n: number): string {
-  return "$" + n.toLocaleString("en-AU", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
-const DEFAULT_LOAN: LoanInput = {
-  amount: "",
-  interestRate: "",
-  loanTerm: "30",
-  upfrontFee: "0",
-  monthlyFee: "0",
-};
-
-export default function LoanComparisonCalculator() {
-  const [loan1, setLoan1] = useState<LoanInput>({ ...DEFAULT_LOAN });
-  const [loan2, setLoan2] = useState<LoanInput>({ ...DEFAULT_LOAN });
-  const [results, setResults] = useState<{ r1: LoanResult | null; r2: LoanResult | null } | null>(null);
-
-  function calculate() {
-    setResults({
-      r1: calcLoan(loan1),
-      r2: calcLoan(loan2),
-    });
-  }
-
-  function LoanInputFields({
-    label,
-    value,
-    onChange,
-  }: {
-    label: string;
-    value: LoanInput;
-    onChange: (v: LoanInput) => void;
-  }) {
-    return (
-      <div>
-        <p className="font-mono text-[11px] uppercase tracking-widest text-ink/40 mb-3 pb-2 border-b border-line">
-          {label}
-        </p>
-        <div className="space-y-4">
-          <div>
-            <label className="block font-mono text-[10px] uppercase tracking-widest text-ink/60 mb-1">
-              Loan Amount ($)
-            </label>
-            <input
-              type="number"
-              value={value.amount}
-              onChange={(e) => onChange({ ...value, amount: e.target.value })}
-              placeholder="500000"
-              className="w-full border border-line bg-white font-sans text-[14px] px-3 py-2.5 outline-none focus:border-orange/60"
-            />
-          </div>
-          <div>
-            <label className="block font-mono text-[10px] uppercase tracking-widest text-ink/60 mb-1">
-              Interest Rate (%)
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              value={value.interestRate}
-              onChange={(e) => onChange({ ...value, interestRate: e.target.value })}
-              placeholder="6.50"
-              className="w-full border border-line bg-white font-sans text-[14px] px-3 py-2.5 outline-none focus:border-orange/60"
-            />
-          </div>
-          <div>
-            <label className="block font-mono text-[10px] uppercase tracking-widest text-ink/60 mb-1">
-              Loan Term (years)
-            </label>
-            <input
-              type="number"
-              value={value.loanTerm}
-              onChange={(e) => onChange({ ...value, loanTerm: e.target.value })}
-              className="w-full border border-line bg-white font-sans text-[14px] px-3 py-2.5 outline-none focus:border-orange/60"
-            />
-          </div>
-          <div>
-            <label className="block font-mono text-[10px] uppercase tracking-widest text-ink/60 mb-1">
-              Upfront Fee ($)
-            </label>
-            <input
-              type="number"
-              value={value.upfrontFee}
-              onChange={(e) => onChange({ ...value, upfrontFee: e.target.value })}
-              className="w-full border border-line bg-white font-sans text-[14px] px-3 py-2.5 outline-none focus:border-orange/60"
-            />
-          </div>
-          <div>
-            <label className="block font-mono text-[10px] uppercase tracking-widest text-ink/60 mb-1">
-              Monthly Fee ($)
-            </label>
-            <input
-              type="number"
-              value={value.monthlyFee}
-              onChange={(e) => onChange({ ...value, monthlyFee: e.target.value })}
-              className="w-full border border-line bg-white font-sans text-[14px] px-3 py-2.5 outline-none focus:border-orange/60"
-            />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const r1 = results?.r1;
-  const r2 = results?.r2;
-  const saving = r1 && r2 ? r1.totalCost - r2.totalCost : null;
-
+function LoanColumn({
+  label, params, onChange,
+}: {
+  label: string;
+  params: LoanParams;
+  onChange: (p: LoanParams) => void;
+}) {
   return (
     <div>
-      {/* Inputs */}
-      <div className="grid md:grid-cols-2 gap-0 border-b border-line">
-        <div className="p-8 border-b md:border-b-0 md:border-r border-line">
-          <LoanInputFields label="Loan 1" value={loan1} onChange={setLoan1} />
+      <p className="text-orange font-sans font-semibold text-[15px] mb-3">{label}</p>
+      <div className="space-y-0">
+        <div className={rowCls}>
+          <span className="font-sans text-[13px] text-navy">Interest rate (%)</span>
+          <input
+            type="number"
+            step="0.01"
+            value={params.rate}
+            onChange={e => onChange({ ...params, rate: e.target.value })}
+            placeholder="6.50"
+            className={inputCls}
+          />
         </div>
-        <div className="p-8">
-          <LoanInputFields label="Loan 2" value={loan2} onChange={setLoan2} />
+        <div className={rowCls}>
+          <span className="font-sans text-[13px] text-navy">Loan term (years)</span>
+          <select
+            value={params.term}
+            onChange={e => onChange({ ...params, term: e.target.value })}
+            className="bg-[#f0f0f0] border-0 font-sans text-[13px] px-3 py-1.5 text-right w-[120px] outline-none focus:ring-1 focus:ring-orange/40 cursor-pointer"
+          >
+            {[5, 10, 15, 20, 25, 30].map(y => (
+              <option key={y} value={y}>{y} years</option>
+            ))}
+          </select>
+        </div>
+        <div className={rowCls}>
+          <span className="font-sans text-[13px] text-navy">Monthly fee</span>
+          <input
+            type="number"
+            value={params.monthlyFee}
+            onChange={e => onChange({ ...params, monthlyFee: e.target.value })}
+            placeholder="0"
+            className={inputCls}
+          />
+        </div>
+        <div className={rowCls}>
+          <span className="font-sans text-[13px] text-navy">Upfront fee</span>
+          <input
+            type="number"
+            value={params.upfrontFee}
+            onChange={e => onChange({ ...params, upfrontFee: e.target.value })}
+            placeholder="0"
+            className={inputCls}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ResultColumn({
+  label, result,
+}: {
+  label: string;
+  result: LoanResult;
+}) {
+  return (
+    <div>
+      <p className="text-orange font-sans font-semibold text-[15px] border-b border-orange pb-1 mb-3">{label}</p>
+      <div className="space-y-2">
+        {[
+          { label: "Monthly repayment", value: fmtDec(result.monthly) },
+          { label: "Total interest", value: fmt(result.totalInterest) },
+          { label: "Total fees", value: fmt(result.totalFees) },
+        ].map(row => (
+          <div key={row.label} className="flex justify-between text-[13px] font-sans border-b border-[#f0f0f0] pb-1.5">
+            <span className="text-navy">{row.label}</span>
+            <span className="text-ink font-medium">{row.value}</span>
+          </div>
+        ))}
+        <div className="flex justify-between text-[13px] font-sans pt-1">
+          <span className="text-orange font-semibold">Total cost</span>
+          <span className="text-orange font-semibold">{fmt(result.totalCost)}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function LoanComparisonCalculator() {
+  const [loanAmount, setLoanAmount] = useState("500000");
+  const [loan1, setLoan1] = useState<LoanParams>({ rate: "6.50", term: "30", monthlyFee: "0", upfrontFee: "0" });
+  const [loan2, setLoan2] = useState<LoanParams>({ rate: "5.99", term: "30", monthlyFee: "10", upfrontFee: "300" });
+  const [result1, setResult1] = useState<LoanResult | null>(null);
+  const [result2, setResult2] = useState<LoanResult | null>(null);
+
+  useEffect(() => {
+    const P = parseFloat(loanAmount.replace(/,/g, "")) || 0;
+    if (P <= 0) {
+      setResult1(null);
+      setResult2(null);
+      return;
+    }
+    setResult1(calcLoan(P, loan1));
+    setResult2(calcLoan(P, loan2));
+  }, [loanAmount, loan1, loan2]);
+
+  const rowCls2 = "flex items-center justify-between border-b border-[#e8e8e8] py-2.5";
+  const inputFullCls =
+    "bg-[#f0f0f0] border-0 font-sans text-[13px] px-3 py-1.5 text-right w-[140px] outline-none focus:ring-1 focus:ring-orange/40";
+
+  const saving = result1 && result2 ? result1.totalCost - result2.totalCost : null;
+
+  return (
+    <div className="max-w-4xl">
+      <h2 className="font-sans font-semibold text-navy text-[1.1rem] mb-5">
+        Loan Comparison Calculator 2025 – 2026
+      </h2>
+
+      {/* Shared loan amount */}
+      <div className="mb-6 pb-5 border-b border-[#e8e8e8]">
+        <p className="text-orange font-sans font-semibold text-[15px] mb-3">Loan amount</p>
+        <div className={rowCls2}>
+          <span className="font-sans text-[13px] text-navy">Loan amount ($)</span>
+          <input
+            type="number"
+            value={loanAmount}
+            onChange={e => setLoanAmount(e.target.value)}
+            className={inputFullCls}
+          />
         </div>
       </div>
 
-      <div className="p-8 border-b border-line">
-        <button
-          onClick={calculate}
-          className="bg-orange text-white font-mono text-[11px] uppercase tracking-widest px-8 py-3 hover:bg-orange/90 transition-colors"
-        >
-          Compare Loans
-        </button>
+      {/* Two-column loan params */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-8">
+        <LoanColumn label="Loan 1 Details" params={loan1} onChange={setLoan1} />
+        <LoanColumn label="Loan 2 Details" params={loan2} onChange={setLoan2} />
       </div>
 
       {/* Results */}
-      {results && (
-        <div className="bg-navy">
-          <div className="grid md:grid-cols-2 gap-0">
-            {[{ label: "Loan 1", result: r1 }, { label: "Loan 2", result: r2 }].map(({ label, result }, i) => (
-              <div
-                key={label}
-                className={`p-8 ${i === 0 ? "border-b md:border-b-0 md:border-r border-white/10" : ""}`}
-              >
-                <p className="font-mono text-[10px] uppercase tracking-widest text-white/50 mb-4">{label}</p>
-                {result ? (
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="font-sans text-[13px] text-white/60">Monthly Repayment</span>
-                      <span className="font-mono text-[13px] text-orange">{fmtDec(result.monthlyRepayment)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="font-sans text-[13px] text-white/60">Total Interest</span>
-                      <span className="font-mono text-[13px] text-white">{fmt(result.totalInterest)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="font-sans text-[13px] text-white/60">Total Fees</span>
-                      <span className="font-mono text-[13px] text-white">{fmt(result.totalFees)}</span>
-                    </div>
-                    <div className="flex justify-between border-t border-white/10 pt-3 mt-3">
-                      <span className="font-mono text-[10px] uppercase tracking-widest text-white/50">Total Cost</span>
-                      <span className="font-mono text-[15px] text-white font-medium">{fmt(result.totalCost)}</span>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="font-sans text-[13px] text-white/30">Enter loan details above</p>
-                )}
-              </div>
-            ))}
-          </div>
+      {result1 && result2 && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+          <ResultColumn label="Loan 1 Results" result={result1} />
+          <ResultColumn label="Loan 2 Results" result={result2} />
 
-          {saving !== null && r1 && r2 && (
-            <div className="border-t border-white/10 px-8 py-6 text-center">
-              {saving > 0 ? (
-                <p className="font-mono text-[14px] uppercase tracking-widest text-white">
+          {saving !== null && (
+            <div className="lg:col-span-2 border-t border-[#e8e8e8] pt-5">
+              {Math.abs(saving) < 1 ? (
+                <p className="font-sans text-[13px] text-navy/60">Both loans have the same total cost.</p>
+              ) : saving > 0 ? (
+                <p className="font-sans text-[14px] font-semibold text-navy">
                   Loan 2 saves you{" "}
-                  <span className="text-orange">{fmt(Math.abs(saving))}</span>{" "}
-                  total
-                </p>
-              ) : saving < 0 ? (
-                <p className="font-mono text-[14px] uppercase tracking-widest text-white">
-                  Loan 1 saves you{" "}
-                  <span className="text-orange">{fmt(Math.abs(saving))}</span>{" "}
-                  total
+                  <span className="text-orange">{fmt(saving)}</span>{" "}
+                  over the life of the loan.
                 </p>
               ) : (
-                <p className="font-mono text-[14px] uppercase tracking-widest text-white/50">
-                  Both loans have the same total cost
+                <p className="font-sans text-[14px] font-semibold text-navy">
+                  Loan 1 saves you{" "}
+                  <span className="text-orange">{fmt(Math.abs(saving))}</span>{" "}
+                  over the life of the loan.
                 </p>
               )}
             </div>
