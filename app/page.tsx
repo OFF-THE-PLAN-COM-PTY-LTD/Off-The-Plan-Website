@@ -138,9 +138,18 @@ export default async function HomePage() {
       <section className="bg-navy py-16 md:py-20">
         <div className="container-padded">
           <AnimateIn>
-            <p className="font-mono text-[11px] uppercase tracking-widest text-white/40 mb-8">
-              Featured Developments
-            </p>
+            <div className="mb-12">
+              <div className="flex items-center gap-3 mb-5">
+                <span className="w-8 h-px bg-orange flex-shrink-0" aria-hidden="true" />
+                <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-orange/80">
+                  Featured Developments
+                </p>
+              </div>
+              <h2 className="font-display font-light text-white leading-[0.95] tracking-tight text-[clamp(2.2rem,4.5vw,4rem)]">
+                Australia&apos;s finest<br />
+                <em className="not-italic italic text-orange">off&#8209;the&#8209;plan properties</em>
+              </h2>
+            </div>
           </AnimateIn>
 
           {/* 3-col × 2-row equal grid */}
