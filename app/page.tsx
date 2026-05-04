@@ -134,6 +134,21 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* ─── Statement Banner ─────────────────────────────────────────────── */}
+      <section className="bg-white py-20 md:py-28">
+        <div className="container-padded max-w-4xl">
+          <AnimateIn>
+            <span className="block w-8 h-px bg-orange mb-8" aria-hidden="true" />
+            <p className="font-display font-light text-navy leading-[1.15] tracking-tight text-[clamp(1.75rem,3.8vw,3rem)]">
+              Your future address, carefully chosen from Australia&apos;s finest new developments —{" "}
+              <em className="not-italic italic text-orange">
+                for buyers who won&apos;t settle for ordinary.
+              </em>
+            </p>
+          </AnimateIn>
+        </div>
+      </section>
+
       {/* ─── Section 1: Featured Developments (Tier 1) ─────────────────────── */}
       <section className="bg-navy py-16 md:py-20">
         <div className="container-padded">
