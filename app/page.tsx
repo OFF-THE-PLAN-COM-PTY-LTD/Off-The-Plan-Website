@@ -134,23 +134,8 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ─── Statement Banner ─────────────────────────────────────────────── */}
-      <section className="bg-white py-20 md:py-28">
-        <div className="container-padded max-w-4xl">
-          <AnimateIn>
-            <span className="block w-8 h-px bg-orange mb-8" aria-hidden="true" />
-            <p className="font-display font-light text-navy leading-[1.15] tracking-tight text-[clamp(1.75rem,3.8vw,3rem)]">
-              Your future address, carefully chosen from Australia&apos;s finest new developments —{" "}
-              <em className="not-italic italic text-orange">
-                for buyers who won&apos;t settle for ordinary.
-              </em>
-            </p>
-          </AnimateIn>
-        </div>
-      </section>
-
       {/* ─── Section 1: Featured Developments (Tier 1) ─────────────────────── */}
-      <section className="bg-navy py-16 md:py-20">
+      <section className="bg-navy py-16 md:py-24">
         <div className="container-padded">
           <AnimateIn>
             <div className="mb-12">
@@ -160,10 +145,14 @@ export default async function HomePage() {
                   Featured Developments
                 </p>
               </div>
-              <h2 className="font-display font-light text-white leading-[0.95] tracking-tight text-[clamp(2.2rem,4.5vw,4rem)]">
+              <h2 className="font-display font-light text-white leading-[0.95] tracking-tight text-[clamp(2.2rem,4.5vw,4rem)] mb-6">
                 Australia&apos;s finest<br />
                 <em className="not-italic italic text-orange">off&#8209;the&#8209;plan properties</em>
               </h2>
+              <p className="font-display font-light text-white/50 text-[clamp(1rem,1.4vw,1.2rem)] leading-relaxed max-w-2xl">
+                Your future address, carefully chosen —{" "}
+                <em className="not-italic italic text-white/70">for buyers who won&apos;t settle for ordinary.</em>
+              </p>
             </div>
           </AnimateIn>
 
