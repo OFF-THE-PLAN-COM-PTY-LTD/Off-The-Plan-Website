@@ -1,8 +1,9 @@
 import Link from "next/link";
-import Image from "next/image";
 import { PropertyCard } from "@/components/property-card";
 import { JournalCard } from "@/components/journal-card";
 import { AnimateIn } from "@/components/animate-in";
+import { CategoryCarousel } from "@/components/category-carousel";
+import type { Category } from "@/components/category-carousel";
 import { ChevronRightIcon } from "@/components/icons";
 import { supabase } from "@/lib/supabase/public";
 import type { Development } from "@/types/development";
@@ -61,11 +62,13 @@ const MOCK_TIER2: Development[] = [
   mockDev("m14", "bayview-terraces",     "Bayview Terraces",     "Manly",       "NSW", "From $980,000", 2, 4, "Selling now", "Townhouses", U("1538688525198-9b3b1c98d25d")),
 ];
 
-const CATEGORIES = [
+const CATEGORIES: Category[] = [
   { label: "Apartments",     href: "/search?type=Apartment",       image: U("1460317442991-0ec209397118") },
   { label: "Townhouses",     href: "/search?type=Townhouse",       image: U("1512917774080-9991f1c4c750") },
   { label: "House & Land",   href: "/search?type=House+%26+Land",  image: U("1600585154340-be6161a56a0c") },
   { label: "New Apartments", href: "/search?type=Apartment",       image: U("1545324418-cc1a3fa10c00")    },
+  { label: "Penthouses",     href: "/search?type=Penthouse",       image: U("1522708323590-d24dbb6b0267") },
+  { label: "Villas",         href: "/search?type=Villa",           image: U("1570129477492-45c003edd2be") },
 ];
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -152,38 +155,24 @@ export default async function HomePage() {
               </AnimateIn>
             ))}
           </div>
+
+          {/* View All button */}
+          <div className="mt-10 flex justify-center">
+            <Link
+              href="/search"
+              className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest px-8 py-3.5 border border-white/20 text-white/50 hover:border-orange hover:text-orange transition-all duration-300"
+            >
+              View All Developments
+              <ChevronRightIcon size={14} />
+            </Link>
+          </div>
         </div>
       </section>
 
       {/* ─── Section 2: Search by Category ─────────────────────────────────── */}
       <section className="bg-cream py-16">
         <div className="container-padded">
-          <p className="font-mono text-[11px] uppercase tracking-widest text-ink/40 text-center mb-8">
-            Search by Category
-          </p>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {CATEGORIES.map((cat) => (
-              <Link
-                key={cat.label}
-                href={cat.href}
-                className="group relative h-60 overflow-hidden"
-              >
-                <Image
-                  src={cat.image}
-                  alt={cat.label}
-                  fill
-                  className="object-cover transition-transform duration-700 group-hover:scale-110"
-                  sizes="(max-width: 640px) 50vw, 25vw"
-                />
-                <div className="absolute inset-0 bg-navy/50 group-hover:bg-navy/30 transition-colors duration-500" />
-                <div className="relative h-full flex items-center justify-center">
-                  <span className="font-mono text-[11px] uppercase tracking-widest text-white">
-                    {cat.label}
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
+          <CategoryCarousel categories={CATEGORIES} />
         </div>
       </section>
 
