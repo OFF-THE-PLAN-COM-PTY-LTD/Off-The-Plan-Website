@@ -242,32 +242,93 @@ export default async function DossierPage({ params }: Props) {
             })()}
           </div>
 
-          {/* Right: sticky developer card + enquiry form */}
+          {/* Right: Contact Agent sidebar */}
           <div>
             <div className="lg:sticky lg:top-24">
-              {dev.developer && (
-                <div className="bg-white border border-line px-5 py-4 mb-4 flex items-center gap-4">
-                  {dev.developer.logo_url ? (
+
+              {/* ── Contact Agent header ── */}
+              <div className="bg-navy flex items-center gap-3 px-4 py-3">
+                {dev.developer?.logo_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={dev.developer.logo_url}
+                    alt={dev.developer.name ?? "Developer"}
+                    className="w-10 h-10 object-contain bg-white p-1 flex-shrink-0"
+                  />
+                ) : (
+                  <div className="w-10 h-10 bg-white/10 flex items-center justify-center flex-shrink-0">
+                    <span className="font-mono text-[7px] uppercase text-white/60">
+                      {dev.developer?.name?.slice(0, 2) ?? ""}
+                    </span>
+                  </div>
+                )}
+                <p className="font-mono text-[13px] font-semibold uppercase tracking-widest text-white">
+                  Contact Agent
+                </p>
+              </div>
+
+              {/* ── Agent card ── */}
+              <div className="border border-t-0 border-line bg-white px-4 py-4">
+                <div className="flex items-start gap-3 mb-3">
+                  {dev.developer?.logo_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={dev.developer.logo_url}
-                      alt={dev.developer.name}
-                      className="h-10 max-w-[110px] object-contain flex-shrink-0"
+                      alt={dev.developer.name ?? "Developer"}
+                      className="w-12 h-12 object-contain border border-line p-1 flex-shrink-0"
                     />
                   ) : (
-                    <div className="w-10 h-10 bg-navy/10 flex items-center justify-center flex-shrink-0">
-                      <span className="font-mono text-[7px] uppercase tracking-widest text-ink/40">
-                        {dev.developer.name.slice(0, 2)}
+                    <div className="w-12 h-12 bg-navy/5 border border-line flex items-center justify-center flex-shrink-0">
+                      <span className="font-mono text-[8px] uppercase text-ink/40">
+                        {dev.developer?.name?.slice(0, 2) ?? ""}
                       </span>
                     </div>
                   )}
-                  <div>
-                    <p className="font-mono text-[9px] uppercase tracking-widest text-ink/40 mb-0.5">Developer</p>
-                    <p className="font-sans font-medium text-body-md text-ink">{dev.developer.name}</p>
+                  <div className="min-w-0">
+                    <p className="font-sans font-semibold text-[14px] text-ink leading-tight mb-1">
+                      {dev.developer?.name ?? "Sales Team"}
+                    </p>
+                    <a
+                      href="tel:1300000000"
+                      className="font-sans text-[13px] text-orange hover:text-orange/70 transition-colors"
+                    >
+                      Enquire for details
+                    </a>
                   </div>
                 </div>
-              )}
-              <EnquiryForm developmentId={dev.id} developmentName={dev.name} />
+
+                <a
+                  href="#enquire"
+                  className="flex items-center justify-center gap-2 w-full bg-navy text-white font-mono text-[10px] uppercase tracking-widest py-2.5 hover:bg-navy/80 transition-colors"
+                >
+                  <MailIcon size={12} />
+                  Message
+                </a>
+              </div>
+
+              {/* ── Share + Enquire footer row ── */}
+              <div className="border border-t-0 border-line grid grid-cols-2">
+                <button
+                  className="flex items-center justify-center gap-2 py-3 font-mono text-[10px] uppercase tracking-widest text-ink/60 hover:text-orange border-r border-line transition-colors"
+                  onClick={undefined}
+                >
+                  <svg width="13" height="13" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                    <circle cx="15" cy="4" r="2" stroke="currentColor" strokeWidth="1.5"/>
+                    <circle cx="5" cy="10" r="2" stroke="currentColor" strokeWidth="1.5"/>
+                    <circle cx="15" cy="16" r="2" stroke="currentColor" strokeWidth="1.5"/>
+                    <path d="M7 9l6-3.5M7 11l6 3.5" stroke="currentColor" strokeWidth="1.5"/>
+                  </svg>
+                  Share
+                </button>
+                <a
+                  href="#enquire"
+                  className="flex items-center justify-center gap-2 py-3 font-mono text-[10px] uppercase tracking-widest bg-orange text-white hover:bg-orange/90 transition-colors"
+                >
+                  <MailIcon size={12} />
+                  Enquire
+                </a>
+              </div>
+
             </div>
           </div>
         </div>
@@ -299,19 +360,19 @@ export default async function DossierPage({ params }: Props) {
 
       {/* ─── 5. Features & Amenities ──────────────────────────────────── */}
       {amenities.length > 0 && (
-        <section className="bg-navy py-16 border-t border-white/10">
+        <section className="bg-navy py-10 border-t border-white/10">
           <div className="container-padded">
-            <p className="font-mono text-[11px] uppercase tracking-widest text-white/35 mb-3">Lifestyle</p>
-            <h2 className="font-display font-light text-white text-section-lg mb-8">
+            <p className="font-mono text-[9px] uppercase tracking-widest text-white/45 mb-2">Lifestyle</p>
+            <h2 className="font-display font-light text-white text-[1.6rem] leading-tight mb-6">
               Features &amp; Amenities
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-3 gap-x-6">
               {amenities.map((a) => (
-                <div key={a} className="flex items-center gap-3">
-                  <span className="w-5 h-5 rounded-full border border-orange flex items-center justify-center flex-shrink-0">
-                    <CheckIcon size={11} className="text-orange" />
+                <div key={a} className="flex items-center gap-2.5">
+                  <span className="w-[18px] h-[18px] rounded-full border border-orange flex items-center justify-center flex-shrink-0">
+                    <CheckIcon size={9} className="text-orange" />
                   </span>
-                  <span className="font-sans text-[14px] text-white/80">{a}</span>
+                  <span className="font-sans text-[13px] text-white/75">{a}</span>
                 </div>
               ))}
             </div>
@@ -400,14 +461,16 @@ export default async function DossierPage({ params }: Props) {
               </a>
             </div>
           </div>
-          {/* Map — full viewport width, no side padding */}
-          <div className="w-full h-[480px]">
-            <iframe
-              src={`https://www.openstreetmap.org/export/embed.html?bbox=${dev.lng - 0.012},${dev.lat - 0.012},${dev.lng + 0.012},${dev.lat + 0.012}&layer=mapnik&marker=${dev.lat},${dev.lng}`}
-              className="w-full h-full border-0 block"
-              loading="lazy"
-              title={`Map showing ${dev.suburb ?? "location"}`}
-            />
+          {/* Map — slight horizontal padding, full bleed feel */}
+          <div className="px-4 md:px-8">
+            <div className="w-full h-[420px]">
+              <iframe
+                src={`https://www.openstreetmap.org/export/embed.html?bbox=${dev.lng - 0.012},${dev.lat - 0.012},${dev.lng + 0.012},${dev.lat + 0.012}&layer=mapnik&marker=${dev.lat},${dev.lng}`}
+                className="w-full h-full border-0 block"
+                loading="lazy"
+                title={`Map showing ${dev.suburb ?? "location"}`}
+              />
+            </div>
           </div>
           <div className="container-padded pb-8" />
         </section>
