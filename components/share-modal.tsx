@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 
 interface ShareModalProps {
@@ -11,7 +12,7 @@ interface ShareModalProps {
   onClose: () => void;
 }
 
-// ── Social icons ────────────────────────────────────────────────────────────
+// ── Icons ─────────────────────────────────────────────────────────────────────
 
 function EmailSvg() {
   return (
@@ -30,6 +31,16 @@ function FacebookSvg() {
   );
 }
 
+function InstagramSvg() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <rect x="2.5" y="2.5" width="15" height="15" rx="4" stroke="currentColor" strokeWidth="1.5" />
+      <circle cx="10" cy="10" r="3.25" stroke="currentColor" strokeWidth="1.5" />
+      <circle cx="14.75" cy="5.25" r="0.9" fill="currentColor" />
+    </svg>
+  );
+}
+
 function WhatsAppSvg() {
   return (
     <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -38,11 +49,11 @@ function WhatsAppSvg() {
   );
 }
 
-function CopySvg() {
+function LinkSvg() {
   return (
-    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <rect x="7" y="7" width="10" height="10" rx="1" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M13 7V4a1 1 0 00-1-1H4a1 1 0 00-1 1v8a1 1 0 001 1h3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <svg width="15" height="15" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="M8.5 11.5a4.5 4.5 0 006.364 0l2-2a4.5 4.5 0 00-6.364-6.364L9.25 4.386" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M11.5 8.5a4.5 4.5 0 00-6.364 0l-2 2a4.5 4.5 0 006.364 6.364L10.75 15.6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   );
 }
@@ -55,22 +66,30 @@ function CloseSvg() {
   );
 }
 
-// ── Component ────────────────────────────────────────────────────────────────
+// ── Component ─────────────────────────────────────────────────────────────────
 
 export function ShareModal({ slug, name, suburb, state, onClose }: ShareModalProps) {
   const [copied, setCopied] = useState(false);
   const [visible, setVisible] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   const listingUrl =
     typeof window !== "undefined"
       ? `${window.location.origin}/listings/${slug}`
       : `https://offtheplan.com.au/listings/${slug}`;
 
-  // Animate in on mount
+  // Mount portal target
   useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+
+  // Animate in
+  useEffect(() => {
+    if (!mounted) return;
     const id = requestAnimationFrame(() => setVisible(true));
     return () => cancelAnimationFrame(id);
-  }, []);
+  }, [mounted]);
 
   // Escape key
   useEffect(() => {
@@ -92,50 +111,88 @@ export function ShareModal({ slug, name, suburb, state, onClose }: ShareModalPro
     });
   };
 
+  const handleInstagram = () => {
+    // Use native Web Share API on mobile (shows Instagram etc.), else copy
+    if (typeof navigator !== "undefined" && navigator.share) {
+      navigator.share({ title: name, url: listingUrl }).catch(() => copyUrl());
+    } else {
+      copyUrl();
+    }
+  };
+
   const location = [suburb, state].filter(Boolean).join(", ");
 
-  const shareOptions = [
+  const socialOptions = [
     {
       label: "Email",
       bg: "bg-navy",
       icon: <EmailSvg />,
-      href: `mailto:?subject=${encodeURIComponent(`${name} – Off The Plan`)}&body=${encodeURIComponent(`I found this listing you might like:\n\n${name}${location ? ` · ${location}` : ""}\n\n${listingUrl}`)}`,
+      onClick: () => {
+        window.open(
+          `mailto:?subject=${encodeURIComponent(`${name} – Off The Plan`)}&body=${encodeURIComponent(`I found this listing you might like:\n\n${name}${location ? ` · ${location}` : ""}\n\n${listingUrl}`)}`,
+          "_blank",
+        );
+      },
     },
     {
       label: "Facebook",
       bg: "bg-[#1877F2]",
       icon: <FacebookSvg />,
-      href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(listingUrl)}`,
+      onClick: () => {
+        window.open(
+          `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(listingUrl)}`,
+          "_blank",
+          "width=600,height=400",
+        );
+      },
+    },
+    {
+      label: "Instagram",
+      bg: "",
+      gradientStyle: {
+        background:
+          "linear-gradient(45deg,#f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%)",
+      },
+      icon: <InstagramSvg />,
+      onClick: handleInstagram,
     },
     {
       label: "WhatsApp",
       bg: "bg-[#25D366]",
       icon: <WhatsAppSvg />,
-      href: `https://wa.me/?text=${encodeURIComponent(`${name}${location ? ` · ${location}` : ""}\n${listingUrl}`)}`,
+      onClick: () => {
+        window.open(
+          `https://wa.me/?text=${encodeURIComponent(`${name}${location ? ` · ${location}` : ""}\n${listingUrl}`)}`,
+          "_blank",
+        );
+      },
     },
   ];
 
-  return (
+  if (!mounted) return null;
+
+  const content = (
+    // ── Overlay — no backdrop-blur (avoids GPU conflict with card hover transforms)
     <div
       className={cn(
-        "fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-200",
-        visible ? "bg-black/55 backdrop-blur-sm" : "bg-transparent pointer-events-none",
+        "fixed inset-0 z-[9999] flex items-center justify-center p-4 transition-opacity duration-200",
+        visible ? "opacity-100 bg-black/60" : "opacity-0 bg-black/0 pointer-events-none",
       )}
       onClick={handleClose}
       aria-modal="true"
       role="dialog"
       aria-label="Share listing"
     >
+      {/* Modal */}
       <div
         className={cn(
-          "flex w-full max-w-[520px] overflow-hidden shadow-[0_32px_64px_-12px_rgba(0,0,0,0.45)] transition-all duration-200",
+          "flex w-full max-w-[520px] overflow-hidden shadow-[0_32px_64px_-8px_rgba(0,0,0,0.5)] transition-all duration-200",
           visible ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-3",
         )}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* ── Left: brand panel ─────────────────────────────────────────── */}
+        {/* ── Left: brand panel ───────────────────────────────────────────── */}
         <div className="hidden sm:flex flex-col justify-between bg-navy p-7 w-[168px] flex-shrink-0">
-          {/* Logo lockup */}
           <div>
             <div className="border border-white/20 px-3 py-3 inline-block mb-4">
               <p className="font-mono text-[7px] uppercase tracking-[0.28em] text-white/50 leading-none">OFF</p>
@@ -152,30 +209,29 @@ export function ShareModal({ slug, name, suburb, state, onClose }: ShareModalPro
               New Home<br />Portal
             </p>
           </div>
-          {/* Bottom tagline */}
           <p className="font-display font-light italic text-white/20 text-[12px] leading-snug">
             Share your<br />future address
           </p>
         </div>
 
-        {/* ── Right: content ────────────────────────────────────────────── */}
-        <div className="flex-1 bg-white relative flex flex-col">
+        {/* ── Right: content ──────────────────────────────────────────────── */}
+        <div className="flex-1 bg-white relative flex flex-col min-w-0">
           {/* Close */}
           <button
             onClick={handleClose}
             aria-label="Close"
-            className="absolute top-4 right-4 p-1.5 text-ink/25 hover:text-ink/70 transition-colors"
+            className="absolute top-4 right-4 p-1.5 text-ink/25 hover:text-ink/60 transition-colors z-10"
           >
             <CloseSvg />
           </button>
 
           {/* Header */}
-          <div className="px-6 pt-6 pb-5 border-b border-line">
+          <div className="px-6 pt-6 pb-4 border-b border-line">
             <div className="flex items-center gap-2 mb-2">
               <span className="block w-5 h-px bg-orange flex-shrink-0" aria-hidden="true" />
               <p className="font-mono text-[9px] uppercase tracking-widest text-orange/80">Share Listing</p>
             </div>
-            <h2 className="font-display font-light text-navy text-[1.35rem] leading-tight pr-6">
+            <h2 className="font-display font-light text-navy text-[1.3rem] leading-tight pr-6">
               {name}
             </h2>
             {location && (
@@ -183,68 +239,64 @@ export function ShareModal({ slug, name, suburb, state, onClose }: ShareModalPro
             )}
           </div>
 
-          {/* Share options */}
+          {/* Social buttons: 4 in a row */}
           <div className="px-6 pt-5 pb-4">
             <p className="font-mono text-[9px] uppercase tracking-widest text-ink/30 mb-3">Share via</p>
-            <div className="grid grid-cols-4 gap-2.5">
-              {shareOptions.map((opt) => (
-                <a
+            <div className="grid grid-cols-4 gap-2">
+              {socialOptions.map((opt) => (
+                <button
                   key={opt.label}
-                  href={opt.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group flex flex-col items-center gap-2 py-3 px-2 border border-line hover:border-orange hover:bg-orange/5 transition-all duration-200"
+                  onClick={opt.onClick}
+                  className="group flex flex-col items-center gap-2 py-3 px-1 border border-line hover:border-orange hover:bg-orange/5 transition-all duration-200"
                 >
                   <span
                     className={cn(
-                      "w-9 h-9 rounded-full flex items-center justify-center text-white flex-shrink-0",
-                      "transition-transform duration-200 group-hover:scale-110",
+                      "w-9 h-9 rounded-full flex items-center justify-center text-white flex-shrink-0 transition-transform duration-200 group-hover:scale-110",
                       opt.bg,
                     )}
+                    style={opt.gradientStyle}
                   >
                     {opt.icon}
                   </span>
-                  <span className="font-mono text-[9px] uppercase tracking-widest text-ink/45 group-hover:text-orange transition-colors">
+                  <span className="font-mono text-[8.5px] uppercase tracking-widest text-ink/40 group-hover:text-orange transition-colors leading-none">
                     {opt.label}
                   </span>
-                </a>
+                </button>
               ))}
-
-              {/* Copy link */}
-              <button
-                onClick={copyUrl}
-                className="group flex flex-col items-center gap-2 py-3 px-2 border border-line hover:border-orange hover:bg-orange/5 transition-all duration-200"
-              >
-                <span
-                  className={cn(
-                    "w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-200 group-hover:scale-110",
-                    copied
-                      ? "bg-orange text-white"
-                      : "bg-ink/8 text-ink/50 group-hover:bg-orange group-hover:text-white",
-                  )}
-                >
-                  <CopySvg />
-                </span>
-                <span className="font-mono text-[9px] uppercase tracking-widest text-ink/45 group-hover:text-orange transition-colors">
-                  {copied ? "Copied!" : "Copy"}
-                </span>
-              </button>
             </div>
           </div>
 
-          {/* URL field */}
-          <div className="px-6 pb-6 mt-auto">
-            <p className="font-mono text-[9px] uppercase tracking-widest text-ink/30 mb-1.5">Listing URL</p>
+          {/* Copy link — full width prominent bar */}
+          <div className="px-6 pb-5">
             <button
               onClick={copyUrl}
-              title="Click to copy"
-              className="w-full text-left border border-line px-3 py-2.5 font-mono text-[11px] text-ink/50 bg-cream/60 hover:border-orange/60 hover:bg-orange/5 transition-all duration-200 truncate block"
+              className={cn(
+                "w-full flex items-center gap-3 px-4 py-3 border transition-all duration-200",
+                copied
+                  ? "border-orange bg-orange/5 text-orange"
+                  : "border-line hover:border-orange hover:bg-orange/5 text-ink/50",
+              )}
             >
-              {listingUrl}
+              <span
+                className={cn(
+                  "w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 transition-colors duration-200",
+                  copied ? "bg-orange text-white" : "bg-ink/8 text-ink/40",
+                )}
+              >
+                <LinkSvg />
+              </span>
+              <div className="flex-1 min-w-0 text-left">
+                <p className="font-mono text-[9px] uppercase tracking-widest mb-0.5 text-current">
+                  {copied ? "Link copied!" : "Copy link"}
+                </p>
+                <p className="font-sans text-[11px] text-ink/40 truncate">{listingUrl}</p>
+              </div>
             </button>
           </div>
         </div>
       </div>
     </div>
   );
+
+  return createPortal(content, document.body);
 }
