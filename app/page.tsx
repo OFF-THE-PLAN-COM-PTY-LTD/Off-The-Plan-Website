@@ -204,8 +204,8 @@ export default async function HomePage() {
               </Link>
             </div>
           </AnimateIn>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {tier2.map((dev, i) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {tier2.slice(0, 4).map((dev, i) => (
               <AnimateIn key={dev.id} delay={i * 70}>
                 <PropertyCard development={dev} layout="tall" />
               </AnimateIn>

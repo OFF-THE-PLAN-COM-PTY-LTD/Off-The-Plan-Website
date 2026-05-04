@@ -275,7 +275,7 @@ export function PropertyCard({
   // Tall (default) layout
   const imageCount = (development.images?.length ?? 0) > 0 ? development.images!.length : 1;
 
-  // Build floor-plan rows. Use real floor_plans when available, else
+  // Build floor-plan rows — use real floor_plans when available, else
   // generate one row per bed count from the beds range.
   type FloorRow = { beds: number | null; baths: number | null; cars: number | null; sqm: number | null; price: string | null };
   const floorRows: FloorRow[] = (() => {
@@ -302,27 +302,50 @@ export function PropertyCard({
   return (
     <div className={cn("group flex flex-col bg-white border border-line overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1", className)}>
 
+      {/* ── Top header: name + address | developer logo ───────────────────── */}
+      <div className="flex items-start justify-between px-4 pt-4 pb-3 border-b border-line">
+        <div className="flex-1 min-w-0 pr-3">
+          <h3 className="font-sans font-bold text-ink text-[16px] leading-snug group-hover:text-orange transition-colors">
+            {development.name}
+            {development.suburb ? `, ${development.suburb}` : ""}
+          </h3>
+          <p className="font-sans text-[12px] text-ink/40 mt-0.5">
+            {[development.suburb, development.state].filter(Boolean).join(", ")}
+          </p>
+        </div>
+        {development.developer && (
+          <div className="flex-shrink-0 ml-2 text-right">
+            {development.developer.logo_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={development.developer.logo_url}
+                alt={development.developer.name}
+                className="h-8 max-w-[110px] object-contain ml-auto"
+              />
+            ) : (
+              <span className="font-mono text-[9px] uppercase tracking-widest text-ink/35 leading-tight block max-w-[100px]">
+                {development.developer.name}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* ── Image ─────────────────────────────────────────────────────────── */}
-      <Link href={`/listings/${development.slug}`} className="relative block h-56 bg-navy/10 overflow-hidden flex-shrink-0">
+      <Link
+        href={`/listings/${development.slug}`}
+        className={cn("relative block bg-navy/10 overflow-hidden flex-shrink-0", imageHeight ?? "h-64")}
+      >
         {heroImageUrl ? (
           <Image
             src={heroImageUrl}
             alt={development.name}
             fill
             className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            sizes="(max-width: 768px) 100vw, 50vw"
           />
         ) : (
           <div className="absolute inset-0 bg-gradient-to-br from-navy to-navy-mid" />
-        )}
-
-        {/* Status pill — top left */}
-        {development.status && (
-          <div className="absolute top-3 left-3">
-            <Pill variant={development.status === "Selling now" ? "orange" : "ghost"}>
-              {development.status}
-            </Pill>
-          </div>
         )}
 
         {/* Save / heart — top right */}
@@ -342,7 +365,7 @@ export function PropertyCard({
         </div>
       </Link>
 
-      {/* ── Header: price guide + name + location ─────────────────────────── */}
+      {/* ── Content: price guide + type label ─────────────────────────────── */}
       <div className="px-4 pt-3 pb-2">
         {development.price_display && (
           <p className="font-sans text-[13px] mb-1">
@@ -350,12 +373,9 @@ export function PropertyCard({
             <span className="text-orange font-medium">{development.price_display}</span>
           </p>
         )}
-        <h3 className="font-sans font-semibold text-ink text-[15px] leading-snug group-hover:text-orange transition-colors line-clamp-2">
-          {development.name}
-        </h3>
-        <p className="font-sans text-[12px] text-ink/45 mt-0.5">
-          {[development.suburb, development.state].filter(Boolean).join(", ")}
-        </p>
+        {development.type && (
+          <p className="font-sans font-bold text-ink text-[14px]">{development.type}</p>
+        )}
       </div>
 
       {/* ── Divider ───────────────────────────────────────────────────────── */}
@@ -365,37 +385,31 @@ export function PropertyCard({
       <div className="px-4 pb-3 flex flex-col gap-1.5 flex-1">
         {floorRows.map((row, i) => (
           <div key={i} className="flex items-center gap-2 text-[12px]">
-            {/* Bed */}
-            <span className="inline-flex items-center gap-0.5 min-w-[32px]">
-              <BedIcon size={13} className="text-orange flex-shrink-0" />
+            <span className="inline-flex items-center gap-0.5 min-w-[34px]">
+              <BedIcon size={14} className="text-orange flex-shrink-0" />
               <span className="text-ink font-sans">{row.beds ?? "–"}</span>
             </span>
-            {/* Bath */}
-            <span className="inline-flex items-center gap-0.5 min-w-[32px]">
-              <BathIcon size={13} className="text-orange flex-shrink-0" />
+            <span className="inline-flex items-center gap-0.5 min-w-[34px]">
+              <BathIcon size={14} className="text-orange flex-shrink-0" />
               <span className="text-ink font-sans">{row.baths ?? "–"}</span>
             </span>
-            {/* Car */}
-            <span className="inline-flex items-center gap-0.5 min-w-[32px]">
-              <CarIcon size={13} className="text-orange flex-shrink-0" />
+            <span className="inline-flex items-center gap-0.5 min-w-[34px]">
+              <CarIcon size={14} className="text-orange flex-shrink-0" />
               <span className="text-ink font-sans">{row.cars ?? "–"}</span>
             </span>
-            {/* Sqm */}
-            <span className="inline-flex items-center gap-0.5 min-w-[32px]">
-              <ExpandIcon size={11} className="text-orange flex-shrink-0" />
+            <span className="inline-flex items-center gap-0.5 min-w-[34px]">
+              <ExpandIcon size={12} className="text-orange flex-shrink-0" />
               <span className="text-ink font-sans">{row.sqm ?? "–"}</span>
             </span>
-            {/* Price — right aligned */}
-            <span className="ml-auto font-sans text-[11px] font-medium text-ink whitespace-nowrap">
+            <span className="ml-auto font-sans text-[12px] font-medium text-ink whitespace-nowrap">
               {row.price ?? "Contact Agent"}
             </span>
           </div>
         ))}
       </div>
 
-      {/* ── Action row: outlined | dark navy | orange ──────────────────────── */}
+      {/* ── Action row: outlined SHARE | dark navy VIEW | orange ENQUIRE ──── */}
       <div className="flex border-t border-line">
-        {/* SHARE — outlined */}
         <button
           onClick={handleShare}
           className="flex-1 flex items-center justify-center gap-1.5 py-3 border-r border-line font-mono text-[10px] uppercase tracking-widest text-ink/60 bg-white hover:bg-ink/5 transition-all"
@@ -403,7 +417,6 @@ export function PropertyCard({
           <ShareIcon size={12} />
           {copied ? "Copied!" : "Share"}
         </button>
-        {/* VIEW — dark navy */}
         <Link
           href={`/listings/${development.slug}`}
           className="flex-1 flex items-center justify-center gap-1.5 py-3 border-r border-navy bg-navy font-mono text-[10px] uppercase tracking-widest text-white hover:bg-navy/80 transition-all"
@@ -411,7 +424,6 @@ export function PropertyCard({
           View
           <ArrowRightIcon size={12} />
         </Link>
-        {/* ENQUIRE — orange */}
         <Link
           href={`/listings/${development.slug}#enquire`}
           className="flex-1 flex items-center justify-center gap-1.5 py-3 bg-orange font-mono text-[10px] uppercase tracking-widest text-white hover:bg-orange/90 transition-all"
