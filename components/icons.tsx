@@ -152,3 +152,11 @@ export function ShareIcon({ className, size = 20 }: IconProps) {
     </svg>
   );
 }
+
+export function ExpandIcon({ className, size = 20 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" className={className} aria-hidden="true">
+      <path d="M3 8V3h5M17 12v5h-5M3 8l5-5M17 12l-5 5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}

@@ -8,6 +8,9 @@ import { cn } from "@/lib/utils";
 import { Pill } from "@/components/pill";
 import {
   BedIcon,
+  BathIcon,
+  CarIcon,
+  ExpandIcon,
   CameraIcon,
   ShareIcon,
   ArrowRightIcon,
@@ -271,11 +274,30 @@ export function PropertyCard({
 
   // Tall (default) layout
   const imageCount = (development.images?.length ?? 0) > 0 ? development.images!.length : 1;
-  const bedsLabel = development.beds_min
-    ? development.beds_min === development.beds_max
-      ? `${development.beds_min}`
-      : `${development.beds_min}–${development.beds_max}`
-    : null;
+
+  // Build floor-plan rows. Use real floor_plans when available, else
+  // generate one row per bed count from the beds range.
+  type FloorRow = { beds: number | null; baths: number | null; cars: number | null; sqm: number | null; price: string | null };
+  const floorRows: FloorRow[] = (() => {
+    if (development.floor_plans && development.floor_plans.length > 0) {
+      return development.floor_plans.slice(0, 5).map((fp) => ({
+        beds: null,
+        baths: null,
+        cars: null,
+        sqm: fp.internal_sqm,
+        price: fp.price_from ? `$${fp.price_from.toLocaleString()}` : "Contact Agent",
+      }));
+    }
+    const min = development.beds_min ?? 1;
+    const max = development.beds_max ?? min;
+    return Array.from({ length: Math.min(max - min + 1, 5) }, (_, i) => ({
+      beds: min + i,
+      baths: null,
+      cars: null,
+      sqm: null,
+      price: null,
+    }));
+  })();
 
   return (
     <div className={cn("group flex flex-col bg-white border border-line overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1", className)}>
@@ -320,70 +342,82 @@ export function PropertyCard({
         </div>
       </Link>
 
-      {/* ── Content ───────────────────────────────────────────────────────── */}
-      <Link href={`/listings/${development.slug}`} className="flex flex-col flex-1 px-4 pt-4 pb-3">
-        {/* Name */}
-        <h3 className="font-display font-light text-navy text-[1.1rem] leading-snug mb-1 group-hover:text-orange transition-colors">
+      {/* ── Header: price guide + name + location ─────────────────────────── */}
+      <div className="px-4 pt-3 pb-2">
+        {development.price_display && (
+          <p className="font-sans text-[13px] mb-1">
+            <span className="text-ink/40">Price Guide: </span>
+            <span className="text-orange font-medium">{development.price_display}</span>
+          </p>
+        )}
+        <h3 className="font-sans font-semibold text-ink text-[15px] leading-snug group-hover:text-orange transition-colors line-clamp-2">
           {development.name}
         </h3>
-
-        {/* Location */}
-        <p className="font-sans text-[12px] text-ink/50 mb-3">
+        <p className="font-sans text-[12px] text-ink/45 mt-0.5">
           {[development.suburb, development.state].filter(Boolean).join(", ")}
         </p>
-
-        {/* Specs row: Type | Beds */}
-        <div className="flex items-center text-ink/60 mb-3 flex-wrap">
-          {development.type && (
-            <span className="font-sans text-[12px] text-ink/60">{development.type}</span>
-          )}
-          {bedsLabel && (
-            <>
-              {development.type && (
-                <span className="mx-2 text-ink/20 text-[10px] select-none">|</span>
-              )}
-              <span className="inline-flex items-center gap-1">
-                <BedIcon size={13} className="text-ink/40" />
-                <span className="font-sans text-[12px] text-ink/60">{bedsLabel} Bed</span>
-              </span>
-            </>
-          )}
-        </div>
-
-        {/* Price guide */}
-        {development.price_display && (
-          <div className="mt-auto">
-            <p className="font-mono text-[9px] uppercase tracking-widest text-ink/30 mb-0.5">Price Guide</p>
-            <p className="font-mono text-[13px] font-medium text-ink">{development.price_display}</p>
-          </div>
-        )}
-      </Link>
+      </div>
 
       {/* ── Divider ───────────────────────────────────────────────────────── */}
-      <div className="h-px bg-line mx-4" />
+      <div className="h-px bg-line mx-4 mb-2" />
 
-      {/* ── Action row ────────────────────────────────────────────────────── */}
-      <div className="flex divide-x divide-line">
+      {/* ── Floor plan rows ───────────────────────────────────────────────── */}
+      <div className="px-4 pb-3 flex flex-col gap-1.5 flex-1">
+        {floorRows.map((row, i) => (
+          <div key={i} className="flex items-center gap-2 text-[12px]">
+            {/* Bed */}
+            <span className="inline-flex items-center gap-0.5 min-w-[32px]">
+              <BedIcon size={13} className="text-orange flex-shrink-0" />
+              <span className="text-ink font-sans">{row.beds ?? "–"}</span>
+            </span>
+            {/* Bath */}
+            <span className="inline-flex items-center gap-0.5 min-w-[32px]">
+              <BathIcon size={13} className="text-orange flex-shrink-0" />
+              <span className="text-ink font-sans">{row.baths ?? "–"}</span>
+            </span>
+            {/* Car */}
+            <span className="inline-flex items-center gap-0.5 min-w-[32px]">
+              <CarIcon size={13} className="text-orange flex-shrink-0" />
+              <span className="text-ink font-sans">{row.cars ?? "–"}</span>
+            </span>
+            {/* Sqm */}
+            <span className="inline-flex items-center gap-0.5 min-w-[32px]">
+              <ExpandIcon size={11} className="text-orange flex-shrink-0" />
+              <span className="text-ink font-sans">{row.sqm ?? "–"}</span>
+            </span>
+            {/* Price — right aligned */}
+            <span className="ml-auto font-sans text-[11px] font-medium text-ink whitespace-nowrap">
+              {row.price ?? "Contact Agent"}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Action row: outlined | dark navy | orange ──────────────────────── */}
+      <div className="flex border-t border-line">
+        {/* SHARE — outlined */}
         <button
           onClick={handleShare}
-          className="flex-1 flex items-center justify-center gap-1.5 py-3 font-mono text-[10px] uppercase tracking-widest text-ink/50 hover:text-orange hover:bg-orange/5 transition-all"
+          className="flex-1 flex items-center justify-center gap-1.5 py-3 border-r border-line font-mono text-[10px] uppercase tracking-widest text-ink/60 bg-white hover:bg-ink/5 transition-all"
         >
-          <ShareIcon size={13} />
+          <ShareIcon size={12} />
           {copied ? "Copied!" : "Share"}
         </button>
+        {/* VIEW — dark navy */}
         <Link
           href={`/listings/${development.slug}`}
-          className="flex-1 flex items-center justify-center gap-1.5 py-3 font-mono text-[10px] uppercase tracking-widest text-ink/50 hover:text-orange hover:bg-orange/5 transition-all"
+          className="flex-1 flex items-center justify-center gap-1.5 py-3 border-r border-navy bg-navy font-mono text-[10px] uppercase tracking-widest text-white hover:bg-navy/80 transition-all"
         >
-          <ArrowRightIcon size={13} />
           View
+          <ArrowRightIcon size={12} />
         </Link>
+        {/* ENQUIRE — orange */}
         <Link
           href={`/listings/${development.slug}#enquire`}
-          className="flex-1 flex items-center justify-center gap-1.5 py-3 font-mono text-[10px] uppercase tracking-widest text-ink/50 hover:text-orange hover:bg-orange/5 transition-all"
+          className="flex-1 flex items-center justify-center gap-1.5 py-3 bg-orange font-mono text-[10px] uppercase tracking-widest text-white hover:bg-orange/90 transition-all"
         >
-          <MailIcon size={13} />
           Enquire
+          <MailIcon size={12} />
         </Link>
       </div>
     </div>
