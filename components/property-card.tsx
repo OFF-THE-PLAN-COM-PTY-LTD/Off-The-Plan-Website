@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Pill } from "@/components/pill";
 import { ShareModal } from "@/components/share-modal";
+import { EnquiryModal } from "@/components/enquiry-modal";
 import {
   BedIcon,
   BathIcon,
@@ -59,6 +60,7 @@ export function PropertyCard({
   const [saved, setSaved] = useState(initialSaved);
   const [loading, setLoading] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [enquireOpen, setEnquireOpen] = useState(false);
 
   const handleShare = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -425,13 +427,13 @@ export function PropertyCard({
           View
           <ArrowRightIcon size={12} />
         </Link>
-        <Link
-          href={`/listings/${development.slug}#enquire`}
+        <button
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEnquireOpen(true); }}
           className="flex-1 flex items-center justify-center gap-1.5 py-3 bg-orange font-mono text-[10px] uppercase tracking-widest text-white hover:bg-orange/90 transition-all"
         >
           Enquire
           <MailIcon size={12} />
-        </Link>
+        </button>
       </div>
 
       {/* Share modal */}
@@ -442,6 +444,17 @@ export function PropertyCard({
           suburb={development.suburb}
           state={development.state}
           onClose={() => setShareOpen(false)}
+        />
+      )}
+
+      {/* Enquiry modal */}
+      {enquireOpen && (
+        <EnquiryModal
+          developmentId={development.id}
+          developmentName={development.name}
+          developerName={development.developer?.name}
+          developerLogoUrl={development.developer?.logo_url}
+          onClose={() => setEnquireOpen(false)}
         />
       )}
     </div>

@@ -132,19 +132,32 @@ export function EnquiryModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* ── Left: brand panel ── */}
-        <div className="hidden sm:flex flex-col bg-navy w-[200px] flex-shrink-0 px-6 py-7">
-          <div className="bg-white p-3 mb-auto w-full">
+        <div className="hidden sm:flex flex-col bg-navy w-[220px] flex-shrink-0 px-6 py-8">
+          {/* Logo */}
+          <div className="bg-white p-3 w-full mb-8">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo.png" alt="Off The Plan" className="w-full object-contain" />
           </div>
-          <div className="py-7">
-            <div className="w-8 h-px bg-orange mb-4" aria-hidden="true" />
-            <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-white/70 leading-[2.1]">
+
+          {/* Middle: brand statement */}
+          <div className="flex-1 flex flex-col justify-center">
+            <div className="w-8 h-px bg-orange mb-5" aria-hidden="true" />
+            <p className="font-mono text-[9px] uppercase tracking-[0.22em] text-white/55 leading-[2.2] mb-6">
               Australia&apos;s<br />New Home<br />Portal
             </p>
+            <p className="font-display font-light text-white text-[1.15rem] leading-snug mb-3">
+              Australia&apos;s finest{" "}
+              <em className="not-italic italic text-orange">off&#8209;the&#8209;plan</em>{" "}
+              properties.
+            </p>
+            <p className="font-sans font-light text-white/55 text-[12px] leading-relaxed">
+              Your future address, carefully chosen for buyers who won&apos;t settle for ordinary.
+            </p>
           </div>
-          <div className="border-t border-white/15 pt-5">
-            <p className="font-display font-light italic text-white text-[16px] leading-snug">
+
+          {/* Bottom */}
+          <div className="border-t border-white/15 pt-5 mt-8">
+            <p className="font-display font-light italic text-white text-[1.05rem] leading-snug">
               Speak with<br />a specialist
             </p>
           </div>
