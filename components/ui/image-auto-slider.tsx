@@ -10,14 +10,6 @@ export interface SliderItem {
   image: string;
 }
 
-interface ImageAutoSliderProps {
-  items: SliderItem[];
-  /** Pixels scrolled per second when auto-playing. Default 55 */
-  pixelsPerSecond?: number;
-  /** Tailwind height class for each tile. Default h-72 */
-  tileHeight?: string;
-}
-
 function ArrowLeft() {
   return (
     <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
@@ -36,51 +28,49 @@ function ArrowRight() {
 
 export function ImageAutoSlider({
   items,
-  pixelsPerSecond = 55,
   tileHeight = "h-72",
-}: ImageAutoSliderProps) {
+}: {
+  items: SliderItem[];
+  tileHeight?: string;
+}) {
   const trackRef  = useRef<HTMLDivElement>(null);
-  const rafRef    = useRef<number | null>(null);
-  const lastTsRef = useRef<number | null>(null);
-  // true when the user is hovering OR a manual scroll is settling
+  const timerRef  = useRef<ReturnType<typeof setInterval> | null>(null);
   const pausedRef = useRef(false);
 
-  // ─── Auto-scroll loop ────────────────────────────────────────────────────
+  // ─── Auto-scroll: 1.5 px every 16 ms ≈ 90 px / s ───────────────────────
   useEffect(() => {
-    const animate = (ts: number) => {
+    timerRef.current = setInterval(() => {
       const track = trackRef.current;
-      if (track && !pausedRef.current) {
-        const dt = lastTsRef.current != null ? (ts - lastTsRef.current) / 1000 : 0;
-        track.scrollLeft += pixelsPerSecond * dt;
+      if (!track || pausedRef.current) return;
 
-        // Seamless reset: when we pass the first copy, jump back by one copy width
-        const half = track.scrollWidth / 2;
-        if (track.scrollLeft >= half) {
-          track.scrollLeft -= half;
-        }
+      track.scrollLeft += 1.5;
+
+      // Seamless loop — when we pass the first copy, jump back by one copy width
+      if (track.scrollLeft >= track.scrollWidth / 2) {
+        track.scrollLeft -= track.scrollWidth / 2;
       }
-      lastTsRef.current = ts;
-      rafRef.current = requestAnimationFrame(animate);
+    }, 16);
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
     };
-    rafRef.current = requestAnimationFrame(animate);
-    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
-  }, [pixelsPerSecond]);
+  }, []);
 
   // ─── Manual prev / next ──────────────────────────────────────────────────
   const scrollManual = (dir: "prev" | "next") => {
     const track = trackRef.current;
     if (!track) return;
     pausedRef.current = true;
-    track.scrollBy({ left: dir === "next" ? 288 : -288, behavior: "smooth" });
-    // Resume auto-scroll after the smooth scroll settles (~700 ms)
-    setTimeout(() => { pausedRef.current = false; }, 700);
+    track.scrollBy({ left: dir === "next" ? 272 : -272, behavior: "smooth" });
+    // Resume auto-scroll once the smooth scroll settles
+    setTimeout(() => { pausedRef.current = false; }, 800);
   };
 
   const strip = [...items, ...items];
 
   return (
     <div>
-      {/* ─── Header row ─────────────────────────────────────────────────── */}
+      {/* ─── Header ─────────────────────────────────────────────────────── */}
       <div className="max-w-screen-xl mx-auto px-6 md:px-10 flex items-center justify-between mb-8">
         <p className="font-mono text-[13px] uppercase tracking-widest text-ink">
           Search by Category
@@ -112,19 +102,20 @@ export function ImageAutoSlider({
       </div>
 
       {/* ─── Scrolling strip ────────────────────────────────────────────── */}
+      {/* onMouseEnter / Leave here so hovering any tile pauses the strip   */}
       <div
         className="w-full overflow-hidden"
         style={{
           maskImage: "linear-gradient(90deg, transparent 0%, black 6%, black 94%, transparent 100%)",
           WebkitMaskImage: "linear-gradient(90deg, transparent 0%, black 6%, black 94%, transparent 100%)",
         }}
+        onMouseEnter={() => { pausedRef.current = true; }}
+        onMouseLeave={() => { pausedRef.current = false; }}
       >
         <div
           ref={trackRef}
           className="flex gap-4 overflow-x-scroll"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-          onMouseEnter={() => { pausedRef.current = true; }}
-          onMouseLeave={() => { pausedRef.current = false; }}
         >
           {strip.map((item, i) => (
             <Link
