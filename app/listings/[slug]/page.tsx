@@ -131,7 +131,7 @@ export default async function DossierPage({ params }: Props) {
                 {dev.name}
                 {dev.suburb ? `, ${dev.suburb}` : ""}
               </h1>
-              <p className="font-sans text-[12px] text-white/45 sm:text-right sm:ml-6 flex-shrink-0">
+              <p className="font-sans text-[12px] text-white/60 sm:text-right sm:ml-6 flex-shrink-0">
                 {[dev.suburb, dev.state, "Australia"].filter(Boolean).join(", ")}
               </p>
             </div>
@@ -140,31 +140,31 @@ export default async function DossierPage({ params }: Props) {
             <div className="flex flex-wrap gap-x-8 gap-y-4 border-t border-white/10 pt-4">
               {dev.price_display && (
                 <div>
-                  <p className="font-mono text-[8px] uppercase tracking-widest text-white/35 mb-1">Price Guide</p>
+                  <p className="font-mono text-[8px] uppercase tracking-widest text-white/60 mb-1">Price Guide</p>
                   <p className="font-sans text-[14px] text-white">{dev.price_display}</p>
                 </div>
               )}
               {dev.residence_count && (
                 <div>
-                  <p className="font-mono text-[8px] uppercase tracking-widest text-white/35 mb-1">Residences</p>
+                  <p className="font-mono text-[8px] uppercase tracking-widest text-white/60 mb-1">Residences</p>
                   <p className="font-sans text-[14px] text-white">{dev.residence_count}</p>
                 </div>
               )}
               {configurationsLabel && (
                 <div>
-                  <p className="font-mono text-[8px] uppercase tracking-widest text-white/35 mb-1">Configurations</p>
+                  <p className="font-mono text-[8px] uppercase tracking-widest text-white/60 mb-1">Configurations</p>
                   <p className="font-sans text-[14px] text-white">{configurationsLabel}</p>
                 </div>
               )}
               {dev.developer?.name && (
                 <div>
-                  <p className="font-mono text-[8px] uppercase tracking-widest text-white/35 mb-1">Developer</p>
+                  <p className="font-mono text-[8px] uppercase tracking-widest text-white/60 mb-1">Developer</p>
                   <p className="font-sans text-[14px] text-white">{dev.developer.name}</p>
                 </div>
               )}
               {(dev.completion_quarter ?? dev.status) && (
                 <div>
-                  <p className="font-mono text-[8px] uppercase tracking-widest text-white/35 mb-1">Development Status</p>
+                  <p className="font-mono text-[8px] uppercase tracking-widest text-white/60 mb-1">Development Status</p>
                   <p className="font-sans text-[14px] text-white">
                     {dev.completion_quarter ?? dev.status}
                   </p>
