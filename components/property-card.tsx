@@ -6,6 +6,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Pill } from "@/components/pill";
+import {
+  BedIcon,
+  CameraIcon,
+  ShareIcon,
+  ArrowRightIcon,
+  MailIcon,
+} from "@/components/icons";
 import type { Development } from "@/types/development";
 
 interface PropertyCardProps {
@@ -47,6 +54,17 @@ export function PropertyCard({
   const router = useRouter();
   const [saved, setSaved] = useState(initialSaved);
   const [loading, setLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const url = `${window.location.origin}/listings/${development.slug}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
 
   const heroImageUrl =
     development.images?.find((img) => img.is_hero)?.url ??
@@ -252,36 +270,40 @@ export function PropertyCard({
   }
 
   // Tall (default) layout
+  const imageCount = (development.images?.length ?? 0) > 0 ? development.images!.length : 1;
+  const bedsLabel = development.beds_min
+    ? development.beds_min === development.beds_max
+      ? `${development.beds_min}`
+      : `${development.beds_min}–${development.beds_max}`
+    : null;
+
   return (
-    <Link
-      href={`/listings/${development.slug}`}
-      className={cn(
-        "group relative flex flex-col overflow-hidden bg-cream-alt border border-line transition-all duration-500 ease-out hover:-translate-y-2 hover:shadow-2xl hover:z-10",
-        className
-      )}
-    >
-      {/* Image */}
-      <div className="relative h-64 bg-navy/10 overflow-hidden flex-shrink-0">
+    <div className={cn("group flex flex-col bg-white border border-line overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1", className)}>
+
+      {/* ── Image ─────────────────────────────────────────────────────────── */}
+      <Link href={`/listings/${development.slug}`} className="relative block h-56 bg-navy/10 overflow-hidden flex-shrink-0">
         {heroImageUrl ? (
           <Image
             src={heroImageUrl}
             alt={development.name}
             fill
-            className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
           />
         ) : (
           <div className="absolute inset-0 bg-gradient-to-br from-navy to-navy-mid" />
         )}
 
-        {/* Pills */}
-        <div className="absolute top-3 left-3 flex gap-2">
-          {development.tag && (
-            <Pill variant={tagVariant(development.tag)}>{development.tag}</Pill>
-          )}
-        </div>
+        {/* Status pill — top left */}
+        {development.status && (
+          <div className="absolute top-3 left-3">
+            <Pill variant={development.status === "Selling now" ? "orange" : "ghost"}>
+              {development.status}
+            </Pill>
+          </div>
+        )}
 
-        {/* Save button */}
+        {/* Save / heart — top right */}
         <button
           onClick={handleSave}
           aria-label={saved ? "Remove from saved" : "Save listing"}
@@ -290,51 +312,80 @@ export function PropertyCard({
         >
           <HeartIcon filled={saved} />
         </button>
-      </div>
 
-      {/* Content */}
-      <div className="flex flex-col flex-1 p-4">
-        <p className="font-mono text-label-sm uppercase tracking-widest text-ink/40 mb-1.5">
-          {development.suburb}, {development.state}
-        </p>
-        <h3 className="font-display text-card-lg font-light text-navy group-hover:text-orange transition-colors mb-3">
+        {/* Photo count badge — bottom right */}
+        <div className="absolute bottom-3 right-3 flex items-center gap-1 bg-black/50 backdrop-blur-sm px-2 py-1">
+          <CameraIcon size={11} className="text-white" />
+          <span className="font-mono text-[10px] text-white leading-none">{imageCount}</span>
+        </div>
+      </Link>
+
+      {/* ── Content ───────────────────────────────────────────────────────── */}
+      <Link href={`/listings/${development.slug}`} className="flex flex-col flex-1 px-4 pt-4 pb-3">
+        {/* Name */}
+        <h3 className="font-display font-light text-navy text-[1.1rem] leading-snug mb-1 group-hover:text-orange transition-colors">
           {development.name}
         </h3>
 
-        <div className="flex gap-4 mt-auto pt-3 border-t border-line">
-          {development.price_display && (
-            <div>
-              <p className="font-mono text-label-sm uppercase tracking-widest text-ink/30">From</p>
-              <p className="font-mono text-label-lg text-ink">{development.price_display}</p>
-            </div>
-          )}
-          {development.beds_min && (
-            <div>
-              <p className="font-mono text-label-sm uppercase tracking-widest text-ink/30">Beds</p>
-              <p className="font-mono text-label-lg text-ink">
-                {development.beds_min === development.beds_max
-                  ? development.beds_min
-                  : `${development.beds_min}–${development.beds_max}`}
-              </p>
-            </div>
-          )}
-          {development.completion_quarter && (
-            <div>
-              <p className="font-mono text-label-sm uppercase tracking-widest text-ink/30">Est.</p>
-              <p className="font-mono text-label-lg text-ink">{development.completion_quarter}</p>
-            </div>
-          )}
-        </div>
-      </div>
+        {/* Location */}
+        <p className="font-sans text-[12px] text-ink/50 mb-3">
+          {[development.suburb, development.state].filter(Boolean).join(", ")}
+        </p>
 
-      {/* Status bar */}
-      {development.status && (
-        <div className="px-4 pb-3">
-          <Pill variant={development.status === "Selling now" ? "orange" : "ghost"}>
-            {development.status}
-          </Pill>
+        {/* Specs row: Type | Beds */}
+        <div className="flex items-center text-ink/60 mb-3 flex-wrap">
+          {development.type && (
+            <span className="font-sans text-[12px] text-ink/60">{development.type}</span>
+          )}
+          {bedsLabel && (
+            <>
+              {development.type && (
+                <span className="mx-2 text-ink/20 text-[10px] select-none">|</span>
+              )}
+              <span className="inline-flex items-center gap-1">
+                <BedIcon size={13} className="text-ink/40" />
+                <span className="font-sans text-[12px] text-ink/60">{bedsLabel} Bed</span>
+              </span>
+            </>
+          )}
         </div>
-      )}
-    </Link>
+
+        {/* Price guide */}
+        {development.price_display && (
+          <div className="mt-auto">
+            <p className="font-mono text-[9px] uppercase tracking-widest text-ink/30 mb-0.5">Price Guide</p>
+            <p className="font-mono text-[13px] font-medium text-ink">{development.price_display}</p>
+          </div>
+        )}
+      </Link>
+
+      {/* ── Divider ───────────────────────────────────────────────────────── */}
+      <div className="h-px bg-line mx-4" />
+
+      {/* ── Action row ────────────────────────────────────────────────────── */}
+      <div className="flex divide-x divide-line">
+        <button
+          onClick={handleShare}
+          className="flex-1 flex items-center justify-center gap-1.5 py-3 font-mono text-[10px] uppercase tracking-widest text-ink/50 hover:text-orange hover:bg-orange/5 transition-all"
+        >
+          <ShareIcon size={13} />
+          {copied ? "Copied!" : "Share"}
+        </button>
+        <Link
+          href={`/listings/${development.slug}`}
+          className="flex-1 flex items-center justify-center gap-1.5 py-3 font-mono text-[10px] uppercase tracking-widest text-ink/50 hover:text-orange hover:bg-orange/5 transition-all"
+        >
+          <ArrowRightIcon size={13} />
+          View
+        </Link>
+        <Link
+          href={`/listings/${development.slug}#enquire`}
+          className="flex-1 flex items-center justify-center gap-1.5 py-3 font-mono text-[10px] uppercase tracking-widest text-ink/50 hover:text-orange hover:bg-orange/5 transition-all"
+        >
+          <MailIcon size={13} />
+          Enquire
+        </Link>
+      </div>
+    </div>
   );
 }

@@ -113,3 +113,42 @@ export function MenuIcon({ className, size = 20 }: IconProps) {
     </svg>
   );
 }
+
+export function BathIcon({ className, size = 20 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" className={className} aria-hidden="true">
+      <path d="M3 10h14v2a5 5 0 01-5 5H8a5 5 0 01-5-5v-2z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+      <path d="M6 10V5.5a2 2 0 114 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function CarIcon({ className, size = 20 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" className={className} aria-hidden="true">
+      <path d="M3 9.5l1.5-4h11l1.5 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+      <rect x="2" y="9.5" width="16" height="5" rx="1" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M5 14.5v1.5M15 14.5v1.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function CameraIcon({ className, size = 20 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" className={className} aria-hidden="true">
+      <path d="M7.5 4.5L6 7H3a1 1 0 00-1 1v7a1 1 0 001 1h14a1 1 0 001-1V8a1 1 0 00-1-1h-3l-1.5-2.5h-5z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+      <circle cx="10" cy="11" r="2.5" stroke="currentColor" strokeWidth="1.4" />
+    </svg>
+  );
+}
+
+export function ShareIcon({ className, size = 20 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" className={className} aria-hidden="true">
+      <circle cx="15" cy="4" r="2" stroke="currentColor" strokeWidth="1.4" />
+      <circle cx="5"  cy="10" r="2" stroke="currentColor" strokeWidth="1.4" />
+      <circle cx="15" cy="16" r="2" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M7 9l6-4M7 11l6 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  );
+}
