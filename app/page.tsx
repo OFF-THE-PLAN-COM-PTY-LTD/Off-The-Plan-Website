@@ -140,36 +140,14 @@ export default async function HomePage() {
             </p>
           </AnimateIn>
 
-          {/* Row 1: hero card (2/3) + side card (1/3) */}
-          <AnimateIn className="mb-3">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-              {tier1[0] && (
-                <div className="lg:col-span-2">
-                  <PropertyCard
-                    development={tier1[0]}
-                    layout="featured"
-                    imageHeight="h-[540px]"
-                  />
-                </div>
-              )}
-              {tier1[1] && (
-                <PropertyCard
-                  development={tier1[1]}
-                  layout="featured"
-                  imageHeight="h-[540px]"
-                />
-              )}
-            </div>
-          </AnimateIn>
-
-          {/* Row 2: 4 equal cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            {tier1.slice(2).map((dev, i) => (
-              <AnimateIn key={dev.id} delay={i * 90}>
+          {/* 3-col × 2-row equal grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {tier1.map((dev, i) => (
+              <AnimateIn key={dev.id} delay={i * 80}>
                 <PropertyCard
                   development={dev}
                   layout="featured"
-                  imageHeight="h-[300px]"
+                  imageHeight="h-[420px]"
                 />
               </AnimateIn>
             ))}
