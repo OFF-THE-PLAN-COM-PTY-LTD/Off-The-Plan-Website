@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Pill } from "@/components/pill";
+import { ShareModal } from "@/components/share-modal";
 import {
   BedIcon,
   BathIcon,
@@ -57,16 +58,12 @@ export function PropertyCard({
   const router = useRouter();
   const [saved, setSaved] = useState(initialSaved);
   const [loading, setLoading] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   const handleShare = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const url = `${window.location.origin}/listings/${development.slug}`;
-    navigator.clipboard.writeText(url).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
+    setShareOpen(true);
   };
 
   const heroImageUrl =
@@ -419,7 +416,7 @@ export function PropertyCard({
           className="flex-1 flex items-center justify-center gap-1.5 py-3 border-r border-line font-mono text-[10px] uppercase tracking-widest text-ink/60 bg-white hover:bg-ink/5 transition-all"
         >
           <ShareIcon size={12} />
-          {copied ? "Copied!" : "Share"}
+          Share
         </button>
         <Link
           href={`/listings/${development.slug}`}
@@ -436,6 +433,17 @@ export function PropertyCard({
           <MailIcon size={12} />
         </Link>
       </div>
+
+      {/* Share modal */}
+      {shareOpen && (
+        <ShareModal
+          slug={development.slug}
+          name={development.name}
+          suburb={development.suburb}
+          state={development.state}
+          onClose={() => setShareOpen(false)}
+        />
+      )}
     </div>
   );
 }
