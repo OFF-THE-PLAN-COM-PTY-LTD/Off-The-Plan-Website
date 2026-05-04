@@ -9,6 +9,7 @@ import { PropertiesTable } from "@/components/properties-table";
 import { ReadMore } from "@/components/read-more";
 import { CheckIcon, MailIcon } from "@/components/icons";
 import { PhoneReveal } from "@/components/phone-reveal";
+import { ShareButton } from "@/components/share-button";
 import { supabase } from "@/lib/supabase/public";
 import type { Development, DevelopmentFloorPlan } from "@/types/development";
 
@@ -313,18 +314,12 @@ export default async function DossierPage({ params }: Props) {
 
               {/* ── Share + Enquire footer row ── */}
               <div className="border border-t-0 border-line grid grid-cols-2">
-                <button
-                  className="flex items-center justify-center gap-2 py-3 font-mono text-[10px] uppercase tracking-widest text-ink/60 hover:text-orange border-r border-line transition-colors"
-                  onClick={undefined}
-                >
-                  <svg width="13" height="13" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                    <circle cx="15" cy="4" r="2" stroke="currentColor" strokeWidth="1.5"/>
-                    <circle cx="5" cy="10" r="2" stroke="currentColor" strokeWidth="1.5"/>
-                    <circle cx="15" cy="16" r="2" stroke="currentColor" strokeWidth="1.5"/>
-                    <path d="M7 9l6-3.5M7 11l6 3.5" stroke="currentColor" strokeWidth="1.5"/>
-                  </svg>
-                  Share
-                </button>
+                <ShareButton
+                  slug={dev.slug}
+                  name={dev.name}
+                  suburb={dev.suburb}
+                  state={dev.state}
+                />
                 <a
                   href="#enquire"
                   className="flex items-center justify-center gap-2 py-3 font-mono text-[10px] uppercase tracking-widest bg-orange text-white hover:bg-orange/90 transition-colors"
