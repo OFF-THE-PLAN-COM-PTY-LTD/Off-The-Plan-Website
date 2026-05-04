@@ -192,26 +192,29 @@ export function ShareModal({ slug, name, suburb, state, onClose }: ShareModalPro
         onClick={(e) => e.stopPropagation()}
       >
         {/* ── Left: brand panel ───────────────────────────────────────────── */}
-        <div className="hidden sm:flex flex-col justify-between bg-navy p-7 w-[168px] flex-shrink-0">
+        <div className="hidden sm:flex flex-col justify-between bg-navy px-7 py-8 w-[190px] flex-shrink-0">
+          {/* Logo — inverted to white on dark background */}
           <div>
-            <div className="border border-white/20 px-3 py-3 inline-block mb-4">
-              <p className="font-mono text-[7px] uppercase tracking-[0.28em] text-white/50 leading-none">OFF</p>
-              <div className="w-full h-[0.5px] bg-white/20 my-2" />
-              <p className="font-display text-[18px] font-light italic text-white leading-none tracking-tight">The</p>
-              <div className="w-full h-[0.5px] bg-white/20 my-2" />
-              <p className="font-mono text-[7px] uppercase tracking-[0.28em] text-white/50 leading-none">PLAN</p>
-            </div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="block w-4 h-px bg-orange" aria-hidden="true" />
-              <p className="font-mono text-[7px] uppercase tracking-[0.2em] text-orange/80">Australia</p>
-            </div>
-            <p className="font-mono text-[7px] uppercase tracking-[0.15em] text-white/25 leading-[1.9]">
-              New Home<br />Portal
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo.png"
+              alt="Off The Plan"
+              className="w-full max-w-[140px] mb-6"
+              style={{ filter: "brightness(0) invert(1)" }}
+            />
+            <div className="w-8 h-px bg-orange mb-4" aria-hidden="true" />
+            <p className="font-mono text-[8px] uppercase tracking-[0.2em] text-white/55 leading-[2]">
+              Australia&apos;s<br />New Home<br />Portal
             </p>
           </div>
-          <p className="font-display font-light italic text-white/20 text-[12px] leading-snug">
-            Share your<br />future address
-          </p>
+
+          {/* Bottom tagline — more visible */}
+          <div>
+            <div className="w-5 h-px bg-white/30 mb-3" aria-hidden="true" />
+            <p className="font-display font-light italic text-white/70 text-[13px] leading-snug">
+              Share your<br />future address
+            </p>
+          </div>
         </div>
 
         {/* ── Right: content ──────────────────────────────────────────────── */}
