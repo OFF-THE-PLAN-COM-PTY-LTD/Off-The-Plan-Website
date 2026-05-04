@@ -135,7 +135,7 @@ export default async function HomePage() {
       </section>
 
       {/* ─── Section 1: Featured Developments (Tier 1) ─────────────────────── */}
-      <section className="bg-navy py-16 md:py-24">
+      <section className="bg-navy pt-16 md:pt-24 pb-10 md:pb-12">
         <div className="container-padded">
           <AnimateIn>
             <div className="mb-12">
@@ -183,7 +183,7 @@ export default async function HomePage() {
       </section>
 
       {/* ─── Section 2: Search by Category ─────────────────────────────────── */}
-      <section className="bg-cream py-16">
+      <section className="bg-cream pt-10 pb-16">
         <ImageAutoSlider items={CATEGORIES} tileHeight="h-72" />
       </section>
 
