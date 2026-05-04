@@ -186,7 +186,7 @@ export function PropertyCard({
         href={`/listings/${development.slug}`}
         className={cn("group relative overflow-hidden block", className)}
       >
-        <div className="relative h-72 bg-navy overflow-hidden">
+        <div className="relative h-[440px] bg-navy overflow-hidden">
           {heroImageUrl ? (
             <Image
               src={heroImageUrl}
@@ -252,7 +252,7 @@ export function PropertyCard({
       className={cn("group relative flex flex-col overflow-hidden bg-cream-alt border border-line", className)}
     >
       {/* Image */}
-      <div className="relative h-56 bg-navy/10 overflow-hidden">
+      <div className="relative h-64 bg-navy/10 overflow-hidden">
         {heroImageUrl ? (
           <Image
             src={heroImageUrl}

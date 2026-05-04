@@ -149,7 +149,7 @@ export default async function HomePage() {
               <Link
                 key={cat.label}
                 href={cat.href}
-                className="group relative h-48 overflow-hidden"
+                className="group relative h-60 overflow-hidden"
               >
                 <div className={`absolute inset-0 bg-gradient-to-br ${cat.gradient}`} />
                 <div className="absolute inset-0 bg-navy/20 group-hover:bg-navy/0 transition-colors duration-300" />
