@@ -1,8 +1,6 @@
 import Link from "next/link";
 import { PropertyCard } from "@/components/property-card";
 import { JournalCard } from "@/components/journal-card";
-import { HeroSearch } from "@/components/hero-search";
-import { MemberSignupForm } from "@/components/member-signup-form";
 import { ChevronRightIcon } from "@/components/icons";
 import { supabase } from "@/lib/supabase/public";
 import type { Development } from "@/types/development";
@@ -10,243 +8,232 @@ import type { JournalArticle } from "@/types/journal";
 
 export const dynamic = "force-dynamic";
 
-export default async function HomePage() {
+// ─── Mock fallback data ───────────────────────────────────────────────────────
+// Shown when the DB has no tier-tagged listings yet.
 
-  const [{ data: featuredData }, { data: trendingData }, { data: articlesData }] = await Promise.all([
+function mockDev(
+  id: string,
+  slug: string,
+  name: string,
+  suburb: string,
+  state: "VIC" | "NSW" | "QLD" | "WA" | "SA",
+  price_display: string,
+  beds_min: number,
+  beds_max: number,
+  status: "Selling now" | "Final release" | "Register interest",
+  type: "Apartments" | "Townhouses" | "Houses" | "Penthouses",
+): Development {
+  return {
+    id, slug, name, suburb, state, price_display, beds_min, beds_max, status, type,
+    tier: null,
+    price_from: null, completion_quarter: null, developer_id: null, tag: null,
+    summary: null, lifestyle: null, architect: null, interiors: null, landscape: null,
+    builder: null, levels: null, residence_count: null, lat: null, lng: null,
+    hero_image_url: null, brochure_url: null, is_published: true, is_featured: false,
+    created_at: "2024-01-01", updated_at: "2024-01-01",
+  };
+}
+
+const MOCK_TIER1: Development[] = [
+  mockDev("m1", "ellie-residences",    "Ellie Residences",    "South Yarra",  "VIC", "From $750,000",   2, 3, "Selling now", "Apartments"),
+  mockDev("m2", "wish-cove",           "Wish Cove",           "Broadbeach",   "QLD", "From $620,000",   1, 2, "Selling now", "Apartments"),
+  mockDev("m3", "arc-spa",             "Arc Spa",             "Bondi",        "NSW", "From $1,100,000", 2, 3, "Selling now", "Apartments"),
+  mockDev("m4", "saltaire-palm-beach", "Saltaire Palm Beach", "Palm Beach",   "QLD", "From $890,000",   2, 4, "Selling now", "Apartments"),
+  mockDev("m5", "jaba",                "Jaba",                "Fitzroy",      "VIC", "From $680,000",   1, 3, "Selling now", "Apartments"),
+  mockDev("m6", "lagoon-main-beach",   "Lagoon Main Beach",   "Main Beach",   "QLD", "From $820,000",   2, 3, "Selling now", "Apartments"),
+];
+
+const MOCK_TIER2: Development[] = [
+  mockDev("m7",  "pines-blacktown",      "Pines Blacktown",      "Blacktown",   "NSW", "From $520,000", 2, 3, "Selling now", "Townhouses"),
+  mockDev("m8",  "phoenix-trust",        "Phoenix & Trust",      "Parramatta",  "NSW", "From $599,000", 1, 2, "Selling now", "Apartments"),
+  mockDev("m9",  "peligon",              "Peligon",              "West End",    "QLD", "From $489,000", 1, 2, "Selling now", "Apartments"),
+  mockDev("m10", "north-village-auburn", "North Village Auburn", "Auburn",      "NSW", "From $650,000", 1, 3, "Selling now", "Apartments"),
+  mockDev("m11", "rose-residences",      "Rose Residences",      "St Kilda",    "VIC", "From $710,000", 2, 3, "Selling now", "Apartments"),
+  mockDev("m12", "haven-collingwood",    "Haven Collingwood",    "Collingwood", "VIC", "From $580,000", 1, 2, "Selling now", "Apartments"),
+  mockDev("m13", "marina-one",           "Marina One",           "Docklands",   "VIC", "From $750,000", 1, 3, "Selling now", "Apartments"),
+  mockDev("m14", "bayview-terraces",     "Bayview Terraces",     "Manly",       "NSW", "From $980,000", 2, 4, "Selling now", "Townhouses"),
+];
+
+const CATEGORIES = [
+  { label: "Apartments",     href: "/search?type=Apartment",       gradient: "from-navy to-navy-mid"  },
+  { label: "Townhouses",     href: "/search?type=Townhouse",       gradient: "from-ink to-navy"       },
+  { label: "House & Land",   href: "/search?type=House+%26+Land",  gradient: "from-navy-mid to-ink"   },
+  { label: "New Apartments", href: "/search?type=Apartment",       gradient: "from-orange to-navy"    },
+];
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
+export default async function HomePage() {
+  const [{ data: tier1Data }, { data: tier2Data }, { data: articlesData }] = await Promise.all([
     supabase
       .from("developments")
       .select("*, developer:developers(*), images:development_images(*)")
-      .eq("is_featured", true)
-      .eq("is_published", true)
-      .order("updated_at", { ascending: false })
-      .limit(7),
-    supabase
-      .from("developments")
-      .select("*, developer:developers(*), images:development_images(*)")
+      .eq("tier", "1st Tier")
       .eq("is_published", true)
       .order("updated_at", { ascending: false })
       .limit(6),
+    supabase
+      .from("developments")
+      .select("*, developer:developers(*), images:development_images(*)")
+      .eq("tier", "2nd Tier")
+      .eq("is_published", true)
+      .order("updated_at", { ascending: false })
+      .limit(8),
     supabase
       .from("journal_articles")
       .select("*")
       .eq("is_published", true)
       .order("published_at", { ascending: false })
-      .limit(4),
+      .limit(3),
   ]);
 
-  const featured = (featuredData ?? []) as unknown as Development[];
-  const trending = (trendingData ?? []) as unknown as Development[];
-  const articles = (articlesData ?? []) as unknown as JournalArticle[];
+  const tier1 = (tier1Data ?? []).length > 0
+    ? (tier1Data as unknown as Development[])
+    : MOCK_TIER1;
 
-  const [heroFeatured, ...restFeatured] = featured;
-  const gridFeatured = restFeatured.slice(0, 6);
+  const tier2 = (tier2Data ?? []).length > 0
+    ? (tier2Data as unknown as Development[])
+    : MOCK_TIER2;
+
+  const articles = (articlesData ?? []) as unknown as JournalArticle[];
 
   return (
     <>
-      {/* ─── Hero ─────────────────────────────────────────────── */}
+      {/* ─── Hero (unchanged) ──────────────────────────────────────────────── */}
       <section className="relative h-screen flex items-center justify-center bg-navy overflow-hidden">
-        {/* Background video */}
         <video
-          autoPlay
-          muted
-          loop
-          playsInline
+          autoPlay muted loop playsInline
           className="absolute inset-0 w-full h-full object-cover"
           aria-hidden="true"
         >
           <source src="/hero-video.mp4" type="video/mp4" />
         </video>
-
-        {/* Dark overlay */}
         <div className="absolute inset-0 bg-navy/60" />
-
-        {/* Centered title */}
         <div className="relative z-10 text-center px-6 flex flex-col items-center gap-6">
-          {/* Thin rule above */}
           <div className="w-12 h-px bg-orange" aria-hidden="true" />
-
-          {/* Eyebrow */}
           <p className="font-mono text-label-lg uppercase tracking-[0.3em] text-ink-light/50">
-            Australia's New Home Portal
+            Australia&apos;s New Home Portal
           </p>
-
-          {/* Main title */}
           <h1 className="font-display font-light text-ink-light leading-[0.9] tracking-tight text-[clamp(56px,9vw,148px)]">
-            Off{" "}
-            <em className="not-italic italic text-orange">The</em>
-            {" "}Plan
+            Off{" "}<em className="not-italic italic text-orange">The</em>{" "}Plan
           </h1>
-
-          {/* Tagline */}
           <p className="font-sans font-light text-ink-light/70 text-[clamp(16px,1.8vw,22px)] tracking-wide max-w-md">
             Where your future address begins
           </p>
-
-          {/* Thin rule below */}
           <div className="w-12 h-px bg-orange" aria-hidden="true" />
         </div>
       </section>
 
-      {/* ─── Featured Developments ────────────────────────────── */}
-      <section className="bg-cream py-20 md:py-30">
+      {/* ─── Section 1: Featured Developments (Tier 1) ─────────────────────── */}
+      <section className="bg-navy py-16 md:py-20">
         <div className="container-padded">
-          {/* Section header */}
-          <div className="flex items-end justify-between mb-10">
-            <div>
-              <p className="section-label mb-3">Volume 04 · Featured</p>
-              <h2 className="font-display font-light text-navy text-section-lg">
-                Eight residences, hand-picked
-                <br />
-                by our editors this fortnight.
-              </h2>
-            </div>
-            <Link
-              href="/search"
-              className="hidden md:flex items-center gap-2 font-mono text-label-lg uppercase tracking-widest text-ink/40 hover:text-orange transition-colors"
-            >
-              View all
-              <ChevronRightIcon size={16} />
-            </Link>
-          </div>
-
-          {/* Wide card — hero feature */}
-          {heroFeatured && (
-            <PropertyCard
-              development={heroFeatured}
-              layout="wide"
-              className="mb-6"
-            />
-          )}
-
-          {/* 2 rows of 3 tall cards */}
+          <p className="font-mono text-[11px] uppercase tracking-widest text-white/40 mb-8">
+            Featured Developments
+          </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {gridFeatured.map((dev, i) => (
-              <PropertyCard
-                key={dev.id}
-                development={dev}
-                layout="tall"
-                className={i === 1 || i === 4 ? "lg:mt-16" : ""}
-              />
+            {tier1.map((dev) => (
+              <PropertyCard key={dev.id} development={dev} layout="featured" />
             ))}
           </div>
-
-          <div className="mt-8 md:hidden text-center">
-            <Link href="/search" className="btn-ghost inline-flex items-center gap-2">
-              View all listings
-              <ChevronRightIcon size={16} />
-            </Link>
-          </div>
         </div>
       </section>
 
-      {/* ─── Trending Rail ────────────────────────────────────── */}
-      <section className="bg-white py-16 border-t border-b border-line">
-        <div className="container-padded mb-8">
-          <div className="flex items-center gap-3 mb-3">
-            <span className="w-2 h-2 rounded-full bg-orange animate-pulse-dot" aria-hidden="true" />
-            <p className="section-label">Live · Trending now</p>
-          </div>
-          <h2 className="font-display font-light text-navy text-section-lg">
-            What buyers are watching this week
-          </h2>
-        </div>
-
-        {/* Horizontal scroll rail */}
-        <div className="flex gap-4 overflow-x-auto px-6 md:px-10 pb-4 scrollbar-none snap-x snap-mandatory">
-          {trending.map((dev) => (
-            <div key={dev.id} className="flex-shrink-0 w-72 snap-start">
-              <PropertyCard development={dev} layout="tall" />
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ─── Member Circle Signup ─────────────────────────────── */}
-      <section id="circle" className="bg-navy py-20 md:py-30 relative overflow-hidden">
-        {/* Decorative grid overlay */}
-        <div
-          className="absolute inset-0 opacity-5"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)",
-            backgroundSize: "48px 48px",
-          }}
-          aria-hidden="true"
-        />
-
-        <div className="relative z-10 container-padded">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
-            {/* Left: value proposition */}
-            <div>
-              <p className="section-label text-ink-light/30 mb-4">The Member Circle</p>
-              <h2 className="font-display font-light text-ink-light text-section-lg mb-6">
-                Get there before
-                <br />
-                everyone else.
-              </h2>
-              <ul className="flex flex-col gap-4 mb-8">
-                {[
-                  "Early access to new launches before they reach the market",
-                  "Curated fortnightly digest of hand-picked listings",
-                  "Market reports and suburb analysis from our editorial team",
-                  "Invitations to private developer preview events",
-                ].map((benefit) => (
-                  <li key={benefit} className="flex items-start gap-3">
-                    <span className="mt-1 w-5 h-5 flex-shrink-0 rounded-full border border-orange/50 flex items-center justify-center">
-                      <span className="w-1.5 h-1.5 rounded-full bg-orange" />
-                    </span>
-                    <span className="font-sans text-body-md text-ink-light/70">{benefit}</span>
-                  </li>
-                ))}
-              </ul>
-              <p className="font-mono text-label-lg text-ink-light/30 uppercase tracking-widest">
-                Australia's qualified buyer network
-              </p>
-            </div>
-
-            {/* Right: signup form */}
-            <div className="lg:pt-12">
-              <MemberSignupForm tone="dark" />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ─── Journal ──────────────────────────────────────────── */}
-      <section className="bg-cream-alt py-20 md:py-30">
+      {/* ─── Section 2: Search by Category ─────────────────────────────────── */}
+      <section className="bg-cream py-16">
         <div className="container-padded">
-          <div className="flex items-end justify-between mb-10">
-            <div>
-              <p className="section-label mb-3">The Residences Journal</p>
-              <h2 className="font-display font-light text-navy text-section-lg">
-                Reading for the considered buyer.
-              </h2>
-            </div>
+          <p className="font-mono text-[11px] uppercase tracking-widest text-ink/40 text-center mb-8">
+            Search by Category
+          </p>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {CATEGORIES.map((cat) => (
+              <Link
+                key={cat.label}
+                href={cat.href}
+                className="group relative h-48 overflow-hidden"
+              >
+                <div className={`absolute inset-0 bg-gradient-to-br ${cat.gradient}`} />
+                <div className="absolute inset-0 bg-navy/20 group-hover:bg-navy/0 transition-colors duration-300" />
+                <div className="relative h-full flex items-center justify-center">
+                  <span className="font-mono text-[11px] uppercase tracking-widest text-white">
+                    {cat.label}
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Section 3: Latest Listings (Tier 2) ────────────────────────────── */}
+      <section className="bg-white py-16 md:py-20">
+        <div className="container-padded">
+          <div className="flex items-center justify-between mb-8">
+            <p className="font-mono text-[11px] uppercase tracking-widest text-ink/40">
+              Latest Listings
+            </p>
             <Link
-              href="/journal"
-              className="hidden md:flex items-center gap-2 font-mono text-label-lg uppercase tracking-widest text-ink/40 hover:text-orange transition-colors"
+              href="/search"
+              className="font-mono text-[11px] uppercase tracking-widest text-ink/40 hover:text-orange transition-colors flex items-center gap-1.5"
             >
-              All articles
-              <ChevronRightIcon size={16} />
+              View more listings
+              <ChevronRightIcon size={14} />
             </Link>
           </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {tier2.map((dev) => (
+              <PropertyCard key={dev.id} development={dev} layout="tall" />
+            ))}
+          </div>
+        </div>
+      </section>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Feature article */}
-            {articles[0] && (
-              <div className="md:col-span-1">
-                <JournalCard article={articles[0]} variant="feature" />
-              </div>
-            )}
-            {/* Compact articles */}
-            <div className="md:col-span-2 flex flex-col">
-              {articles.slice(1, 4).map((article) => (
-                <JournalCard key={article.id} article={article} variant="compact" />
+      {/* ─── Section 4: Start Listing CTA ───────────────────────────────────── */}
+      <section className="bg-orange py-12">
+        <div className="container-padded flex flex-col md:flex-row items-center justify-between gap-6">
+          <div>
+            <p className="font-mono text-[10px] uppercase tracking-widest text-white/60 mb-2">
+              Off The Plan
+            </p>
+            <h2 className="font-display font-light text-white text-section-lg mb-1">
+              Start Listing With Off The Plan
+            </h2>
+            <p className="font-sans text-white/80 text-body-md">
+              Reach thousands of qualified buyers across Australia.
+            </p>
+          </div>
+          <Link
+            href="/list-a-listing"
+            className="flex-shrink-0 font-mono text-[11px] uppercase tracking-widest px-6 py-3 border border-white text-white hover:bg-white hover:text-orange transition-colors whitespace-nowrap"
+          >
+            Learn More
+          </Link>
+        </div>
+      </section>
+
+      {/* ─── Section 5: News & Events ───────────────────────────────────────── */}
+      {articles.length > 0 && (
+        <section className="bg-cream-alt py-16 md:py-20">
+          <div className="container-padded">
+            <div className="flex items-center justify-between mb-8">
+              <p className="font-mono text-[11px] uppercase tracking-widest text-ink/40">
+                News &amp; Events
+              </p>
+              <Link
+                href="/journal"
+                className="font-mono text-[11px] uppercase tracking-widest text-ink/40 hover:text-orange transition-colors flex items-center gap-1.5"
+              >
+                View all
+                <ChevronRightIcon size={14} />
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {articles.map((article) => (
+                <JournalCard key={article.id} article={article} variant="feature" />
               ))}
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
     </>
   );
 }
