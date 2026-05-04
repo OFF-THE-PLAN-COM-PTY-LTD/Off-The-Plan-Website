@@ -2,8 +2,8 @@ import Link from "next/link";
 import { PropertyCard } from "@/components/property-card";
 import { JournalCard } from "@/components/journal-card";
 import { AnimateIn } from "@/components/animate-in";
-import { CategoryCarousel } from "@/components/category-carousel";
-import type { Category } from "@/components/category-carousel";
+import { ImageAutoSlider } from "@/components/ui/image-auto-slider";
+import type { SliderItem } from "@/components/ui/image-auto-slider";
 import { ChevronRightIcon } from "@/components/icons";
 import { supabase } from "@/lib/supabase/public";
 import type { Development } from "@/types/development";
@@ -62,7 +62,7 @@ const MOCK_TIER2: Development[] = [
   mockDev("m14", "bayview-terraces",     "Bayview Terraces",     "Manly",       "NSW", "From $980,000", 2, 4, "Selling now", "Townhouses", U("1538688525198-9b3b1c98d25d")),
 ];
 
-const CATEGORIES: Category[] = [
+const CATEGORIES: SliderItem[] = [
   { label: "Apartments",     href: "/search?type=Apartment",       image: U("1460317442991-0ec209397118") },
   { label: "Townhouses",     href: "/search?type=Townhouse",       image: U("1512917774080-9991f1c4c750") },
   { label: "House & Land",   href: "/search?type=House+%26+Land",  image: U("1600585154340-be6161a56a0c") },
@@ -185,8 +185,11 @@ export default async function HomePage() {
       {/* ─── Section 2: Search by Category ─────────────────────────────────── */}
       <section className="bg-cream py-16">
         <div className="container-padded">
-          <CategoryCarousel categories={CATEGORIES} />
+          <p className="font-mono text-[13px] uppercase tracking-widest text-ink mb-8">
+            Search by Category
+          </p>
         </div>
+        <ImageAutoSlider items={CATEGORIES} speed={28} tileHeight="h-72" />
       </section>
 
       {/* ─── Section 3: Latest Listings (Tier 2) ────────────────────────────── */}
