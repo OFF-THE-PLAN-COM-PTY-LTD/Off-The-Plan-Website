@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { AboutValues } from "@/components/about-values";
 import { LogoSlider } from "@/components/logo-slider";
+import { ContactNextSteps } from "@/components/contact-next-steps";
 
 export const metadata: Metadata = {
   title: "About | Off The Plan",
@@ -188,51 +189,7 @@ export default function AboutPage() {
           <p className="font-mono uppercase tracking-widest text-navy text-center mb-12" style={{ fontSize: "20px" }}>
             Contact &amp; Next Steps
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              {
-                label: "In The Market",
-                desc: "If you're ready to explore your next home or investment, head over to our property search.",
-                cta: "Search",
-                href: "/search",
-                image: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=600&h=400&fit=crop&auto=format&q=80",
-              },
-              {
-                label: "Developers",
-                desc: "For developers looking to showcase a new development, register your project with us.",
-                cta: "Learn More",
-                href: "/list-a-listing",
-                image: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=600&h=400&fit=crop&auto=format&q=80",
-              },
-              {
-                label: "General Enquiries",
-                desc: "For general enquiries, please call +61 410 313 030 or complete the contact form and our team will respond promptly.",
-                cta: "Contact Us",
-                href: "/contact",
-                image: "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=600&h=400&fit=crop&auto=format&q=80",
-              },
-            ].map((card) => (
-              <div key={card.label} className="flex flex-col border border-line bg-white">
-                {/* Text area */}
-                <div className="flex flex-col items-center text-center px-8 pt-10 pb-8">
-                  <p className="font-mono text-label-sm uppercase tracking-widest text-navy font-semibold mb-5">
-                    {card.label}
-                  </p>
-                  <p className="font-sans text-body-md text-ink/70 leading-relaxed mb-8">{card.desc}</p>
-                  <Link
-                    href={card.href}
-                    className="font-mono text-label-sm uppercase tracking-widest px-6 py-2 border border-ink/30 text-ink hover:border-navy hover:text-navy transition-colors"
-                  >
-                    {card.cta}
-                  </Link>
-                </div>
-                {/* Image area */}
-                <div className="relative h-52 overflow-hidden flex-shrink-0">
-                  <Image src={card.image} alt={card.label} fill className="object-cover" />
-                </div>
-              </div>
-            ))}
-          </div>
+          <ContactNextSteps />
         </div>
       </section>
 
