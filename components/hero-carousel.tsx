@@ -1,9 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { ChevronLeftIcon, ChevronRightIcon, CameraIcon } from "@/components/icons";
+
+const MOCK_IMAGES = [
+  "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1600&h=900&fit=crop&auto=format&q=80",
+  "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1600&h=900&fit=crop&auto=format&q=80",
+  "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1600&h=900&fit=crop&auto=format&q=80",
+  "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1600&h=900&fit=crop&auto=format&q=80",
+  "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1600&h=900&fit=crop&auto=format&q=80",
+];
 
 interface CarouselImage {
   url: string;
@@ -16,21 +24,33 @@ interface HeroCarouselProps {
 }
 
 export function HeroCarousel({ images, name }: HeroCarouselProps) {
+  const displayImages = images.length > 0
+    ? images
+    : MOCK_IMAGES.map((url) => ({ url, caption: null }));
+
   const [current, setCurrent] = useState(0);
-  const total = images.length;
+  const total = displayImages.length;
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  if (total === 0) {
-    return (
-      <div className="relative w-full h-[65vh] bg-gradient-to-br from-navy to-navy-mid" />
-    );
-  }
+  const resetTimer = () => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setCurrent((c) => (c + 1) % total);
+    }, 4000);
+  };
 
-  const prev = () => setCurrent((c) => (c - 1 + total) % total);
-  const next = () => setCurrent((c) => (c + 1) % total);
+  useEffect(() => {
+    resetTimer();
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [total]);
+
+  const prev = () => { setCurrent((c) => (c - 1 + total) % total); resetTimer(); };
+  const next = () => { setCurrent((c) => (c + 1) % total); resetTimer(); };
 
   return (
     <div className="relative w-full h-[65vh] bg-navy overflow-hidden">
-      {images.map((img, i) => (
+      {displayImages.map((img, i) => (
         <div
           key={i}
           className={cn(
@@ -82,7 +102,7 @@ export function HeroCarousel({ images, name }: HeroCarouselProps) {
 
           {/* Dot indicators */}
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex gap-1.5">
-            {images.map((_, i) => (
+            {displayImages.map((_, i) => (
               <button
                 key={i}
                 onClick={() => setCurrent(i)}
