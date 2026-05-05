@@ -222,12 +222,12 @@ export default function FeaturesAndPricingPage() {
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-12 items-start">
 
             {/* Left — phone mockup image */}
-            <div className="hidden lg:flex items-end justify-center overflow-hidden">
+            <div className="hidden lg:block relative overflow-hidden min-h-[420px]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/Phone-Mock-05.png"
                 alt="Off The Plan on mobile"
-                className="w-full max-w-none scale-110 object-contain drop-shadow-2xl"
+                className="absolute inset-0 w-full h-full object-cover object-center scale-125"
               />
             </div>
 
