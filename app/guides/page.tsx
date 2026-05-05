@@ -98,14 +98,14 @@ export default async function GuidesPage() {
                   </div>
                 ))}
 
-                {/* Ad banner slot — partner image */}
-                <div className="hidden lg:flex items-stretch">
-                  <div className="relative w-full overflow-hidden border border-line">
+                {/* Ad banner slot — portrait image */}
+                <div className="hidden lg:flex flex-col bg-white border border-line overflow-hidden">
+                  <div className="relative flex-1">
                     <Image
-                      src="/off-the-plan-banner-landscape.png"
+                      src="/off-the-plan-banner-portrait.png"
                       alt="Off The Plan Partner Network"
                       fill
-                      className="object-cover"
+                      className="object-cover object-top"
                     />
                   </div>
                 </div>
