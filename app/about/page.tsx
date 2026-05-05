@@ -155,7 +155,7 @@ export default function AboutPage() {
       <section className="py-24 bg-cream">
         <div className="container-padded">
           <p className="font-mono uppercase tracking-widest text-navy text-center mb-4" style={{ fontSize: "20px" }}>Our Values</p>
-          <p className="font-sans text-body-md text-ink/70 text-center mb-14 max-w-xl mx-auto">
+          <p className="font-sans text-body-md text-ink/70 text-center mb-14 max-w-3xl mx-auto">
             Our values guide every decision we make and every relationship we build. At offtheplan.com.au™ we are committed to:
           </p>
           <div className="grid grid-cols-3 md:grid-cols-6 gap-8">
