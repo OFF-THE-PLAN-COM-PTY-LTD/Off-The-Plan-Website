@@ -342,23 +342,23 @@ export default function FeaturesAndPricingPage() {
       {/* ── 6. Bottom CTA ── */}
       <div className="bg-navy py-16">
         <div className="container-padded text-center">
-          <h2 className="font-mono text-[13px] uppercase tracking-[0.28em] text-white font-semibold mb-4">
+          <h2 className="font-mono text-[2rem] md:text-[2.6rem] uppercase tracking-[0.18em] text-white font-semibold mb-5">
             Ready to list your project?
           </h2>
-          <p className="font-sans text-[14px] text-white/60 mb-8 max-w-md mx-auto leading-relaxed">
+          <p className="font-sans text-[17px] text-white/60 mb-10 max-w-xl mx-auto leading-relaxed">
             Join hundreds of developers and builders already showcasing their
             properties on Off The Plan.
           </p>
-          <div className="flex flex-wrap gap-4 justify-center">
+          <div className="flex flex-wrap gap-5 justify-center">
             <Link
               href="/list-a-listing"
-              className="font-mono text-[10px] uppercase tracking-widest bg-orange text-white px-10 py-3 hover:bg-orange/90 transition-colors"
+              className="font-mono text-[11px] uppercase tracking-widest bg-orange text-white px-14 py-4 hover:bg-orange/90 transition-colors"
             >
               List With Us
             </Link>
             <Link
               href="/contact"
-              className="font-mono text-[10px] uppercase tracking-widest border border-white/30 text-white px-10 py-3 hover:border-orange hover:text-orange transition-colors"
+              className="font-mono text-[11px] uppercase tracking-widest border border-white/30 text-white px-14 py-4 hover:border-orange hover:text-orange transition-colors"
             >
               Contact Us
             </Link>
