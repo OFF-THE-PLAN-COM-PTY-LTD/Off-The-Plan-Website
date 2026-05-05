@@ -85,7 +85,7 @@ export function LogoSlider() {
     <div>
       {/* Header */}
       <div className="container-padded flex items-center justify-between mb-8">
-        <p className="font-mono uppercase tracking-widest text-navy font-semibold" style={{ fontSize: "20px" }}>
+        <p className="font-mono uppercase tracking-widest text-navy font-semibold" style={{ fontSize: "15px" }}>
           Trusted By:
         </p>
         <div className="flex items-center gap-3">
