@@ -61,7 +61,7 @@ export function NavBar({ tone = "light", position = "fixed", user = null }: NavB
               key={link.href}
               href={link.href}
               className={cn(
-                "font-mono text-[13px] uppercase tracking-widest transition-opacity hover:opacity-60",
+                "font-mono text-[13px] uppercase tracking-widest transition-colors hover:text-orange",
                 isDark ? "text-ink-light" : "text-ink"
               )}
             >
