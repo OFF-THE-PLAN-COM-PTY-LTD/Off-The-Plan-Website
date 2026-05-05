@@ -112,24 +112,24 @@ export default function AboutPage() {
       {/* ── A Message From Our Founder ──────────────────────────────────────── */}
       <section className="container-padded py-20 grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-start">
         <div>
-          <p className="font-mono text-label-sm uppercase tracking-widest text-ink/40 mb-5">
+          <p className="font-mono uppercase tracking-widest text-navy mb-5" style={{ fontSize: "20px" }}>
             A Message From Our Founder
           </p>
           <p className="font-sans text-body-md text-ink/80 leading-relaxed mb-4">
-            Over the last twenty years I have seen a dangerous trend occurring in our housing market. The need
-            for quality new property that meets the needs of Australians has never been greater. And yet finding
-            it has never been harder.
+            After more than twenty years in real estate, I recognised a significant gap in the market — the need
+            for an affordable, easy-to-use platform that brings together all forms of off-the-plan property
+            within a single, trusted domain.
           </p>
           <p className="font-sans text-body-md text-ink/80 leading-relaxed mb-4">
-            Off The Plan™ was created to both democratise access to property, leverage best practice
-            development and to provide developers with an effective, scalable platform to showcase their
-            projects.
+            offtheplan.com.au™ was created to fulfil that purpose: to simplify how buyers discover new
+            developments and to provide developers with an effective, results-oriented platform to showcase
+            their projects.
           </p>
-          <p className="font-sans text-body-md text-ink/80 leading-relaxed mb-8">
-            I strongly believe in Tasmania first, to identify and maximise the impact of innovation in the
-            housing sector and engage with communities. I am proud to create pathways and empower all
-            Australians to invest and engage with confidence.
+          <p className="font-sans text-body-md text-ink/80 leading-relaxed mb-6">
+            Today, our mission remains focused on accessibility, innovation and connection. Helping Australians
+            and the world to explore and secure opportunities across Australia.
           </p>
+          <p className="font-display font-light text-navy text-body-md mb-8">— Tim W.</p>
           <Link href="/contact" className="btn-primary inline-block">
             Talk to us
           </Link>
