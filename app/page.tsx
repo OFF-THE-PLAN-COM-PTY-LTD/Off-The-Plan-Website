@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { PropertyCard } from "@/components/property-card";
 import { JournalCard } from "@/components/journal-card";
 import { AnimateIn } from "@/components/animate-in";
@@ -272,6 +273,19 @@ export default async function HomePage() {
           </div>
         </section>
       )}
+
+      {/* ─── Partner Banner ─────────────────────────────────────────────────── */}
+      <section className="bg-cream py-10">
+        <div className="container-padded">
+          <Image
+            src="/off-the-plan-banner-landscape.png"
+            alt="Off The Plan Partner Network"
+            width={1200}
+            height={200}
+            className="w-full h-auto object-contain"
+          />
+        </div>
+      </section>
     </>
   );
 }

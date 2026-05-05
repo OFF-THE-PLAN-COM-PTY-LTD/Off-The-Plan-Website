@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Image from "next/image";
 import { JournalCard } from "@/components/journal-card";
 import { supabase } from "@/lib/supabase/public";
 import type { JournalArticle, JournalCategory } from "@/types/journal";
@@ -80,17 +79,6 @@ export default async function JournalPage({ searchParams }: JournalPageProps) {
         {articles.length === 0 && (
           <p className="font-sans text-body-md text-ink/40 text-center py-16">No articles in this category yet.</p>
         )}
-      </div>
-
-      {/* Partner banner */}
-      <div className="container-padded pb-14">
-        <Image
-          src="/off-the-plan-banner-landscape.png"
-          alt="Off The Plan Partner Network"
-          width={1200}
-          height={200}
-          className="w-full h-auto object-contain"
-        />
       </div>
     </div>
   );
