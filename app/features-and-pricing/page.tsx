@@ -222,12 +222,12 @@ export default function FeaturesAndPricingPage() {
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-12 items-start">
 
             {/* Left — phone mockup image */}
-            <div className="hidden lg:flex items-center justify-center py-4">
+            <div className="hidden lg:flex items-center justify-center self-stretch overflow-hidden">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/Phone-Mock-05.png"
                 alt="Off The Plan on mobile"
-                className="w-[110%] object-contain"
+                className="h-full w-auto object-contain scale-110"
               />
             </div>
 
