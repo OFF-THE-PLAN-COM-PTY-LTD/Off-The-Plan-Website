@@ -146,7 +146,7 @@ export function ContactNextSteps() {
                   </label>
                   <select className="w-full border border-line px-3 py-2.5 font-sans text-body-md outline-none cursor-pointer text-ink/50">
                     <option value="">Category</option>
-                    {["Apartments", "Townhouses", "Houses", "House & Land", "Commercial", "Penthouses"].map((t) => (
+                    {["New Apartments", "Townhouses", "Land and Estates", "Commercial", "House & Land", "New Home Design"].map((t) => (
                       <option key={t} value={t}>{t}</option>
                     ))}
                   </select>
@@ -158,7 +158,7 @@ export function ContactNextSteps() {
                   </label>
                   <select className="w-full border border-line px-3 py-2.5 font-sans text-body-md outline-none cursor-pointer text-ink/50">
                     <option value="">State</option>
-                    {["VIC", "NSW", "QLD", "WA", "SA", "TAS", "ACT", "NT"].map((s) => (
+                    {["Australian Capital Territory", "New South Wales", "Northern Territory", "Queensland", "South Australia", "Tasmania", "Victoria", "Western Australia"].map((s) => (
                       <option key={s} value={s}>{s}</option>
                     ))}
                   </select>
