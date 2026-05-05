@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { AboutValues } from "@/components/about-values";
+import { LogoSlider } from "@/components/logo-slider";
 
 export const metadata: Metadata = {
   title: "About | Off The Plan",
@@ -9,9 +10,6 @@ export const metadata: Metadata = {
 };
 
 
-const TRUSTED_BY = [
-  "LURE", "Good Selling", "ETON", "No Fly Zone", "FLAGSHIP", "fo:lar", "PF",
-];
 
 const WHAT_WE_DO = [
   "Provides a one-stop shop to list, promote and market off-the-plan and new home projects across Australia.",
@@ -148,18 +146,7 @@ export default function AboutPage() {
 
       {/* ── Trusted By ──────────────────────────────────────────────────────── */}
       <section className="py-16 bg-cream">
-        <div className="container-padded">
-          <p className="font-mono text-label-sm uppercase tracking-widest text-ink/40 text-center mb-10">
-            Trusted By
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-10 md:gap-16">
-            {TRUSTED_BY.map((name) => (
-              <span key={name} className="font-mono text-label-lg uppercase tracking-widest text-ink/30">
-                {name}
-              </span>
-            ))}
-          </div>
-        </div>
+        <LogoSlider />
       </section>
 
       <div className="border-t border-line" />
