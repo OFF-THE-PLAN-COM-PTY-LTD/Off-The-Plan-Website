@@ -33,7 +33,17 @@ export default function ListWithUsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-navy flex items-center justify-center px-4 py-20">
+    <div className="min-h-screen bg-navy flex items-center justify-center px-4 py-20 relative">
+      {/* Logo — left side */}
+      <div className="hidden lg:flex absolute left-16 top-1/2 -translate-y-1/2 flex-col items-center">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/logo.png"
+          alt="Off The Plan"
+          className="h-24 w-auto object-contain brightness-0 invert"
+        />
+      </div>
+
       <div className="bg-white w-full max-w-xl shadow-xl px-10 py-10">
         {/* Title */}
         <h1 className="font-display font-semibold text-navy text-2xl text-center mb-6">
@@ -47,7 +57,7 @@ export default function ListWithUsPage() {
             onClick={() => setRole("agency")}
             className={`px-8 py-2 font-mono text-label-lg uppercase tracking-widest border-2 transition-colors ${
               role === "agency"
-                ? "border-orange text-orange"
+                ? "bg-orange border-orange text-white"
                 : "border-orange/30 text-ink/50 hover:border-orange/60"
             }`}
           >
