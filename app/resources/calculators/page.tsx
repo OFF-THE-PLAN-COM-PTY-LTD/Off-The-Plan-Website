@@ -140,39 +140,9 @@ export default function CalculatorsPage() {
         </div>
       </div>
 
-      {/* ── Featured Partner — portrait card + landscape banner ── */}
+      {/* ── Featured Partner — landscape banner ── */}
       <div className="bg-[#f5f4f1] py-14 border-t border-line">
         <div className="container-padded">
-
-          {/* Portrait card */}
-          <div className="mb-6 inline-block">
-            <div className="w-[260px] bg-navy overflow-hidden border border-navy/20">
-              <div className="bg-orange px-5 py-4">
-                <p className="font-mono text-[9px] uppercase tracking-[0.25em] text-white/80 mb-1">Featured Partner</p>
-                <p className="font-display font-light text-white text-[1.1rem] leading-tight">
-                  Off The Plan<br />
-                  <em className="not-italic italic text-orange-200">Partner Network</em>
-                </p>
-              </div>
-              <div className="px-5 py-6">
-                <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-white/50 leading-[2.4]">
-                  Deposit Bonds<br />
-                  Finance Brokers<br />
-                  Conveyancers<br />
-                  Property Managers<br />
-                  Buyers Agents
-                </p>
-              </div>
-              <div className="border-t border-white/10 px-5 py-3">
-                <Link
-                  href="/contact"
-                  className="font-mono text-[8px] uppercase tracking-widest text-orange hover:text-orange/70 transition-colors"
-                >
-                  Become a Partner →
-                </Link>
-              </div>
-            </div>
-          </div>
 
           {/* Landscape banner */}
           <div className="w-full bg-navy flex items-center overflow-hidden border border-navy/20">
