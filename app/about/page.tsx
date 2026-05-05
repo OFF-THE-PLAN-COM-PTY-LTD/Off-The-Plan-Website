@@ -120,7 +120,7 @@ export default function AboutPage() {
 
       {/* ── Our Story ───────────────────────────────────────────────────────── */}
       <section className="container-padded py-20 grid grid-cols-1 md:grid-cols-[200px_1fr] gap-10 md:gap-16 items-start">
-        <p className="font-mono uppercase tracking-widest text-ink/70 pt-1" style={{ fontSize: "20px" }}>Our Story</p>
+        <p className="font-mono uppercase tracking-widest text-navy pt-1" style={{ fontSize: "20px" }}>Our Story</p>
         <div className="flex flex-col gap-4">
           <p className="font-sans text-body-md text-ink/80 leading-relaxed">
             offtheplan.com.au™ is an independent property portal designed exclusively to showcase new
