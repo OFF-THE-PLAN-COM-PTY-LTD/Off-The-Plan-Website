@@ -1,5 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { ImageAutoSlider } from "@/components/ui/image-auto-slider";
+import type { SliderItem } from "@/components/ui/image-auto-slider";
 
 export const metadata: Metadata = {
   title: "Features and Pricing | Off The Plan",
@@ -8,30 +10,30 @@ export const metadata: Metadata = {
 };
 
 // ── Category data ─────────────────────────────────────────────────────────────
-const CATEGORIES = [
+const CATEGORIES: SliderItem[] = [
   {
     label: "Townhouses",
-    img: "https://images.unsplash.com/photo-1558036117-15d82a90b9b1?w=600&h=400&fit=crop&auto=format&q=75",
+    image: "https://images.unsplash.com/photo-1558036117-15d82a90b9b1?w=600&h=400&fit=crop&auto=format&q=75",
     href: "/search?type=townhouse",
   },
   {
     label: "Land And Estates",
-    img: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=600&h=400&fit=crop&auto=format&q=75",
+    image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=600&h=400&fit=crop&auto=format&q=75",
     href: "/search?type=land",
   },
   {
     label: "Commercial",
-    img: "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=600&h=400&fit=crop&auto=format&q=75",
+    image: "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=600&h=400&fit=crop&auto=format&q=75",
     href: "/search?type=commercial",
   },
   {
     label: "House & Land",
-    img: "https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=600&h=400&fit=crop&auto=format&q=75",
+    image: "https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=600&h=400&fit=crop&auto=format&q=75",
     href: "/search?type=house-and-land",
   },
   {
     label: "New Home Design",
-    img: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&h=400&fit=crop&auto=format&q=75",
+    image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&h=400&fit=crop&auto=format&q=75",
     href: "/search?type=new-home-design",
   },
 ];
@@ -334,40 +336,7 @@ export default function FeaturesAndPricingPage() {
 
       {/* ── 5. Our Categories ── */}
       <div className="bg-white py-14">
-        <div className="container-padded">
-          <h2 className="font-mono text-[12px] uppercase tracking-[0.28em] text-ink/70 font-semibold mb-8">
-            Our Categories
-          </h2>
-        </div>
-
-        {/* Horizontally scrollable strip — no container constraint */}
-        <div className="overflow-x-auto scrollbar-hide">
-          <div className="flex min-w-max px-6 md:px-10 gap-0">
-            {CATEGORIES.map((cat) => (
-              <Link
-                key={cat.label}
-                href={cat.href}
-                className="relative flex-shrink-0 w-[220px] h-[180px] overflow-hidden group"
-              >
-                {/* Background image */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={cat.img}
-                  alt={cat.label}
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-                {/* Dark overlay */}
-                <div className="absolute inset-0 bg-navy/55 group-hover:bg-navy/40 transition-colors duration-300" />
-                {/* Label */}
-                <div className="absolute bottom-0 left-0 right-0 p-4">
-                  <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-white font-semibold leading-tight">
-                    {cat.label}
-                  </p>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
+        <ImageAutoSlider items={CATEGORIES} tileHeight="h-72" />
       </div>
 
       {/* ── 6. Bottom CTA ── */}
