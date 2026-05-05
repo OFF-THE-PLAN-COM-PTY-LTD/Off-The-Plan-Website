@@ -36,12 +36,14 @@ export default function ListWithUsPage() {
     <div className="min-h-screen bg-navy flex items-center justify-center px-4 py-20 relative">
       {/* Logo — left side */}
       <div className="hidden lg:flex absolute left-16 top-1/2 -translate-y-1/2 flex-col items-center">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/logo.png"
-          alt="Off The Plan"
-          className="h-24 w-auto object-contain brightness-0 invert"
-        />
+        <div className="bg-white px-6 py-4">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/logo.png"
+            alt="Off The Plan"
+            className="h-16 w-auto object-contain"
+          />
+        </div>
       </div>
 
       <div className="bg-white w-full max-w-xl shadow-xl px-10 py-10">
