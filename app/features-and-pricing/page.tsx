@@ -114,85 +114,61 @@ export default function FeaturesAndPricingPage() {
       </div>
 
       {/* ── 2. Media kit / about section ── */}
-      <div className="bg-white py-16">
-        <div className="container-padded">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+      <div className="bg-navy overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-2">
 
-            {/* Left — copy */}
-            <div>
-              <h2 className="font-mono text-[13px] uppercase tracking-[0.25em] text-navy font-semibold mb-6">
-                Australia&apos;s Home of New Property
-              </h2>
-              <ul className="space-y-2 mb-8">
-                {[
-                  "Off the plan projects",
-                  "New Apartments",
-                  "Land Estates",
-                  "New Homes",
-                ].map((item) => (
-                  <li key={item} className="flex items-center gap-2 font-sans text-[14px] text-ink/80">
-                    <span className="w-1.5 h-1.5 rounded-full bg-orange flex-shrink-0" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <div className="flex flex-wrap gap-3 mb-10">
-                <a
-                  href="/media-kit.pdf"
-                  className="font-mono text-[10px] uppercase tracking-widest bg-orange text-white px-6 py-2.5 hover:bg-orange/90 transition-colors"
-                >
-                  Download Media Kit
-                </a>
-                <Link
-                  href="/contact"
-                  className="font-mono text-[10px] uppercase tracking-widest bg-navy text-white px-6 py-2.5 hover:bg-navy/80 transition-colors"
-                >
-                  Contact Us
-                </Link>
-              </div>
-              <p className="font-sans text-[13px] text-ink/60 leading-relaxed max-w-sm">
-                <strong className="text-ink/80">offtheplan.com.au</strong> is an independently owned
-                property portal solely dedicated to showcasing properties, products, services and
-                opportunities available nationally off-the-plan
-                <sup className="text-[10px]">®</sup>
-              </p>
+          {/* Left — copy */}
+          <div className="px-6 md:px-10 xl:px-16 py-20">
+            <h2 className="font-mono text-[13px] uppercase tracking-[0.25em] text-white font-semibold mb-6">
+              Australia&apos;s Home of New Property
+            </h2>
+            <ul className="space-y-2 mb-8">
+              {[
+                "Off the plan projects",
+                "New Apartments",
+                "Land Estates",
+                "New Homes",
+              ].map((item) => (
+                <li key={item} className="flex items-center gap-2 font-sans text-[14px] text-white/75">
+                  <span className="w-1.5 h-1.5 rounded-full bg-orange flex-shrink-0" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+            <div className="flex flex-wrap gap-3 mb-10">
+              <a
+                href="/media-kit.pdf"
+                className="font-mono text-[10px] uppercase tracking-widest bg-orange text-white px-6 py-2.5 hover:bg-orange/90 transition-colors"
+              >
+                Download Media Kit
+              </a>
+              <Link
+                href="/contact"
+                className="font-mono text-[10px] uppercase tracking-widest border border-white/30 text-white px-6 py-2.5 hover:border-white transition-colors"
+              >
+                Contact Us
+              </Link>
             </div>
-
-            {/* Right — media kit card */}
-            <div className="flex justify-center lg:justify-end">
-              <div className="w-full max-w-[320px] bg-navy overflow-hidden shadow-lg">
-                {/* Card image placeholder — rich gradient */}
-                <div
-                  className="h-44 relative overflow-hidden"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, #1a2a3a 0%, #2c4a6e 50%, #3a5f8a 100%)",
-                  }}
-                >
-                  {/* Decorative circles */}
-                  <div className="absolute -top-8 -right-8 w-36 h-36 rounded-full bg-white/5" />
-                  <div className="absolute top-4 right-6 w-20 h-20 rounded-full bg-white/5" />
-                  {/* Badge */}
-                  <div className="absolute top-4 left-4 bg-orange/90 px-2.5 py-1">
-                    <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-white">
-                      Media Kit
-                    </span>
-                  </div>
-                </div>
-                {/* Card footer */}
-                <div className="px-6 py-5 border-t border-white/10">
-                  <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-white/50 mb-1">
-                    Off The Plan
-                  </p>
-                  <p className="font-display font-light text-white text-lg leading-tight">
-                    The Home of{" "}
-                    <em className="not-italic italic text-orange">New Property</em>
-                  </p>
-                </div>
-              </div>
-            </div>
-
+            <p className="font-sans text-[13px] text-white/50 leading-relaxed max-w-sm">
+              <strong className="text-white/70">offtheplan.com.au</strong> is an independently owned
+              property portal solely dedicated to showcasing properties, products, services and
+              opportunities available nationally off-the-plan
+              <sup className="text-[10px]">®</sup>
+            </p>
           </div>
+
+          {/* Right — media kit photo, full bleed */}
+          <div className="relative min-h-[420px] lg:min-h-0">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/media-kit-photo.jpg"
+              alt="Off The Plan Media Kit"
+              className="absolute inset-0 w-full h-full object-cover object-center"
+            />
+            {/* Subtle left fade to blend with navy */}
+            <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-navy to-transparent" />
+          </div>
+
         </div>
       </div>
 
