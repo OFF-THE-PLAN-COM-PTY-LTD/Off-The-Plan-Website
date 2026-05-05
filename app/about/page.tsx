@@ -12,9 +12,9 @@ export const metadata: Metadata = {
 
 
 const WHAT_WE_DO = [
-  "Provides a one-stop shop to list, promote and market off-the-plan and new home projects across Australia.",
-  "Attract Tiers and Investors — to help you attract, maximise and convert more qualified buyers to your developments through national exposure, market insights and transaction support.",
-  "Connects Buyers and Developers — a direct pipeline of off-the-plan buyers delivered straight to your development team. Whether you are looking to promote, list or market your development. Whether you want to promote your brand or your listing type, our platform is designed to provide you with the type of qualified buyers you're after.",
+  "Comprehensive Listings – A wide selection of off-the-plan apartments, houses, townhouses, commercial properties, house & land and estates",
+  "Market Tools and Resources – Mortgage calculators, insights and guides to support smarter property decisions",
+  "Developer and Agent Support – Effective exposure for projects through tailored listings, marketing solutions and analytics",
 ];
 
 export default function AboutPage() {
@@ -162,8 +162,11 @@ export default function AboutPage() {
           />
         </div>
         <div>
-          <p className="font-mono text-label-sm uppercase tracking-widest text-ink/40 mb-5">What We Do</p>
-          <ul className="flex flex-col gap-5">
+          <p className="font-mono uppercase tracking-widest text-navy mb-4" style={{ fontSize: "15px" }}>What We Do</p>
+          <p className="font-sans text-body-md text-ink/80 leading-relaxed mb-5">
+            offtheplan.com.au™ provides a streamlined way to explore Australia's newest property developments. We offer:
+          </p>
+          <ul className="flex flex-col gap-5 mb-6">
             {WHAT_WE_DO.map((item, i) => (
               <li key={i} className="flex gap-3">
                 <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-orange flex-shrink-0" />
@@ -171,6 +174,9 @@ export default function AboutPage() {
               </li>
             ))}
           </ul>
+          <p className="font-sans text-body-md text-ink/80 leading-relaxed">
+            Our platform is designed with clarity and simplicity in mind, helping users navigate the off-the-plan market with confidence. Whether you are purchasing your first home, expanding your investment portfolio or launching a new project, we are here to connect you with the right opportunities.
+          </p>
         </div>
       </section>
 
