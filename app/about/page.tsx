@@ -142,7 +142,7 @@ export default function AboutPage() {
         <div className="container-padded text-center max-w-3xl mx-auto">
           <p className="font-mono uppercase tracking-widest text-navy mb-8" style={{ fontSize: "20px" }}>Our Mission</p>
           <p className="font-sans text-body-md text-ink/70 mb-4">We are Off-The-Plan® – Australia's home for new homes.</p>
-          <p className="font-display font-light text-navy text-section-lg leading-snug">
+          <p className="font-sans text-body-md text-navy leading-relaxed">
             offtheplan.com.au™ is a trusted, transparent, and easy-to-use marketplace connecting buyers,
             developers, and agents through an affordable, premium digital experience.
           </p>
