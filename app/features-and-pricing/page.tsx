@@ -118,7 +118,7 @@ export default function FeaturesAndPricingPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2">
 
           {/* Left — copy, shifted right toward center */}
-          <div className="px-6 md:px-10 xl:px-16 py-20 lg:pl-[18%] xl:pl-[22%]">
+          <div className="px-6 md:px-10 xl:px-16 py-20 lg:pl-[25%] xl:pl-[28%]">
             <h2 className="font-mono text-[13px] uppercase tracking-[0.25em] text-white font-semibold mb-6">
               Australia&apos;s Home of New Property
             </h2>
@@ -222,12 +222,12 @@ export default function FeaturesAndPricingPage() {
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-12 items-start">
 
             {/* Left — phone mockup image */}
-            <div className="hidden lg:flex items-center justify-center py-6">
+            <div className="hidden lg:flex items-end justify-center overflow-hidden">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/Phone-Mock-05.png"
                 alt="Off The Plan on mobile"
-                className="w-full max-w-[420px] object-contain drop-shadow-2xl"
+                className="w-full max-w-none scale-110 object-contain drop-shadow-2xl"
               />
             </div>
 
