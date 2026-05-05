@@ -365,11 +365,26 @@ export default function LoanComparisonCalculator() {
           </div>
           <div className={rowCls}>
             <span className="font-sans text-[13px] text-navy">Loan term</span>
-            <select value={loanTerm} onChange={e => setLoanTerm(e.target.value)} className={selectCls}>
-              {[5, 10, 15, 20, 25, 30].map(y => (
-                <option key={y} value={y}>{y} years</option>
-              ))}
-            </select>
+            <div className="flex items-center gap-1.5">
+              <input
+                type="number"
+                value={loanTerm}
+                onChange={e => setLoanTerm(e.target.value)}
+                min="1" max="40"
+                className="bg-[#f0f0f0] border-0 font-sans text-[13px] px-2 py-1.5 text-right w-[52px] outline-none focus:ring-1 focus:ring-orange/40"
+              />
+              <span className="font-sans text-[12px] text-ink/50 select-none">yrs</span>
+              <select
+                value={[5, 10, 15, 20, 25, 30].includes(parseInt(loanTerm)) ? loanTerm : ""}
+                onChange={e => { if (e.target.value) setLoanTerm(e.target.value); }}
+                className="bg-[#e8e8e8] border-0 font-sans text-[11px] px-2 py-1.5 outline-none cursor-pointer text-navy"
+              >
+                <option value="">Quick select</option>
+                {[5, 10, 15, 20, 25, 30].map(y => (
+                  <option key={y} value={y}>{y} years</option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
       </div>
