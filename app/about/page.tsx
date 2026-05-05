@@ -140,11 +140,11 @@ export default function AboutPage() {
       {/* ── Our Mission ─────────────────────────────────────────────────────── */}
       <section className="bg-cream py-24">
         <div className="container-padded text-center max-w-3xl mx-auto">
-          <p className="font-mono text-label-sm uppercase tracking-widest text-ink/40 mb-8">Our Mission</p>
-          <p className="font-sans text-body-md text-ink/50 mb-4">We are Off The Plan™ built specifically for new homes.</p>
+          <p className="font-mono uppercase tracking-widest text-navy mb-8" style={{ fontSize: "20px" }}>Our Mission</p>
+          <p className="font-sans text-body-md text-ink/70 mb-4">We are Off-The-Plan® – Australia's home for new homes.</p>
           <p className="font-display font-light text-navy text-section-lg leading-snug">
-            Our goal is to connect people with their dream new home or investment through an efficiently
-            digital personalised experience.
+            offtheplan.com.au™ is a trusted, transparent, and easy-to-use marketplace connecting buyers,
+            developers, and agents through an affordable, premium digital experience.
           </p>
         </div>
       </section>
@@ -154,10 +154,9 @@ export default function AboutPage() {
       {/* ── Our Values ──────────────────────────────────────────────────────── */}
       <section className="py-24 bg-cream">
         <div className="container-padded">
-          <p className="font-mono text-label-sm uppercase tracking-widest text-ink/40 text-center mb-4">Our Values</p>
-          <p className="font-sans text-body-md text-ink/50 text-center mb-14 max-w-xl mx-auto">
-            Your selling process can turn into an extraordinary experience. Register for Off The Plan™
-            services to connect to buyers.
+          <p className="font-mono uppercase tracking-widest text-navy text-center mb-4" style={{ fontSize: "20px" }}>Our Values</p>
+          <p className="font-sans text-body-md text-ink/70 text-center mb-14 max-w-xl mx-auto">
+            Our values guide every decision we make and every relationship we build. At offtheplan.com.au™ we are committed to:
           </p>
           <div className="grid grid-cols-3 md:grid-cols-6 gap-8">
             {VALUES.map((v) => (
