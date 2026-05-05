@@ -1,5 +1,4 @@
 import Link from "next/link";
-import nextDynamic from "next/dynamic";
 import type { Metadata } from "next";
 import { PropertyCard } from "@/components/property-card";
 import { supabase } from "@/lib/supabase/public";
@@ -11,11 +10,6 @@ export const metadata: Metadata = {
   title: "Search Listings",
   description: "Browse off-the-plan apartments, townhouses, and houses across Australia.",
 };
-
-const DevelopmentsMap = nextDynamic(
-  () => import("@/components/developments-map").then((m) => m.DevelopmentsMap),
-  { ssr: false, loading: () => <div className="absolute inset-0 bg-navy/5" /> }
-);
 
 interface SearchPageProps {
   searchParams: {
@@ -69,7 +63,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const page = parseInt(searchParams.page ?? "1");
   const totalPages = Math.ceil(results.length / PAGE_SIZE);
   const pageResults = results.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-  const mapDevelopments = results.filter((d) => d.lat !== null && d.lng !== null);
 
   const activeFilters = [
     searchParams.suburb && { key: "suburb", label: `Suburb: ${searchParams.suburb}` },
@@ -91,173 +84,145 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const listUrl = buildUrl({ view: undefined });
   const mapUrl = buildUrl({ view: "map" });
 
-  // Shared filter bar (rendered in both views)
-  const filterBar = (
-    <>
-      <div className="container-padded py-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
-        {/* List / Map toggle */}
-        <div className="flex border border-line overflow-hidden flex-shrink-0">
-          <Link
-            href={listUrl}
-            className={`px-4 py-1.5 font-mono text-label-lg uppercase tracking-widest transition-colors ${
-              view === "list" ? "bg-navy text-ink-light" : "bg-white text-ink hover:text-orange"
-            }`}
-          >
-            List
-          </Link>
-          <Link
-            href={mapUrl}
-            className={`px-4 py-1.5 font-mono text-label-lg uppercase tracking-widest border-l border-line transition-colors ${
-              view === "map" ? "bg-navy text-ink-light" : "bg-white text-ink hover:text-orange"
-            }`}
-          >
-            Map
-          </Link>
+  return (
+    <div className="min-h-screen bg-cream pt-16">
+      {/* Filter bar */}
+      <div className="sticky top-16 z-30 bg-cream/95 backdrop-blur-sm border-b border-line">
+        <div className="container-padded py-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
+          {/* List / Map toggle */}
+          <div className="flex border border-line overflow-hidden flex-shrink-0">
+            <Link
+              href={listUrl}
+              className={`px-4 py-1.5 font-mono text-label-lg uppercase tracking-widest transition-colors ${
+                view === "list" ? "bg-navy text-ink-light" : "bg-white text-ink hover:text-orange"
+              }`}
+            >
+              List
+            </Link>
+            <Link
+              href={mapUrl}
+              className={`px-4 py-1.5 font-mono text-label-lg uppercase tracking-widest border-l border-line transition-colors ${
+                view === "map" ? "bg-navy text-ink-light" : "bg-white text-ink hover:text-orange"
+              }`}
+            >
+              Map
+            </Link>
+          </div>
+
+          <form method="GET" action="/search" className="flex flex-wrap gap-2 items-center flex-1">
+            {view === "map" && <input type="hidden" name="view" value="map" />}
+            <input
+              name="suburb"
+              defaultValue={searchParams.suburb}
+              placeholder="Suburb or postcode"
+              className="font-sans text-body-md border border-line px-3 py-1.5 bg-white outline-none focus:border-orange/60 w-full sm:w-40"
+              aria-label="Suburb"
+            />
+            <select
+              name="state"
+              defaultValue={searchParams.state}
+              className="font-mono text-label-lg border border-line px-3 py-1.5 bg-white outline-none cursor-pointer"
+              aria-label="State"
+            >
+              <option value="">All states</option>
+              {["VIC", "NSW", "QLD", "WA", "SA"].map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+            <select
+              name="type"
+              defaultValue={searchParams.type}
+              className="font-mono text-label-lg border border-line px-3 py-1.5 bg-white outline-none cursor-pointer"
+              aria-label="Property type"
+            >
+              <option value="">All types</option>
+              {["Apartments", "Townhouses", "Houses", "Penthouses"].map((t) => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </select>
+            <select
+              name="sort"
+              defaultValue={searchParams.sort}
+              className="font-mono text-label-lg border border-line px-3 py-1.5 bg-white outline-none cursor-pointer"
+              aria-label="Sort"
+            >
+              <option value="">Featured</option>
+              <option value="price_asc">Price: low–high</option>
+              <option value="price_desc">Price: high–low</option>
+              <option value="newest">Newest</option>
+            </select>
+            <button type="submit" className="btn-primary py-1.5 px-4">Filter</button>
+          </form>
         </div>
 
-        <form method="GET" action="/search" className="flex flex-wrap gap-2 items-center flex-1">
-          {view === "map" && <input type="hidden" name="view" value="map" />}
-          <input
-            name="suburb"
-            defaultValue={searchParams.suburb}
-            placeholder="Suburb or postcode"
-            className="font-sans text-body-md border border-line px-3 py-1.5 bg-white outline-none focus:border-orange/60 w-full sm:w-40"
-            aria-label="Suburb"
-          />
-          <select
-            name="state"
-            defaultValue={searchParams.state}
-            className="font-mono text-label-lg border border-line px-3 py-1.5 bg-white outline-none cursor-pointer"
-            aria-label="State"
-          >
-            <option value="">All states</option>
-            {["VIC", "NSW", "QLD", "WA", "SA"].map((s) => (
-              <option key={s} value={s}>{s}</option>
+        {activeFilters.length > 0 && (
+          <div className="container-padded pb-2 flex flex-wrap gap-2">
+            {activeFilters.map((f) => (
+              <Link
+                key={f.key}
+                href={buildUrl({ [f.key]: undefined })}
+                className="inline-flex items-center gap-1.5 font-mono text-label-sm uppercase tracking-widest px-2.5 py-1 border border-ink/20 text-ink hover:border-orange hover:text-orange transition-colors"
+              >
+                {f.label}
+                <span aria-hidden="true">×</span>
+              </Link>
             ))}
-          </select>
-          <select
-            name="type"
-            defaultValue={searchParams.type}
-            className="font-mono text-label-lg border border-line px-3 py-1.5 bg-white outline-none cursor-pointer"
-            aria-label="Property type"
-          >
-            <option value="">All types</option>
-            {["Apartments", "Townhouses", "Houses", "Penthouses"].map((t) => (
-              <option key={t} value={t}>{t}</option>
-            ))}
-          </select>
-          <select
-            name="sort"
-            defaultValue={searchParams.sort}
-            className="font-mono text-label-lg border border-line px-3 py-1.5 bg-white outline-none cursor-pointer"
-            aria-label="Sort"
-          >
-            <option value="">Featured</option>
-            <option value="price_asc">Price: low–high</option>
-            <option value="price_desc">Price: high–low</option>
-            <option value="newest">Newest</option>
-          </select>
-          <button type="submit" className="btn-primary py-1.5 px-4">Filter</button>
-        </form>
+            <Link
+              href={view === "map" ? "/search?view=map" : "/search"}
+              className="font-mono text-label-sm uppercase tracking-widest text-ink/40 hover:text-orange transition-colors"
+            >
+              Clear all
+            </Link>
+          </div>
+        )}
       </div>
 
-      {activeFilters.length > 0 && (
-        <div className="container-padded pb-2 flex flex-wrap gap-2">
-          {activeFilters.map((f) => (
-            <Link
-              key={f.key}
-              href={buildUrl({ [f.key]: undefined })}
-              className="inline-flex items-center gap-1.5 font-mono text-label-sm uppercase tracking-widest px-2.5 py-1 border border-ink/20 text-ink hover:border-orange hover:text-orange transition-colors"
-            >
-              {f.label}
-              <span aria-hidden="true">×</span>
-            </Link>
-          ))}
-          <Link
-            href={view === "map" ? "/search?view=map" : "/search"}
-            className="font-mono text-label-sm uppercase tracking-widest text-ink/40 hover:text-orange transition-colors"
-          >
-            Clear all
-          </Link>
-        </div>
-      )}
-    </>
-  );
+      {/* Map view — placeholder */}
+      {view === "map" ? (
+        <div className="h-[calc(100vh-8rem)]" />
+      ) : (
+        /* List view */
+        <div className="container-padded py-10">
+          <p className="font-mono text-label-lg text-ink/40 mb-8 uppercase tracking-widest">
+            {results.length} listing{results.length !== 1 ? "s" : ""}
+          </p>
 
-  // ── Map view ──────────────────────────────────────────────────────────────
-  if (view === "map") {
-    return (
-      // Fixed below the nav bar, fills the remaining viewport
-      <div className="fixed inset-0 flex flex-col" style={{ top: 64 }}>
-        <div className="z-30 bg-cream/95 backdrop-blur-sm border-b border-line flex-none">
-          {filterBar}
-        </div>
-        <div className="flex-1 relative">
-          {mapDevelopments.length > 0 ? (
-            <DevelopmentsMap developments={mapDevelopments} />
+          {pageResults.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {pageResults.map((dev) => (
+                <PropertyCard key={dev.id} development={dev} layout="tall" />
+              ))}
+            </div>
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center bg-navy/5">
-              <div className="text-center px-6">
-                <p className="font-display text-section-lg font-light text-navy/30 mb-4">No mapped listings</p>
-                <p className="font-sans text-body-md text-ink/50 mb-6">
-                  No listings with location data match your current filters.
-                </p>
-                <Link href="/search" className="btn-ghost inline-block">Clear filters</Link>
-              </div>
+            <div className="text-center py-20">
+              <p className="font-display text-section-lg font-light text-navy/30 mb-4">No results</p>
+              <p className="font-sans text-body-md text-ink/50 mb-6">
+                Try broadening your filters to see more listings.
+              </p>
+              <Link href="/search" className="btn-ghost inline-block">Clear filters</Link>
+            </div>
+          )}
+
+          {totalPages > 1 && (
+            <div className="flex justify-center gap-2 mt-12">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                <Link
+                  key={p}
+                  href={buildUrl({ page: String(p) })}
+                  className={`font-mono text-label-lg px-3 py-1.5 border transition-colors ${
+                    p === page
+                      ? "bg-navy text-ink-light border-navy"
+                      : "border-line text-ink hover:border-orange hover:text-orange"
+                  }`}
+                  aria-current={p === page ? "page" : undefined}
+                >
+                  {p}
+                </Link>
+              ))}
             </div>
           )}
         </div>
-      </div>
-    );
-  }
-
-  // ── List view ─────────────────────────────────────────────────────────────
-  return (
-    <div className="min-h-screen bg-cream pt-16">
-      <div className="sticky top-16 z-30 bg-cream/95 backdrop-blur-sm border-b border-line">
-        {filterBar}
-      </div>
-
-      <div className="container-padded py-10">
-        <p className="font-mono text-label-lg text-ink/40 mb-8 uppercase tracking-widest">
-          {results.length} listing{results.length !== 1 ? "s" : ""}
-        </p>
-
-        {pageResults.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {pageResults.map((dev) => (
-              <PropertyCard key={dev.id} development={dev} layout="tall" />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-20">
-            <p className="font-display text-section-lg font-light text-navy/30 mb-4">No results</p>
-            <p className="font-sans text-body-md text-ink/50 mb-6">
-              Try broadening your filters to see more listings.
-            </p>
-            <Link href="/search" className="btn-ghost inline-block">Clear filters</Link>
-          </div>
-        )}
-
-        {totalPages > 1 && (
-          <div className="flex justify-center gap-2 mt-12">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-              <Link
-                key={p}
-                href={buildUrl({ page: String(p) })}
-                className={`font-mono text-label-lg px-3 py-1.5 border transition-colors ${
-                  p === page
-                    ? "bg-navy text-ink-light border-navy"
-                    : "border-line text-ink hover:border-orange hover:text-orange"
-                }`}
-                aria-current={p === page ? "page" : undefined}
-              >
-                {p}
-              </Link>
-            ))}
-          </div>
-        )}
-      </div>
+      )}
     </div>
   );
 }
