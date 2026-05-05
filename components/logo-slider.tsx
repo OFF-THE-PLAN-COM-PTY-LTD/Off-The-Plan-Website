@@ -6,20 +6,21 @@ import { cn } from "@/lib/utils";
 const DURATION = 32;
 
 const LOGOS = [
-  { name: "TRISECA" },
-  { name: "THE ONE\nCOLLECTION" },
-  { name: "Laver." },
-  { name: "CEDAR\nWOODS" },
-  { name: "ETON\nPROPERTY" },
-  { name: "FAR EAST\nCONSORTIUM" },
-  { name: "FLAGSHIP" },
-  { name: "CO-LAB\nRESIDENTIAL" },
-  { name: "PRD\nREAL ESTATE" },
-  { name: "CHANINE\nDEVELOPMENTS" },
-  { name: "CORONATION" },
-  { name: "INCA" },
-  { name: "PEZET.\nMATHESON." },
-  { name: "MASSCON" },
+  { name: "TRISECA",             src: "/logos/TRISECA.png" },
+  { name: "The One Collection",  src: "/logos/The one collection.jpg" },
+  { name: "Laver",               src: "/logos/Laver.jpg" },
+  { name: "Cedar Woods",         src: "/logos/Cedar woods.jpg" },
+  { name: "Eton Property",       src: "/logos/eton property.jpg" },
+  { name: "Far East Consortium", src: "/logos/Far East.jpg" },
+  { name: "Flagship",            src: "/logos/Flagship.jpg" },
+  { name: "CO-LAB Residential",  src: "/logos/CO-Lab.jpg" },
+  { name: "PRD Real Estate",     src: "/logos/PRDA.jpg" },
+  { name: "Chanine Developments",src: "/logos/Chanine_Developments_Black.webp" },
+  { name: "Coronation",          src: "/logos/coronation.png" },
+  { name: "C.",                  src: "/logos/C..jpg" },
+  { name: "INCA",                src: "/logos/INCA_Logo.png" },
+  { name: "Pezet Matheson",      src: "/logos/PEZET_MATHESON.png" },
+  { name: "Masscon",             src: "/logos/masscon_logo.jpg" },
 ];
 
 function ArrowLeft() {
@@ -132,9 +133,13 @@ export function LogoSlider() {
               key={i}
               className="flex-shrink-0 w-40 h-20 border border-ink/10 bg-white flex items-center justify-center px-4 hover:border-ink/30 transition-colors"
             >
-              <p className="font-mono text-[11px] uppercase tracking-widest text-ink/60 text-center whitespace-pre-line leading-snug">
-                {logo.name}
-              </p>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={logo.src}
+                alt={logo.name}
+                className="max-h-12 max-w-full object-contain grayscale hover:grayscale-0 transition-all duration-300"
+                loading="lazy"
+              />
             </div>
           ))}
         </div>
