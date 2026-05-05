@@ -1,68 +1,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
+import { AboutValues } from "@/components/about-values";
 
 export const metadata: Metadata = {
   title: "About | Off The Plan",
   description: "Australia's home of new property. Learn about who we are, our mission, and what we do.",
 };
 
-const VALUES = [
-  {
-    icon: (
-      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <circle cx="16" cy="16" r="12" />
-        <path d="M16 10v6l4 2" strokeLinecap="round" />
-      </svg>
-    ),
-    label: "Timely",
-  },
-  {
-    icon: (
-      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <path d="M16 4l3 9h9l-7 5 3 9-8-6-8 6 3-9-7-5h9z" strokeLinejoin="round" />
-      </svg>
-    ),
-    label: "Innovative",
-  },
-  {
-    icon: (
-      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <path d="M8 20l8-12 8 12" strokeLinejoin="round" />
-        <path d="M12 20h8" strokeLinecap="round" />
-      </svg>
-    ),
-    label: "Ambitious",
-  },
-  {
-    icon: (
-      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <rect x="6" y="6" width="20" height="20" rx="2" />
-        <path d="M11 16h10M16 11v10" strokeLinecap="round" />
-      </svg>
-    ),
-    label: "Creative",
-  },
-  {
-    icon: (
-      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <path d="M16 6C10.477 6 6 10.477 6 16s4.477 10 10 10 10-4.477 10-10S21.523 6 16 6z" />
-        <path d="M12 16l3 3 5-5" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ),
-    label: "Clear",
-  },
-  {
-    icon: (
-      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <path d="M6 16c0-5.523 4.477-10 10-10s10 4.477 10 10" />
-        <path d="M6 16c0 5.523 4.477 10 10 10" strokeDasharray="3 3" />
-        <path d="M22 22l4 4M22 26l4-4" strokeLinecap="round" />
-      </svg>
-    ),
-    label: "Reliable",
-  },
-];
 
 const TRUSTED_BY = [
   "LURE", "Good Selling", "ETON", "No Fly Zone", "FLAGSHIP", "fo:lar", "PF",
@@ -158,14 +103,7 @@ export default function AboutPage() {
           <p className="font-sans text-body-md text-ink/70 text-center mb-14 max-w-3xl mx-auto">
             Our values guide every decision we make and every relationship we build. At offtheplan.com.au™ we are committed to:
           </p>
-          <div className="grid grid-cols-3 md:grid-cols-6 gap-8">
-            {VALUES.map((v) => (
-              <div key={v.label} className="flex flex-col items-center gap-3">
-                <div className="text-navy/60">{v.icon}</div>
-                <p className="font-mono text-label-sm uppercase tracking-widest text-ink/60">{v.label}</p>
-              </div>
-            ))}
-          </div>
+          <AboutValues />
         </div>
       </section>
 
