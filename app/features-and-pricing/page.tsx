@@ -117,8 +117,8 @@ export default function FeaturesAndPricingPage() {
       <div className="bg-navy overflow-hidden">
         <div className="grid grid-cols-1 lg:grid-cols-2">
 
-          {/* Left — copy */}
-          <div className="px-6 md:px-10 xl:px-16 py-20">
+          {/* Left — copy, shifted right toward center */}
+          <div className="px-6 md:px-10 xl:px-16 py-20 lg:pl-[18%] xl:pl-[22%]">
             <h2 className="font-mono text-[13px] uppercase tracking-[0.25em] text-white font-semibold mb-6">
               Australia&apos;s Home of New Property
             </h2>
@@ -221,49 +221,14 @@ export default function FeaturesAndPricingPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-12 items-start">
 
-            {/* Left — phone mockup visual */}
-            <div className="hidden lg:flex items-end justify-center py-6">
-              <div className="relative w-full max-w-[240px]">
-                {/* Back phone */}
-                <div
-                  className="absolute left-6 top-6 w-[120px] h-[220px] bg-navy border-2 border-navy/30 rounded-[18px] shadow-xl overflow-hidden"
-                  aria-hidden="true"
-                >
-                  <div className="w-full h-full"
-                    style={{
-                      background: "linear-gradient(160deg, #1e3a52 0%, #0f2030 100%)",
-                    }}
-                  >
-                    <div className="h-3 bg-navy/80 w-16 mx-auto mt-2 rounded-full" />
-                    <div className="m-3 space-y-2">
-                      <div className="h-16 bg-white/10 rounded" />
-                      <div className="h-3 bg-white/20 rounded w-3/4" />
-                      <div className="h-3 bg-white/10 rounded w-1/2" />
-                      <div className="h-3 bg-orange/40 rounded w-2/3" />
-                    </div>
-                  </div>
-                </div>
-                {/* Front phone */}
-                <div
-                  className="relative ml-12 w-[130px] h-[240px] bg-navy border-2 border-navy/20 rounded-[20px] shadow-2xl overflow-hidden"
-                  aria-hidden="true"
-                >
-                  <div className="w-full h-full"
-                    style={{
-                      background: "linear-gradient(160deg, #243b53 0%, #0f2030 100%)",
-                    }}
-                  >
-                    <div className="h-3 bg-navy/60 w-16 mx-auto mt-2 rounded-full" />
-                    <div className="m-3 space-y-2">
-                      <div className="h-20 bg-white/10 rounded" />
-                      <div className="h-3 bg-white/20 rounded w-4/5" />
-                      <div className="h-3 bg-white/10 rounded w-1/2" />
-                      <div className="h-3 bg-orange/50 rounded w-3/4" />
-                      <div className="h-3 bg-white/10 rounded w-2/3" />
-                    </div>
-                  </div>
-                </div>
-              </div>
+            {/* Left — phone mockup image */}
+            <div className="hidden lg:flex items-center justify-center py-6">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/Phone-Mock-05.png"
+                alt="Off The Plan on mobile"
+                className="w-full max-w-[420px] object-contain drop-shadow-2xl"
+              />
             </div>
 
             {/* Right — pricing cards */}
