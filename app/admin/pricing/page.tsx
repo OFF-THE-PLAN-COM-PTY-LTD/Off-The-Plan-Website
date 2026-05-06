@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { CheckCircle } from "lucide-react";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 
 const plans = [
   {
@@ -32,7 +33,6 @@ const upgrades = [
   {
     name: "Promo Flag",
     price: 50,
-    preview: "/off-the-plan-banner-portrait.png",
     features: [
       "Available for all properties",
       "Promotional flag on the listing",
@@ -45,7 +45,6 @@ const upgrades = [
   {
     name: "Featured Project Tier 2",
     price: 200,
-    preview: "/off-the-plan-banner-landscape.png",
     features: [
       "Available for all properties",
       "Property featured under the home page banner (2nd row)",
@@ -58,7 +57,6 @@ const upgrades = [
   {
     name: "Featured Project Tier 1",
     price: 400,
-    preview: "/off-the-plan-banner-landscape.png",
     features: [
       "Available to New Apartments and Townhouses",
       "Property featured under the home page banner",
@@ -71,7 +69,6 @@ const upgrades = [
   {
     name: "Home Page Main Banner",
     price: 1000,
-    preview: "/off-the-plan-banner-landscape.png",
     features: [
       "Available to: New Apartments and Townhouses",
       "Up to 3 available per month, 33% share of voice",
@@ -83,35 +80,55 @@ const upgrades = [
   },
 ];
 
-export default function PricingPage() {
+function ListingImageGrid({ images }: { images: string[] }) {
+  const slots = Array.from({ length: 6 }, (_, i) => images[i] ?? null);
+  return (
+    <div className="grid grid-cols-3 gap-1">
+      {slots.map((src, i) => (
+        <div key={i} className="relative aspect-video bg-gray-100 overflow-hidden rounded-sm">
+          {src ? (
+            <Image src={src} alt="" fill className="object-cover" />
+          ) : (
+            <div className="w-full h-full bg-gray-200" />
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export default async function PricingPage() {
+  // Fetch featured development images
+  const { data: featured } = await supabaseAdmin
+    .from("developments")
+    .select("name, hero_image_url, feature_image_url, images:development_images(url, is_hero)")
+    .eq("is_featured", true)
+    .limit(6);
+
+  const listingImages: string[] = (featured ?? []).map((d) => {
+    const imgs = (d.images ?? []) as { url: string; is_hero: boolean }[];
+    const hero = imgs.find((i) => i.is_hero)?.url ?? imgs[0]?.url;
+    return hero ?? d.hero_image_url ?? d.feature_image_url ?? "";
+  }).filter(Boolean);
+
   return (
     <div>
       {/* Page title */}
       <div className="text-center mb-8">
-        <h1
-          className="text-2xl font-bold uppercase tracking-widest"
-          style={{ color: "#1a2340" }}
-        >
+        <h1 className="text-2xl font-bold uppercase tracking-widest" style={{ color: "#1a2340" }}>
           Plans and Pricing
         </h1>
       </div>
 
       {/* ── Main plans ── */}
-      <div
-        className="rounded-xl overflow-hidden mb-10"
-        style={{ background: "#1a2340" }}
-      >
+      <div className="rounded-xl overflow-hidden mb-10" style={{ background: "#1a2340" }}>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
           {/* Left — phone mockup */}
           <div className="flex items-center justify-center p-10">
             <div className="relative">
               <div className="text-center mb-6">
-                <p className="text-white/60 text-xs uppercase tracking-widest mb-1">
-                  Start Listing with
-                </p>
-                <h2 className="text-white font-bold text-xl uppercase tracking-widest">
-                  Off The Plan
-                </h2>
+                <p className="text-white/60 text-xs uppercase tracking-widest mb-1">Start Listing with</p>
+                <h2 className="text-white font-bold text-xl uppercase tracking-widest">Off The Plan</h2>
               </div>
               <Image
                 src="/Phone-Mock-05.png"
@@ -127,12 +144,7 @@ export default function PricingPage() {
           <div className="p-6 flex flex-col gap-4 justify-center">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {plans.map((plan) => (
-                <div
-                  key={plan.name}
-                  className="rounded-lg overflow-hidden flex flex-col"
-                  style={{ background: "#fff" }}
-                >
-                  {/* Header */}
+                <div key={plan.name} className="rounded-lg overflow-hidden flex flex-col bg-white">
                   <div
                     className="px-4 py-3 text-center text-xs font-bold uppercase tracking-widest"
                     style={{
@@ -142,33 +154,20 @@ export default function PricingPage() {
                   >
                     {plan.name}
                   </div>
-
-                  {/* Price */}
                   <div className="px-4 pt-4 pb-2 text-center border-b border-gray-100">
-                    <span
-                      className="font-bold"
-                      style={{ fontSize: 36, color: "#1a2340" }}
-                    >
+                    <span className="font-bold" style={{ fontSize: 36, color: "#1a2340" }}>
                       ${plan.price}
                     </span>
                     <span className="text-gray-400 text-sm"> /month</span>
                   </div>
-
-                  {/* Features */}
                   <div className="px-4 py-4 flex flex-col gap-2 flex-1">
                     {plan.features.map((f, i) => (
                       <div key={i} className="flex items-start gap-2">
-                        <CheckCircle
-                          size={13}
-                          className="flex-shrink-0 mt-0.5"
-                          style={{ color: "#e85d26" }}
-                        />
+                        <CheckCircle size={13} className="flex-shrink-0 mt-0.5" style={{ color: "#e85d26" }} />
                         <p className="text-xs text-gray-600 leading-snug">{f}</p>
                       </div>
                     ))}
                   </div>
-
-                  {/* CTA */}
                   <div className="px-4 pb-4">
                     <a
                       href="/admin/listings"
@@ -184,11 +183,8 @@ export default function PricingPage() {
                 </div>
               ))}
             </div>
-
-            {/* Terms */}
             <p className="text-white/40 text-[11px] leading-relaxed text-center">
-              1. Terms available: 6 months and 12 months. 2. Automatic debit each month
-              for the selected term or until cancellation. 2. 21 day cancellation policy.
+              1. Terms available: 6 months and 12 months. 2. Automatic debit each month for the selected term or until cancellation. 2. 21 day cancellation policy.
             </p>
           </div>
         </div>
@@ -196,24 +192,18 @@ export default function PricingPage() {
 
       {/* ── Featured Upgrades ── */}
       <div className="text-center mb-6">
-        <h2
-          className="text-lg font-bold uppercase tracking-widest mb-2"
-          style={{ color: "#1a2340" }}
-        >
+        <h2 className="text-lg font-bold uppercase tracking-widest mb-2" style={{ color: "#1a2340" }}>
           Featured Upgrades
         </h2>
         <p className="text-sm text-gray-500 max-w-xl mx-auto">
-          These upgrades are billed manually in addition to the standard monthly
-          subscriptions. Please see below our current listing upgrade options.
+          These upgrades are billed manually in addition to the standard monthly subscriptions.
+          Please see below our current listing upgrade options.
         </p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {upgrades.map((u) => (
-          <div
-            key={u.name}
-            className="rounded-lg overflow-hidden flex flex-col border border-gray-200 bg-white"
-          >
+          <div key={u.name} className="rounded-lg overflow-hidden flex flex-col border border-gray-200 bg-white">
             {/* Header */}
             <div
               className="px-4 py-3 text-center text-xs font-bold uppercase tracking-widest text-white"
@@ -223,35 +213,23 @@ export default function PricingPage() {
             </div>
 
             {/* Price */}
-            <div className="px-4 pt-4 pb-2 text-center">
-              <span
-                className="font-bold"
-                style={{ fontSize: 28, color: "#1a2340" }}
-              >
+            <div className="px-4 pt-4 pb-3 text-center">
+              <span className="font-bold" style={{ fontSize: 28, color: "#1a2340" }}>
                 ${u.price.toLocaleString()}
               </span>
               <span className="text-gray-400 text-sm"> /month</span>
             </div>
 
-            {/* Preview image */}
-            <div className="mx-4 mb-3 rounded overflow-hidden border border-gray-100 relative h-32 bg-gray-50">
-              <Image
-                src={u.preview}
-                alt={u.name}
-                fill
-                className="object-cover"
-              />
+            {/* 6-image grid from featured listings */}
+            <div className="mx-4 mb-4">
+              <ListingImageGrid images={listingImages} />
             </div>
 
             {/* Features */}
             <div className="px-4 pb-3 flex flex-col gap-2 flex-1">
               {u.features.map((f, i) => (
                 <div key={i} className="flex items-start gap-2">
-                  <CheckCircle
-                    size={12}
-                    className="flex-shrink-0 mt-0.5"
-                    style={{ color: "#e85d26" }}
-                  />
+                  <CheckCircle size={12} className="flex-shrink-0 mt-0.5" style={{ color: "#e85d26" }} />
                   <p className="text-xs text-gray-600 leading-snug">{f}</p>
                 </div>
               ))}
