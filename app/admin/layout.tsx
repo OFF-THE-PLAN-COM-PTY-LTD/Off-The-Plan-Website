@@ -35,12 +35,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* Logo */}
         <div className="px-5 py-5 border-b border-white/10">
           <Link href="/">
-            <img
-              src="/logo.png"
-              alt="Off The Plan"
-              className="h-8 w-auto"
-              style={{ filter: "brightness(0) invert(1)" }}
-            />
+            <div className="bg-white rounded px-3 py-2 inline-block">
+              <img
+                src="/logo.png"
+                alt="Off The Plan"
+                className="h-7 w-auto"
+              />
+            </div>
           </Link>
         </div>
 
