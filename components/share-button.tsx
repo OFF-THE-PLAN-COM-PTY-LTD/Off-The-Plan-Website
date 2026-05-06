@@ -8,15 +8,27 @@ interface ShareButtonProps {
   name: string;
   suburb?: string | null;
   state?: string | null;
+  developmentId?: string;
 }
 
-export function ShareButton({ slug, name, suburb, state }: ShareButtonProps) {
+export function ShareButton({ slug, name, suburb, state, developmentId }: ShareButtonProps) {
   const [open, setOpen] = useState(false);
+
+  const handleOpen = () => {
+    setOpen(true);
+    if (developmentId) {
+      fetch("/api/track/share", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ developmentId }),
+      }).catch(() => {});
+    }
+  };
 
   return (
     <>
       <button
-        onClick={() => setOpen(true)}
+        onClick={handleOpen}
         className="flex items-center justify-center gap-2 py-3 w-full font-mono text-[10px] uppercase tracking-widest text-ink/60 hover:text-orange border-r border-line transition-colors"
       >
         <svg width="13" height="13" viewBox="0 0 20 20" fill="none" aria-hidden="true">

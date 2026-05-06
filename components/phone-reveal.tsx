@@ -4,18 +4,28 @@ import { useState } from "react";
 
 interface PhoneRevealProps {
   phone: string;
+  developmentId?: string;
 }
 
 /**
  * Shows a masked phone number with a "show" button.
- * Reveals the full number on click.
- * e.g. "1800 606 ***" → "1800 606 808"
+ * Reveals the full number on click and logs a phone_click event.
  */
-export function PhoneReveal({ phone }: PhoneRevealProps) {
+export function PhoneReveal({ phone, developmentId }: PhoneRevealProps) {
   const [revealed, setRevealed] = useState(false);
 
-  // Mask the last 3 digits of the raw number
   const masked = phone.replace(/\d{3}$/, "***");
+
+  const handleReveal = () => {
+    setRevealed(true);
+    if (developmentId) {
+      fetch("/api/track/phone-click", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ developmentId }),
+      }).catch(() => {});
+    }
+  };
 
   return (
     <span className="inline-flex items-center gap-1.5">
@@ -28,7 +38,7 @@ export function PhoneReveal({ phone }: PhoneRevealProps) {
       </a>
       {!revealed && (
         <button
-          onClick={() => setRevealed(true)}
+          onClick={handleReveal}
           className="font-mono text-[9px] uppercase tracking-widest text-ink/40 border border-ink/20 px-1.5 py-0.5 hover:border-orange hover:text-orange transition-colors leading-none"
         >
           show

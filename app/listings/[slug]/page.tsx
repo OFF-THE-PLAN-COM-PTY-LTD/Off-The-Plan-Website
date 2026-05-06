@@ -10,6 +10,7 @@ import { CheckIcon, MailIcon } from "@/components/icons";
 import { PhoneReveal } from "@/components/phone-reveal";
 import { ShareButton } from "@/components/share-button";
 import { EnquiryButton } from "@/components/enquiry-button";
+import { ViewTracker } from "@/components/view-tracker";
 import { supabase } from "@/lib/supabase/public";
 import type { Development, DevelopmentFloorPlan } from "@/types/development";
 
@@ -88,6 +89,8 @@ export default async function DossierPage({ params }: Props) {
 
   return (
     <>
+      {/* Silently log this page view */}
+      <ViewTracker developmentId={dev.id} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
       {/* ─── 1. Hero Carousel ─────────────────────────────────────────── */}
@@ -285,7 +288,7 @@ export default async function DossierPage({ params }: Props) {
                       {dev.developer?.name ? `${dev.developer.name} Sales Team` : "Sales Team"}
                     </p>
                     {dev.developer?.phone ? (
-                      <PhoneReveal phone={dev.developer.phone} />
+                      <PhoneReveal phone={dev.developer.phone} developmentId={dev.id} />
                     ) : (
                       <a
                         href="#enquire"
@@ -316,6 +319,7 @@ export default async function DossierPage({ params }: Props) {
                   name={dev.name}
                   suburb={dev.suburb}
                   state={dev.state}
+                  developmentId={dev.id}
                 />
                 <EnquiryButton
                   developmentId={dev.id}

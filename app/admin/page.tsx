@@ -25,6 +25,7 @@ export default async function AdminDashboard() {
     { count: activeListings },
     { count: featuredListings },
     { count: enquiryCount },
+    { data: analyticsData },
   ] = await Promise.all([
     supabaseAdmin
       .from("developments")
@@ -36,13 +37,20 @@ export default async function AdminDashboard() {
       .eq("is_published", true)
       .eq("is_featured", true),
     supabaseAdmin.from("enquiries").select("*", { count: "exact", head: true }),
+    supabaseAdmin
+      .from("developments")
+      .select("view_count, phone_click_count, share_count"),
   ]);
 
+  const totalViews = (analyticsData ?? []).reduce((s, d) => s + (d.view_count ?? 0), 0);
+  const totalPhoneClicks = (analyticsData ?? []).reduce((s, d) => s + (d.phone_click_count ?? 0), 0);
+  const totalShares = (analyticsData ?? []).reduce((s, d) => s + (d.share_count ?? 0), 0);
+
   const topStats = [
-    { label: "Total Views",     value: "—",              icon: Eye,            scrollTo: null },
+    { label: "Total Views",     value: totalViews,        icon: Eye,            scrollTo: null },
     { label: "Total Enquiries", value: enquiryCount ?? 0, icon: MessageSquare,  scrollTo: "enquiries" },
-    { label: "Phone Clicks",    value: "—",              icon: Phone,          scrollTo: null },
-    { label: "Total Share",     value: "—",              icon: Share2,         scrollTo: null },
+    { label: "Phone Clicks",    value: totalPhoneClicks,  icon: Phone,          scrollTo: null },
+    { label: "Total Share",     value: totalShares,       icon: Share2,         scrollTo: null },
   ];
 
   const hour = new Date().getHours();
