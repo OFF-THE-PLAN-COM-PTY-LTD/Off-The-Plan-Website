@@ -219,6 +219,7 @@ function ListingSection({ title, listings }: { title: string; listings: any[] })
                     isPublished={l.is_published}
                     isFeatured={l.is_featured}
                     status={l.status ?? null}
+                    name={l.name ?? "this listing"}
                   />
                 </td>
               </tr>
