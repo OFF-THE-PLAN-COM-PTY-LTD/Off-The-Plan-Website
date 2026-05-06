@@ -171,8 +171,8 @@ export default function PricingPage() {
                   {/* CTA */}
                   <div className="px-4 pb-4">
                     <a
-                      href="mailto:hello@offtheplan.com.au?subject=New Listing Enquiry"
-                      className="block text-center py-2.5 text-xs font-bold uppercase tracking-widest transition-colors"
+                      href="/admin/listings"
+                      className="block text-center py-2.5 text-xs font-bold uppercase tracking-widest transition-opacity hover:opacity-80"
                       style={{
                         background: plan.highlighted ? "#e85d26" : "#e8e8e8",
                         color: plan.highlighted ? "#fff" : "#1a2340",
