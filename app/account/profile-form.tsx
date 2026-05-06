@@ -51,7 +51,7 @@ export function ProfileForm({ fullName, email, interestType }: ProfileFormProps)
         <p className="mt-1 font-mono text-label-sm text-ink/30">Email cannot be changed here.</p>
       </div>
       <div>
-        <label className="section-label block mb-1.5">I am a...</label>
+        <label className="section-label block mb-1.5">Update my profile type <span className="normal-case font-sans text-ink/40 text-xs">(optional)</span></label>
         <select value={interest} onChange={(e) => setInterest(e.target.value)} className={inputClass + " cursor-pointer"}>
           <option value="">Select</option>
           <option value="Owner-occupier">Owner-occupier</option>
