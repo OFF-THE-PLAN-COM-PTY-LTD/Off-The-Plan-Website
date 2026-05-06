@@ -113,7 +113,7 @@ export function NavBar({ tone = "light", position = "fixed", user = null }: NavB
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             animate={cursorPos as any}
             className={cn(
-              "pointer-events-none absolute z-0 h-7 rounded-sm",
+              "pointer-events-none absolute z-0 inset-y-1 rounded-sm",
               isDark ? "bg-ink-light" : "bg-ink"
             )}
           />
