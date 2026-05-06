@@ -33,6 +33,7 @@ interface ListingData {
   name?: string;
   slug?: string;
   developer_id?: string | null;
+  portal_developer_name?: string | null;
   owner_user_id?: string | null;
   developer_website?: string;
   listing_duration?: string;
@@ -768,6 +769,7 @@ export function ListingForm({
   const [name, setName] = useState(existing?.name ?? "");
   const [slug, setSlug] = useState(existing?.slug ?? "");
   const [developerId, setDeveloperId] = useState(existing?.developer_id ?? "");
+  const [portalDeveloperName, setPortalDeveloperName] = useState(existing?.portal_developer_name ?? "");
   const [ownerUserId, setOwnerUserId] = useState(existing?.owner_user_id ?? "");
   const [developerWebsite, setDeveloperWebsite] = useState(existing?.developer_website ?? "");
   const [listingDuration, setListingDuration] = useState(existing?.listing_duration ?? "");
@@ -940,6 +942,7 @@ export function ListingForm({
       name,
       slug,
       developer_id: developerId || null,
+      portal_developer_name: portalDeveloperName || null,
       owner_user_id: ownerUserId || null,
       developer_website: developerWebsite || null,
       listing_duration: listingDuration || null,
@@ -1149,10 +1152,10 @@ export function ListingForm({
               {isPortal ? (
                 <input
                   type="text"
-                  value={developers.find((d) => d.id === developerId)?.name ?? ""}
-                  readOnly
-                  className={inp + " bg-cream/60 cursor-default text-ink/60"}
-                  placeholder="Assigned by administrator"
+                  value={portalDeveloperName}
+                  onChange={(e) => setPortalDeveloperName(e.target.value)}
+                  placeholder="e.g. ABC Developers Pty Ltd"
+                  className={inp}
                 />
               ) : (
                 <select value={developerId} onChange={(e) => setDeveloperId(e.target.value)} className={inp + " cursor-pointer"}>
