@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
@@ -21,8 +22,50 @@ interface NavBarProps {
   user?: { name: string; isAdmin?: boolean } | null;
 }
 
+interface CursorPosition {
+  left: number;
+  width: number;
+  opacity: number;
+}
+
+function SlideNavLink({
+  href,
+  children,
+  setPosition,
+  isDark,
+}: {
+  href: string;
+  children: React.ReactNode;
+  setPosition: React.Dispatch<React.SetStateAction<CursorPosition>>;
+  isDark: boolean;
+}) {
+  const ref = useRef<HTMLLIElement>(null);
+  return (
+    <li
+      ref={ref}
+      onMouseEnter={() => {
+        if (!ref.current) return;
+        const { width } = ref.current.getBoundingClientRect();
+        setPosition({ width, opacity: 1, left: ref.current.offsetLeft });
+      }}
+      className="relative z-10"
+    >
+      <Link
+        href={href}
+        className={cn(
+          "block font-mono text-[13px] uppercase tracking-widest px-3 py-1.5 mix-blend-difference",
+          isDark ? "text-white" : "text-white"
+        )}
+      >
+        {children}
+      </Link>
+    </li>
+  );
+}
+
 export function NavBar({ tone = "light", position = "fixed", user = null }: NavBarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [cursorPos, setCursorPos] = useState<CursorPosition>({ left: 0, width: 0, opacity: 0 });
 
   const isDark = tone === "dark";
 
@@ -55,20 +98,26 @@ export function NavBar({ tone = "light", position = "fixed", user = null }: NavB
         </Link>
 
         {/* Desktop nav */}
-        <nav className="hidden md:flex items-center gap-6" aria-label="Main navigation">
+        <ul
+          className="relative hidden md:flex items-center"
+          aria-label="Main navigation"
+          onMouseLeave={() => setCursorPos((pv) => ({ ...pv, opacity: 0 }))}
+        >
           {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={cn(
-                "font-mono text-[13px] uppercase tracking-widest transition-colors hover:text-orange",
-                isDark ? "text-ink-light" : "text-ink"
-              )}
-            >
+            <SlideNavLink key={link.href} href={link.href} setPosition={setCursorPos} isDark={isDark}>
               {link.label}
-            </Link>
+            </SlideNavLink>
           ))}
-        </nav>
+          <motion.li
+            aria-hidden
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            animate={cursorPos as any}
+            className={cn(
+              "pointer-events-none absolute z-0 h-7 rounded-sm",
+              isDark ? "bg-ink-light" : "bg-ink"
+            )}
+          />
+        </ul>
 
         {/* Desktop CTAs */}
         <div className="hidden md:flex items-center gap-4">
