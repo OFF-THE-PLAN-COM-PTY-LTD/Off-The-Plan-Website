@@ -1046,6 +1046,10 @@ export function ListingForm({
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
 
+  // Floor plan delete confirmation (portal only)
+  const [pendingDeleteIndex, setPendingDeleteIndex] = useState<number | null>(null);
+  const [floorPlanDeleteText, setFloorPlanDeleteText] = useState("");
+
   async function handleDelete() {
     setShowDeleteModal(false);
     setDeleteConfirmText("");
@@ -1419,7 +1423,14 @@ export function ListingForm({
                           <td className="px-4 py-3">
                             <button
                               type="button"
-                              onClick={() => removeFloorPlan(i)}
+                              onClick={() => {
+                                if (isPortal) {
+                                  setFloorPlanDeleteText("");
+                                  setPendingDeleteIndex(i);
+                                } else {
+                                  removeFloorPlan(i);
+                                }
+                              }}
                               className="font-mono text-[10px] uppercase tracking-widest px-3 py-2 border border-red-300 text-red-500 hover:bg-red-500 hover:text-white hover:border-red-500 transition-colors"
                             >
                               Delete
@@ -1772,6 +1783,52 @@ export function ListingForm({
       </form>
 
       {/* ── Delete confirmation modal ─────────────────────────────────────── */}
+      {/* Floor plan delete confirmation modal (portal only) */}
+      {pendingDeleteIndex !== null && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/50">
+          <div className="bg-white w-full max-w-md mx-4 p-6 flex flex-col gap-4">
+            <h2 className="font-mono text-[13px] uppercase tracking-widest text-ink font-bold">Delete Configuration</h2>
+            <p className="font-sans text-sm text-ink/70">
+              You are about to delete the configuration:{" "}
+              <strong>
+                {floorPlans[pendingDeleteIndex]?.beds || "—"} Bed,{" "}
+                {floorPlans[pendingDeleteIndex]?.bath || "—"} Bath,{" "}
+                {floorPlans[pendingDeleteIndex]?.garage || "—"} Garage
+                {floorPlans[pendingDeleteIndex]?.internal_sqm ? `, ${floorPlans[pendingDeleteIndex].internal_sqm} sqm` : ""}
+                {floorPlans[pendingDeleteIndex]?.price_from ? `, $${Number(floorPlans[pendingDeleteIndex].price_from).toLocaleString()}` : ""}
+              </strong>
+              . This cannot be undone.
+            </p>
+            <p className="font-sans text-sm text-ink/70">Type <strong>delete</strong> below to confirm.</p>
+            <input
+              type="text"
+              value={floorPlanDeleteText}
+              onChange={(e) => setFloorPlanDeleteText(e.target.value)}
+              placeholder="delete"
+              autoFocus
+              className="border border-line px-3 py-2 font-mono text-sm outline-none focus:border-red-400 w-full"
+            />
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => { removeFloorPlan(pendingDeleteIndex); setPendingDeleteIndex(null); setFloorPlanDeleteText(""); }}
+                disabled={floorPlanDeleteText !== "delete"}
+                className="flex-1 font-mono text-[10px] uppercase tracking-widest px-4 py-2.5 bg-red-500 text-white hover:bg-red-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Delete
+              </button>
+              <button
+                type="button"
+                onClick={() => { setPendingDeleteIndex(null); setFloorPlanDeleteText(""); }}
+                className="flex-1 font-mono text-[10px] uppercase tracking-widest px-4 py-2.5 border border-line text-ink/60 hover:text-ink transition-colors"
+              >
+                Go Back
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showDeleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/50">
           <div className="bg-white w-full max-w-md mx-4 p-6 flex flex-col gap-4">
