@@ -1,9 +1,17 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Eye, Phone, Share2, MessageSquare, Building2, Star } from "lucide-react";
+import { Eye, Phone, Share2, MessageSquare, Building2, Star, Sparkles, TrendingUp } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { LogoUploader } from "./logo-uploader";
+
+const MOTIVATIONAL = [
+  "Let's make today count.",
+  "Your listings are live and working hard.",
+  "Ready to close some deals?",
+  "Great things are happening on the platform.",
+  "Another day, another opportunity.",
+];
 
 export default async function PortalDashboard() {
   const supabase = createClient();
@@ -44,6 +52,9 @@ export default async function PortalDashboard() {
 
   const hour = new Date().getHours();
   const timeLabel = hour < 12 ? "Good Morning" : hour < 18 ? "Good Afternoon" : "Good Evening";
+  const emoji = hour < 12 ? "☀️" : hour < 18 ? "🌤️" : "🌙";
+  const motivational = MOTIVATIONAL[new Date().getDay() % MOTIVATIONAL.length];
+  const today = new Date().toLocaleDateString("en-AU", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 
   const stats = [
     { label: "Total Views",     value: totalViews,        icon: Eye },
@@ -58,57 +69,66 @@ export default async function PortalDashboard() {
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
-      <div className="p-6 text-white" style={{ background: "#1a2340" }}>
-        <p className="font-mono text-[10px] uppercase tracking-widest text-white/40 mb-1">
-          {new Date().toLocaleDateString("en-AU", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
-        </p>
-        <h1 className="font-serif text-2xl">{timeLabel}, {firstName}!</h1>
-        <p className="font-sans text-sm text-white/50 mt-1">Here's an overview of your listings and performance.</p>
+      <div
+        className="relative overflow-hidden rounded-sm px-8 py-6 flex items-center justify-between"
+        style={{ background: "linear-gradient(135deg, #1a2340 0%, #2d3a5e 60%, #3b4f82 100%)" }}
+      >
+        <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full opacity-10" style={{ background: "#e85d26" }} />
+        <div className="absolute -bottom-8 right-32 w-32 h-32 rounded-full opacity-5" style={{ background: "#fff" }} />
+        <div className="relative z-10">
+          <p className="text-white/60 text-sm font-medium mb-1">{today}</p>
+          <h1 className="text-white font-bold text-2xl mb-1">{emoji} {timeLabel}, {firstName}!</h1>
+          <p className="text-white/50 text-sm flex items-center gap-1.5">
+            <Sparkles size={13} className="text-orange-400" />
+            {motivational}
+          </p>
+        </div>
+        <div className="relative z-10 hidden md:flex items-center gap-3">
+          <div className="text-right">
+            <p className="text-white/40 text-xs uppercase tracking-widest mb-0.5">Platform Status</p>
+            <p className="text-white font-semibold text-sm flex items-center gap-1.5 justify-end">
+              <span className="w-2 h-2 rounded-full bg-green-400 inline-block" />
+              All Systems Live
+            </p>
+          </div>
+          <div
+            className="w-10 h-10 rounded-full flex items-center justify-center"
+            style={{ background: "rgba(232,93,38,0.2)", border: "1px solid rgba(232,93,38,0.4)" }}
+          >
+            <TrendingUp size={18} className="text-orange-400" />
+          </div>
+        </div>
       </div>
 
       {/* Performance stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {stats.map(({ label, value, icon: Icon }) => (
-          <div key={label} className="bg-white p-5 flex items-center justify-between">
-            <div>
-              <p className="font-mono text-[10px] uppercase tracking-widest text-ink/40">{label}</p>
-              <p className="font-serif text-3xl text-orange mt-1">{value}</p>
+          <div key={label} className="bg-white border border-gray-200 rounded px-5 py-4 flex items-center gap-4">
+            <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "#1a2340" }}>
+              <Icon size={18} className="text-white" />
             </div>
-            <Icon size={28} className="text-ink/10" />
+            <div>
+              <p className="text-xs text-gray-500 uppercase tracking-widest leading-tight">{label}</p>
+              <p className="text-xl font-bold text-gray-800">{value}</p>
+            </div>
           </div>
         ))}
       </div>
 
       {/* Active + Featured counts */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="bg-white p-5 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Building2 size={28} className="text-orange/60" />
-            <div>
-              <p className="font-mono text-[10px] uppercase tracking-widest text-ink/40">Active Listings</p>
-              <p className="font-serif text-3xl text-ink mt-1">{activeCount}</p>
-            </div>
-          </div>
-          <Link
-            href="/portal/listings"
-            className="font-mono text-[9px] uppercase tracking-widest px-3 py-1.5 border border-ink/20 text-ink/60 hover:border-ink hover:text-ink transition-colors self-start"
-          >
-            View All
+        <div className="bg-white border border-gray-200 rounded p-6 text-center">
+          <p className="text-xs text-gray-500 uppercase tracking-widest mb-2">Active Listings</p>
+          <p className="font-bold mb-3" style={{ fontSize: 48, color: "#e85d26" }}>{activeCount}</p>
+          <Link href="/portal/listings" className="text-xs font-bold uppercase tracking-widest text-orange-500 hover:underline">
+            VIEW LISTINGS »
           </Link>
         </div>
-        <div className="bg-white p-5 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Star size={28} className="text-orange/60" />
-            <div>
-              <p className="font-mono text-[10px] uppercase tracking-widest text-ink/40">Featured Listings</p>
-              <p className="font-serif text-3xl text-ink mt-1">{featuredCount}</p>
-            </div>
-          </div>
-          <Link
-            href="/portal/listings"
-            className="font-mono text-[9px] uppercase tracking-widest px-3 py-1.5 border border-ink/20 text-ink/60 hover:border-ink hover:text-ink transition-colors self-start"
-          >
-            View All
+        <div className="bg-white border border-gray-200 rounded p-6 text-center">
+          <p className="text-xs text-gray-500 uppercase tracking-widest mb-2">Featured Listings</p>
+          <p className="font-bold mb-3" style={{ fontSize: 48, color: "#e85d26" }}>{featuredCount}</p>
+          <Link href="/portal/listings" className="text-xs font-bold uppercase tracking-widest text-orange-500 hover:underline">
+            VIEW LISTINGS »
           </Link>
         </div>
       </div>
