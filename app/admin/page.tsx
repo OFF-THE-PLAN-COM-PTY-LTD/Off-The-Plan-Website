@@ -85,7 +85,7 @@ export default async function AdminDashboard() {
         <div className="relative z-10">
           <p className="text-white/60 text-sm font-medium mb-1">{today}</p>
           <h1 className="text-white font-bold text-2xl mb-1">
-            Good Day, {firstName}!
+            👋 Good Day, {firstName}!
           </h1>
           <p className="text-white/50 text-sm flex items-center gap-1.5">
             <Sparkles size={13} className="text-orange-400" />
