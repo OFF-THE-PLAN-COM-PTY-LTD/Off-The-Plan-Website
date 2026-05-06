@@ -65,7 +65,7 @@
   }
 
   .section-label {
-    @apply font-mono text-label-lg uppercase tracking-widest text-ink/40;
+    @apply font-mono text-label-lg uppercase tracking-widest text-ink/70;
   }
 
   .btn-primary {
