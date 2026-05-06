@@ -287,8 +287,8 @@ export default async function DossierPage({ params }: Props) {
                     <p className="font-sans font-semibold text-[14px] text-ink leading-tight mb-1">
                       {dev.developer?.name ? `${dev.developer.name} Sales Team` : "Sales Team"}
                     </p>
-                    {dev.developer?.phone ? (
-                      <PhoneReveal phone={dev.developer.phone} developmentId={dev.id} />
+                    {dev.agent_phone ? (
+                      <PhoneReveal phone={dev.agent_phone} developmentId={dev.id} />
                     ) : (
                       <a
                         href="#enquire"
