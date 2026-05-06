@@ -7,8 +7,13 @@ interface Props { params: { id: string } }
 export default async function AdminListingEditPage({ params }: Props) {
   const isNew = params.id === "new";
 
-  const [developersResult, devResult, galleryResult, floorPlanResult, agentsResult] = await Promise.all([
+  const [developersResult, membersResult, devResult, galleryResult, floorPlanResult, agentsResult] = await Promise.all([
     supabaseAdmin.from("developers").select("id, name").order("name"),
+    supabaseAdmin
+      .from("profiles")
+      .select("id, full_name, interest_type")
+      .in("interest_type", ["Developer", "Agent"])
+      .order("full_name"),
     isNew
       ? Promise.resolve({ data: null, error: null })
       : supabaseAdmin.from("developments").select("*").eq("id", params.id).single(),
@@ -36,6 +41,12 @@ export default async function AdminListingEditPage({ params }: Props) {
   ]);
 
   if (!isNew && !devResult.data) notFound();
+
+  const members = (membersResult.data ?? []).map((m) => ({
+    id: m.id as string,
+    full_name: m.full_name as string | null,
+    interest_type: m.interest_type as string | null,
+  }));
 
   const gallery = (galleryResult.data ?? []).map((img) => ({
     id: img.id as string,
@@ -68,6 +79,7 @@ export default async function AdminListingEditPage({ params }: Props) {
       id={params.id}
       existing={devResult.data ?? undefined}
       developers={developersResult.data ?? []}
+      members={members}
       gallery={gallery}
       floorPlans={floorPlans}
       agents={agents}

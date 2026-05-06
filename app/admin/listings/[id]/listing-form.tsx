@@ -9,6 +9,7 @@ import { ImageUpload } from "@/components/admin/image-upload";
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 interface Developer { id: string; name: string }
+interface Member { id: string; full_name: string | null; interest_type: string | null }
 interface GalleryImage { id: string; url: string; sort_order: number }
 interface FloorPlan {
   id?: string;
@@ -32,6 +33,7 @@ interface ListingData {
   name?: string;
   slug?: string;
   developer_id?: string | null;
+  owner_user_id?: string | null;
   developer_website?: string;
   listing_duration?: string;
   logo_url?: string;
@@ -128,6 +130,7 @@ interface Props {
   id: string;
   existing?: ListingData;
   developers: Developer[];
+  members: Member[];
   gallery: GalleryImage[];
   floorPlans: FloorPlan[];
   agents: Omit<Agent, "isNew" | "saving" | "deleting">[];
@@ -757,6 +760,7 @@ export function ListingForm({
   const [name, setName] = useState(existing?.name ?? "");
   const [slug, setSlug] = useState(existing?.slug ?? "");
   const [developerId, setDeveloperId] = useState(existing?.developer_id ?? "");
+  const [ownerUserId, setOwnerUserId] = useState(existing?.owner_user_id ?? "");
   const [developerWebsite, setDeveloperWebsite] = useState(existing?.developer_website ?? "");
   const [listingDuration, setListingDuration] = useState(existing?.listing_duration ?? "");
   const [logoUrl, setLogoUrl] = useState(existing?.logo_url ?? "");
@@ -928,6 +932,7 @@ export function ListingForm({
       name,
       slug,
       developer_id: developerId || null,
+      owner_user_id: ownerUserId || null,
       developer_website: developerWebsite || null,
       listing_duration: listingDuration || null,
       logo_url: logoUrl || null,
@@ -1138,6 +1143,19 @@ export function ListingForm({
               <label className={lbl}>Number of Apartments / Lots</label>
               <input type="number" value={residenceCount} onChange={(e) => setResidenceCount(e.target.value === "" ? "" : Number(e.target.value))} className={inp} />
             </div>
+          </div>
+
+          {/* Row 3: assign to member */}
+          <div className="mt-4">
+            <label className={lbl}>Assign to Member <span className="normal-case font-sans text-ink/40 text-xs">(Developer or Agent account)</span></label>
+            <select value={ownerUserId} onChange={(e) => setOwnerUserId(e.target.value)} className={inp + " cursor-pointer"}>
+              <option value="">— Unassigned —</option>
+              {members.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.full_name ?? "Unnamed"} — {m.interest_type}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Project logo */}
