@@ -46,7 +46,7 @@ export function PortalListingActions({ id, slug, isPublished, isFeatured, status
         Edit Listing
       </Link>
 
-      {isPublished && (
+      {isPublished && !isFeatured && (
         <>
           <Link
             href="/portal/pricing"
@@ -61,14 +61,12 @@ export function PortalListingActions({ id, slug, isPublished, isFeatured, status
           >
             {loading ? "…" : "Cancel Listing"}
           </button>
-          {!isFeatured && (
-            <Link
-              href="/portal/pricing"
-              className="font-mono text-[9px] uppercase tracking-widest px-2.5 py-1.5 border border-orange/40 text-orange hover:bg-orange hover:text-white transition-colors whitespace-nowrap"
-            >
-              Feature This Listing
-            </Link>
-          )}
+          <Link
+            href="/portal/pricing"
+            className="font-mono text-[9px] uppercase tracking-widest px-2.5 py-1.5 border border-orange/40 text-orange hover:bg-orange hover:text-white transition-colors whitespace-nowrap"
+          >
+            Feature This Listing
+          </Link>
         </>
       )}
 
