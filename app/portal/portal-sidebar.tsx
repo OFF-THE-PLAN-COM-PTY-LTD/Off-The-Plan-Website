@@ -2,13 +2,25 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, ListChecks, Users, UserCircle, LogOut } from "lucide-react";
+import {
+  LayoutDashboard,
+  ListChecks,
+  Users,
+  BarChart2,
+  UserCircle,
+  CreditCard,
+  Tag,
+  LogOut,
+} from "lucide-react";
 
 const navItems = [
-  { label: "Dashboard",   href: "/portal",          icon: LayoutDashboard },
-  { label: "My Listings", href: "/portal/listings",  icon: ListChecks },
-  { label: "Leads",       href: "/portal/leads",     icon: Users },
-  { label: "Profile",     href: "/portal/profile",   icon: UserCircle },
+  { label: "Dashboard",   href: "/portal",           icon: LayoutDashboard },
+  { label: "Listings",    href: "/portal/listings",   icon: ListChecks },
+  { label: "Reports",     href: "/portal/reports",    icon: BarChart2 },
+  { label: "Leads",       href: "/portal/leads",      icon: Users },
+  { label: "Profile",     href: "/portal/profile",    icon: UserCircle },
+  { label: "Billing",     href: "/portal/billing",    icon: CreditCard },
+  { label: "Pricing",     href: "/portal/pricing",    icon: Tag },
 ];
 
 export default function PortalSidebar() {
