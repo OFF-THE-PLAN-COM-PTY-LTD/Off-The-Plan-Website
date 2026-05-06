@@ -72,13 +72,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         {/* Logout */}
         <div className="border-t border-white/10 p-4">
-          <Link
-            href="/auth/logout"
-            className="flex items-center gap-3 px-1 py-2 text-sm text-white/50 hover:text-white transition-colors"
-          >
-            <LogOut size={16} />
-            Logout
-          </Link>
+          <form action="/api/auth/logout" method="POST">
+            <button
+              type="submit"
+              className="flex items-center gap-3 px-1 py-2 text-sm text-white/50 hover:text-white transition-colors w-full"
+            >
+              <LogOut size={16} />
+              Logout
+            </button>
+          </form>
         </div>
       </aside>
 

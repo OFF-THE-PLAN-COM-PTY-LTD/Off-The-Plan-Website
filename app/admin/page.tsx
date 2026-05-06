@@ -17,9 +17,10 @@ export default async function AdminDashboard() {
   // Get logged-in user's name
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const firstName = user?.user_metadata?.full_name?.split(" ")[0]
+  const rawName = user?.user_metadata?.full_name?.split(" ")[0]
     ?? user?.email?.split("@")[0]
     ?? "Admin";
+  const firstName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
 
   const [
     { count: activeListings },
