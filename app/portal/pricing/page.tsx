@@ -1,5 +1,7 @@
+import { redirect } from "next/navigation";
 import Image from "next/image";
 import { CheckCircle } from "lucide-react";
+import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import UpgradeCards from "@/components/admin/upgrade-cards";
 
@@ -82,10 +84,14 @@ const upgrades = [
 ];
 
 export default async function PortalPricing() {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
   const { data: devs } = await supabaseAdmin
     .from("developments")
     .select("id, name, hero_image_url, feature_image_url, is_featured, images:development_images(url, is_hero)")
-    .eq("is_published", true)
+    .eq("owner_user_id", user.id)
     .order("is_featured", { ascending: false })
     .limit(50);
 
