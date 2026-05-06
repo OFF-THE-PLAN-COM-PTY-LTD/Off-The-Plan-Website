@@ -50,7 +50,7 @@ export default async function PortalNew() {
           </Link>
 
           <Link
-            href="/contact"
+            href="/portal/listings/new"
             className="flex items-center gap-5 px-8 py-6 w-80 transition-opacity hover:opacity-90"
             style={{ background: "#1a2340" }}
           >

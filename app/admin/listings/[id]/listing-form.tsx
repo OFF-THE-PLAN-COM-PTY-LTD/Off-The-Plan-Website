@@ -1110,7 +1110,7 @@ export function ListingForm({
       return;
     }
 
-    router.push("/admin/listings");
+    router.push(isPortal ? "/portal/listings" : "/admin/listings");
     router.refresh();
   }
 
@@ -1136,7 +1136,7 @@ export function ListingForm({
       setDeleting(false);
       return;
     }
-    router.push("/admin/listings");
+    router.push(isPortal ? "/portal/listings" : "/admin/listings");
     router.refresh();
   }
 
@@ -1155,7 +1155,7 @@ export function ListingForm({
   return (
     <div>
       <Link
-        href="/admin/listings"
+        href={isPortal ? "/portal/listings" : "/admin/listings"}
         className="inline-flex items-center gap-1.5 font-mono text-label-sm uppercase tracking-widest text-ink/40 hover:text-orange transition-colors mb-6"
       >
         ← Back to Listings
