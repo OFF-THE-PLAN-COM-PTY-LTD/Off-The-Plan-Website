@@ -98,18 +98,22 @@ function ListingImageGrid({ images }: { images: string[] }) {
 }
 
 export default async function PricingPage() {
-  // Fetch featured development images
-  const { data: featured } = await supabaseAdmin
+  // Fetch up to 6 development images — featured first, then fill from all published
+  const { data: devs } = await supabaseAdmin
     .from("developments")
-    .select("name, hero_image_url, feature_image_url, images:development_images(url, is_hero)")
-    .eq("is_featured", true)
-    .limit(6);
+    .select("name, hero_image_url, feature_image_url, is_featured, images:development_images(url, is_hero)")
+    .eq("is_published", true)
+    .order("is_featured", { ascending: false })
+    .limit(12);
 
-  const listingImages: string[] = (featured ?? []).map((d) => {
-    const imgs = (d.images ?? []) as { url: string; is_hero: boolean }[];
-    const hero = imgs.find((i) => i.is_hero)?.url ?? imgs[0]?.url;
-    return hero ?? d.hero_image_url ?? d.feature_image_url ?? "";
-  }).filter(Boolean);
+  const listingImages: string[] = (devs ?? [])
+    .map((d) => {
+      const imgs = (d.images ?? []) as { url: string; is_hero: boolean }[];
+      const hero = imgs.find((i) => i.is_hero)?.url ?? imgs[0]?.url;
+      return hero ?? d.hero_image_url ?? d.feature_image_url ?? "";
+    })
+    .filter(Boolean)
+    .slice(0, 6);
 
   return (
     <div>
