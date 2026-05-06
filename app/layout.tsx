@@ -45,17 +45,19 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const { data: { user } } = await supabase.auth.getUser();
 
   let isAdmin = false;
+  let isPortalMember = false;
   if (user) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("is_admin")
+      .select("is_admin, interest_type")
       .eq("id", user.id)
       .single();
     isAdmin = profile?.is_admin ?? false;
+    isPortalMember = ["Developer", "Agent"].includes(profile?.interest_type ?? "");
   }
 
   const authUser = user
-    ? { name: user.user_metadata?.full_name ?? user.email ?? "Account", isAdmin }
+    ? { name: user.user_metadata?.full_name ?? user.email ?? "Account", isAdmin, isPortalMember }
     : null;
 
   return (

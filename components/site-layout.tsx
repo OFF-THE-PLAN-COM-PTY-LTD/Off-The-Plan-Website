@@ -7,7 +7,7 @@ import { Footer } from "@/components/footer";
 import { CirclePopup } from "@/components/circle-popup";
 
 interface SiteLayoutProps {
-  user: { name: string; isAdmin: boolean } | null;
+  user: { name: string; isAdmin: boolean; isPortalMember: boolean } | null;
   children: React.ReactNode;
 }
 

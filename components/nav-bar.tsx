@@ -18,7 +18,7 @@ const navLinks = [
 interface NavBarProps {
   tone?: "light" | "dark";
   position?: "fixed" | "absolute" | "sticky";
-  user?: { name: string; isAdmin?: boolean } | null;
+  user?: { name: string; isAdmin?: boolean; isPortalMember?: boolean } | null;
 }
 
 export function NavBar({ tone = "light", position = "fixed", user = null }: NavBarProps) {
@@ -72,6 +72,19 @@ export function NavBar({ tone = "light", position = "fixed", user = null }: NavB
 
         {/* Desktop CTAs */}
         <div className="hidden md:flex items-center gap-4">
+          {user?.isPortalMember && (
+            <Link
+              href="/portal"
+              className={cn(
+                "font-mono text-[10px] uppercase tracking-widest px-3 py-1.5 border transition-colors",
+                isDark
+                  ? "border-orange/60 text-orange hover:bg-orange hover:text-white"
+                  : "border-orange/60 text-orange hover:bg-orange hover:text-white"
+              )}
+            >
+              My Dashboard
+            </Link>
+          )}
           <Link
             href="/list-a-listing"
             className={cn(
@@ -186,6 +199,15 @@ export function NavBar({ tone = "light", position = "fixed", user = null }: NavB
         </nav>
 
         <div className="mt-auto flex flex-col gap-4">
+          {user?.isPortalMember && (
+            <Link
+              href="/portal"
+              onClick={() => setMenuOpen(false)}
+              className="font-mono text-label-lg uppercase tracking-widest text-center py-3 border border-orange text-orange"
+            >
+              My Dashboard
+            </Link>
+          )}
           <Link
             href="/list-a-listing"
             onClick={() => setMenuOpen(false)}
