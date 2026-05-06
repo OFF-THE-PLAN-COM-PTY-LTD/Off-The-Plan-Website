@@ -46,7 +46,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
 
         {/* Nav */}
-        <nav className="flex flex-col py-2 flex-1" aria-label="Admin navigation">
+        <nav className="flex flex-col py-2" aria-label="Admin navigation">
           {navItems.map((item) => {
             const Icon = item.icon;
             const active =
