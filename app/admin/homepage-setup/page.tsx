@@ -135,7 +135,7 @@ export default function HomepageSetupPage() {
   const allKeys = [...savedKeys, ...newKeys];
 
   return (
-    <div className="max-w-4xl">
+    <div className="w-full">
       {/* Toast */}
       {toast && (
         <div
@@ -166,90 +166,92 @@ export default function HomepageSetupPage() {
           return (
             <div key={key} className="border border-gray-200 rounded bg-white overflow-hidden">
               {/* Banner heading */}
-              <div className="px-5 py-3 border-b border-gray-200 bg-gray-50">
+              <div className="px-6 py-3 border-b border-gray-200 bg-gray-50">
                 <p className="font-semibold text-gray-700 text-sm">Banner {idx + 1}</p>
               </div>
 
-              <div className="px-5 py-5 flex flex-col gap-5">
-                {/* Title + Link */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1 font-medium">Title</label>
-                    <input
-                      type="text"
-                      value={draft.title}
-                      onChange={(e) => setField(key, "title", e.target.value)}
-                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-blue-400"
-                      placeholder="e.g. FLORIAN"
+              {/* Two-column layout */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x divide-gray-100">
+
+                {/* Left — form fields (2/3 width) */}
+                <div className="lg:col-span-2 px-6 py-6 flex flex-col gap-5">
+                  {/* Title + Link */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1 font-medium">Title</label>
+                      <input
+                        type="text"
+                        value={draft.title}
+                        onChange={(e) => setField(key, "title", e.target.value)}
+                        className="w-full border border-gray-300 rounded px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-blue-400"
+                        placeholder="e.g. FLORIAN"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1 font-medium">Link</label>
+                      <input
+                        type="text"
+                        value={draft.link}
+                        onChange={(e) => setField(key, "link", e.target.value)}
+                        className="w-full border border-gray-300 rounded px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-blue-400"
+                        placeholder="https://offtheplan.com.au/new-apartments/..."
+                      />
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  <div className="flex-1">
+                    <label className="block text-xs text-gray-500 mb-1 font-medium">Description</label>
+                    <textarea
+                      rows={5}
+                      value={draft.description}
+                      onChange={(e) => setField(key, "description", e.target.value)}
+                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-blue-400 resize-none"
+                      placeholder="Banner description..."
                     />
                   </div>
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1 font-medium">Link</label>
-                    <input
-                      type="text"
-                      value={draft.link}
-                      onChange={(e) => setField(key, "link", e.target.value)}
-                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-blue-400"
-                      placeholder="https://offtheplan.com.au/new-apartments/..."
-                    />
+
+                  {/* Actions */}
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => saveBanner(key)}
+                      disabled={isSaving || isDeleting}
+                      className="px-6 py-2 text-xs font-bold uppercase tracking-widest text-white rounded transition-opacity hover:opacity-80 disabled:opacity-50"
+                      style={{ background: "#1a2340" }}
+                    >
+                      {isSaving ? "Saving…" : "Save"}
+                    </button>
+                    <button
+                      onClick={() => deleteBanner(key)}
+                      disabled={isSaving || isDeleting}
+                      className="px-6 py-2 text-xs font-bold uppercase tracking-widest border border-red-400 text-red-500 rounded transition-opacity hover:bg-red-50 disabled:opacity-50"
+                    >
+                      {isDeleting ? "Deleting…" : "Delete"}
+                    </button>
                   </div>
                 </div>
 
-                {/* Description */}
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1 font-medium">Description</label>
-                  <textarea
-                    rows={4}
-                    value={draft.description}
-                    onChange={(e) => setField(key, "description", e.target.value)}
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-blue-400 resize-none"
-                    placeholder="Banner description..."
+                {/* Right — image uploads (1/3 width) */}
+                <div className="px-6 py-6 flex flex-col gap-6 bg-gray-50">
+                  <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Banner Images Upload</p>
+                  <ImageUploadField
+                    label="Desktop View:"
+                    hint="(Dimensions: 1920x1080)"
+                    currentUrl={draft.desktop_image_url}
+                    isUploading={uploading?.id === key && uploading.field === "desktop"}
+                    onFile={(file) => uploadImage(key, "desktop", file)}
+                    onClear={() => setField(key, "desktop_image_url", "")}
+                  />
+                  <ImageUploadField
+                    label="Mobile View:"
+                    hint="(Dimensions: 500x500)"
+                    currentUrl={draft.mobile_image_url}
+                    isUploading={uploading?.id === key && uploading.field === "mobile"}
+                    onFile={(file) => uploadImage(key, "mobile", file)}
+                    onClear={() => setField(key, "mobile_image_url", "")}
                   />
                 </div>
 
-                {/* Image Upload */}
-                <div>
-                  <p className="text-sm font-semibold text-gray-700 mb-3">Banner Images Upload</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    {/* Desktop */}
-                    <ImageUploadField
-                      label="Desktop View:"
-                      hint="(Dimensions: 1920x1080)"
-                      currentUrl={draft.desktop_image_url}
-                      isUploading={uploading?.id === key && uploading.field === "desktop"}
-                      onFile={(file) => uploadImage(key, "desktop", file)}
-                      onClear={() => setField(key, "desktop_image_url", "")}
-                    />
-                    {/* Mobile */}
-                    <ImageUploadField
-                      label="Mobile View:"
-                      hint="(Dimensions: 500x500)"
-                      currentUrl={draft.mobile_image_url}
-                      isUploading={uploading?.id === key && uploading.field === "mobile"}
-                      onFile={(file) => uploadImage(key, "mobile", file)}
-                      onClear={() => setField(key, "mobile_image_url", "")}
-                    />
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex gap-3 pt-1">
-                  <button
-                    onClick={() => saveBanner(key)}
-                    disabled={isSaving || isDeleting}
-                    className="px-5 py-2 text-xs font-bold uppercase tracking-widest text-white border rounded transition-opacity hover:opacity-80 disabled:opacity-50"
-                    style={{ background: "#1a2340", borderColor: "#1a2340" }}
-                  >
-                    {isSaving ? "Saving…" : "Save"}
-                  </button>
-                  <button
-                    onClick={() => deleteBanner(key)}
-                    disabled={isSaving || isDeleting}
-                    className="px-5 py-2 text-xs font-bold uppercase tracking-widest border border-red-400 text-red-500 rounded transition-opacity hover:bg-red-50 disabled:opacity-50"
-                  >
-                    {isDeleting ? "Deleting…" : "Delete"}
-                  </button>
-                </div>
               </div>
             </div>
           );
