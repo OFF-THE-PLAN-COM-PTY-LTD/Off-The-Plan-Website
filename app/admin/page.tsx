@@ -39,10 +39,10 @@ export default async function AdminDashboard() {
   ]);
 
   const topStats = [
-    { label: "Total Views",     value: "—",              icon: Eye },
-    { label: "Total Enquiries", value: enquiryCount ?? 0, icon: MessageSquare },
-    { label: "Phone Clicks",    value: "—",              icon: Phone },
-    { label: "Total Share",     value: "—",              icon: Share2 },
+    { label: "Total Views",     value: "—",              icon: Eye,            scrollTo: null },
+    { label: "Total Enquiries", value: enquiryCount ?? 0, icon: MessageSquare,  scrollTo: "enquiries" },
+    { label: "Phone Clicks",    value: "—",              icon: Phone,          scrollTo: null },
+    { label: "Total Share",     value: "—",              icon: Share2,         scrollTo: null },
   ];
 
   const hour = new Date().getHours();
@@ -109,11 +109,8 @@ export default async function AdminDashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {topStats.map((s) => {
           const Icon = s.icon;
-          return (
-            <div
-              key={s.label}
-              className="bg-white border border-gray-200 rounded px-5 py-4 flex items-center gap-4"
-            >
+          const inner = (
+            <>
               <div
                 className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
                 style={{ background: "#1a2340" }}
@@ -126,6 +123,22 @@ export default async function AdminDashboard() {
                 </p>
                 <p className="text-xl font-bold text-gray-800">{s.value}</p>
               </div>
+            </>
+          );
+          return s.scrollTo ? (
+            <a
+              key={s.label}
+              href={`#${s.scrollTo}`}
+              className="bg-white border border-gray-200 rounded px-5 py-4 flex items-center gap-4 cursor-pointer hover:border-orange-400 transition-colors"
+            >
+              {inner}
+            </a>
+          ) : (
+            <div
+              key={s.label}
+              className="bg-white border border-gray-200 rounded px-5 py-4 flex items-center gap-4"
+            >
+              {inner}
             </div>
           );
         })}
@@ -221,6 +234,24 @@ export default async function AdminDashboard() {
           { key: "created_at",      label: "Date" },
         ]}
       />
+
+      {/* Enquiries — anchor target for Total Enquiries stat card */}
+      <div id="enquiries">
+        <DashboardTable
+          title="Enquiries"
+          pdfTitle="Enquiries"
+          apiPath="/api/admin/enquiries"
+          columns={[
+            { key: "full_name",    label: "Enquiry Name" },
+            { key: "email",        label: "Email Address" },
+            { key: "mobile",       label: "Contact Number" },
+            { key: "project_name", label: "Project" },
+            { key: "buyer_type",   label: "Category" },
+            { key: "status",       label: "Status" },
+            { key: "created_at",   label: "Date" },
+          ]}
+        />
+      </div>
 
       {/* Listings table */}
       <ListingsTable />
