@@ -136,7 +136,7 @@ export default async function PortalDashboard() {
           <h2 className="font-mono text-[11px] uppercase tracking-widest text-ink font-bold">Manage Your Listings</h2>
           <div className="flex items-center gap-2">
             <Link
-              href="/contact"
+              href="/portal/new"
               className="font-mono text-[9px] uppercase tracking-widest px-3 py-1.5 bg-orange text-white hover:bg-orange/90 transition-colors"
             >
               + New
