@@ -42,6 +42,10 @@ export default async function AdminListingEditPage({ params }: Props) {
 
   if (!isNew && !devResult.data) notFound();
 
+  if (membersResult.error) {
+    console.error("Failed to load members:", membersResult.error.message);
+  }
+
   const members = (membersResult.data ?? []).map((m) => ({
     id: m.id as string,
     full_name: m.full_name as string | null,

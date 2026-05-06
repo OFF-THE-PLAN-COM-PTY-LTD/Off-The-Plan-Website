@@ -20,6 +20,7 @@ function buildListingData(fields: Record<string, unknown>) {
     tier: fields.tier ?? null,
     // Project Overview – identity
     developer_id: fields.developer_id ?? null,
+    owner_user_id: fields.owner_user_id ?? null,
     developer_website: fields.developer_website ?? null,
     listing_duration: fields.listing_duration ?? null,
     logo_url: fields.logo_url ?? null,

@@ -744,6 +744,7 @@ export function ListingForm({
   id,
   existing,
   developers,
+  members,
   gallery: initialGallery,
   floorPlans: initialFloorPlans,
   agents,
