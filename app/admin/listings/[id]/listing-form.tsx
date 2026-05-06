@@ -210,7 +210,7 @@ function AccordionSection({
         onClick={() => setOpen(!open)}
         className="w-full flex items-center justify-between px-5 py-4 bg-white hover:bg-cream-alt transition-colors"
       >
-        <span className="font-mono text-[11px] uppercase tracking-widest text-navy font-bold">
+        <span className="font-mono text-[11px] uppercase tracking-widest text-orange font-bold">
           {title}
         </span>
         <svg
