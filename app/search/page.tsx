@@ -106,14 +106,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const selCat = searchParams.type        ?? "";
   const selPr  = searchParams.price_range ?? "";
 
-  // shared dropdown class
-  const sel = [
-    "appearance-none bg-white border border-[#c8cdd8]",
-    "font-mono text-[11px] uppercase tracking-widest text-[#1a2340]",
-    "px-4 py-2.5 pr-8 outline-none cursor-pointer",
-    "hover:border-orange/60 focus:border-orange transition-colors",
-    "bg-[url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%231a2340' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\")] bg-no-repeat bg-[right_12px_center]",
-  ].join(" ");
+  const sel = "appearance-none bg-white border border-[#c8cdd8] font-mono text-[11px] uppercase tracking-widest text-[#1a2340] px-4 py-2.5 pr-8 outline-none cursor-pointer hover:border-orange/60 focus:border-orange transition-colors w-full";
 
   return (
     <div className="min-h-screen bg-cream pt-16">
@@ -179,33 +172,42 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
               name="suburb"
               defaultValue={searchParams.suburb}
               placeholder="Suburb or postcode"
-              className="font-mono text-[11px] uppercase tracking-widest placeholder:normal-case placeholder:tracking-normal border border-[#c8cdd8] px-4 py-2.5 bg-white outline-none focus:border-orange/60 transition-colors w-44"
+              className="font-sans text-sm border border-[#c8cdd8] px-4 py-2.5 bg-white outline-none focus:border-orange/60 transition-colors w-44"
               aria-label="Suburb"
             />
 
             {/* State */}
-            <select name="state" defaultValue={selSt} className={sel} aria-label="State">
-              <option value="">State</option>
-              {AU_STATES.map((st) => (
-                <option key={st.abbr} value={st.abbr}>{st.full}</option>
-              ))}
-            </select>
+            <div className="relative">
+              <select name="state" defaultValue={selSt} className={sel} aria-label="State">
+                <option value="">State</option>
+                {AU_STATES.map((st) => (
+                  <option key={st.abbr} value={st.abbr}>{st.full}</option>
+                ))}
+              </select>
+              <svg className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#1a2340" strokeWidth="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
 
             {/* Category */}
-            <select name="type" defaultValue={selCat} className={sel} aria-label="Category">
-              <option value="">Category</option>
-              {CATEGORIES.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
+            <div className="relative">
+              <select name="type" defaultValue={selCat} className={sel} aria-label="Category">
+                <option value="">Category</option>
+                {CATEGORIES.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+              <svg className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#1a2340" strokeWidth="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
 
             {/* Price Range */}
-            <select name="price_range" defaultValue={selPr} className={sel} aria-label="Price Range">
-              <option value="">Price Range</option>
-              {PRICE_RANGES.map((r) => (
-                <option key={r.value} value={r.value}>{r.label}</option>
-              ))}
-            </select>
+            <div className="relative">
+              <select name="price_range" defaultValue={selPr} className={sel} aria-label="Price Range">
+                <option value="">Price Range</option>
+                {PRICE_RANGES.map((r) => (
+                  <option key={r.value} value={r.value}>{r.label}</option>
+                ))}
+              </select>
+              <svg className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#1a2340" strokeWidth="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
 
             {/* Search button */}
             <button
