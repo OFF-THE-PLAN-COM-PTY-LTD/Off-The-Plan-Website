@@ -110,8 +110,8 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* ─── Hero (unchanged) ──────────────────────────────────────────────── */}
-      <section className="relative h-screen flex items-center justify-center bg-navy overflow-hidden">
+      {/* ─── Hero ──────────────────────────────────────────────────────────── */}
+      <section className="relative h-screen flex flex-col bg-navy overflow-hidden">
         <video
           autoPlay muted loop playsInline
           className="absolute inset-0 w-full h-full object-cover"
@@ -120,18 +120,97 @@ export default async function HomePage() {
           <source src="/hero-video.mp4" type="video/mp4" />
         </video>
         <div className="absolute inset-0 bg-navy/60" />
-        <div className="relative z-10 text-center px-6 flex flex-col items-center gap-6">
-          <div className="w-12 h-px bg-orange" aria-hidden="true" />
-          <p className="font-mono text-label-lg uppercase tracking-[0.3em] text-ink-light/50">
-            Australia&apos;s New Home Portal
-          </p>
-          <h1 className="font-display font-light text-ink-light leading-[0.9] tracking-tight text-[clamp(56px,9vw,148px)]">
-            Off{" "}<em className="not-italic italic text-orange">The</em>{" "}Plan
-          </h1>
-          <p className="font-sans font-light text-ink-light/70 text-[clamp(16px,1.8vw,22px)] tracking-wide max-w-md">
-            Where your future address begins
-          </p>
-          <div className="w-12 h-px bg-orange" aria-hidden="true" />
+
+        {/* Hero text — centred in remaining space */}
+        <div className="relative z-10 flex-1 flex items-center justify-center text-center px-6">
+          <div className="flex flex-col items-center gap-6">
+            <div className="w-12 h-px bg-orange" aria-hidden="true" />
+            <p className="font-mono text-label-lg uppercase tracking-[0.3em] text-ink-light/50">
+              Australia&apos;s New Home Portal
+            </p>
+            <h1 className="font-display font-light text-ink-light leading-[0.9] tracking-tight text-[clamp(56px,9vw,148px)]">
+              Off{" "}<em className="not-italic italic text-orange">The</em>{" "}Plan
+            </h1>
+            <p className="font-sans font-light text-ink-light/70 text-[clamp(16px,1.8vw,22px)] tracking-wide max-w-md">
+              Where your future address begins
+            </p>
+            <div className="w-12 h-px bg-orange" aria-hidden="true" />
+          </div>
+        </div>
+
+        {/* Search bar — overlaid at bottom of hero */}
+        <div className="relative z-10">
+          {/* gradient fade */}
+          <div className="h-16 bg-gradient-to-t from-[#0d1529]/90 to-transparent" />
+          <div style={{ background: "rgba(13,21,41,0.92)" }}>
+            <div className="container-padded py-3">
+              {/* Heading + state tabs row */}
+              <div className="flex items-center justify-between mb-2">
+                <div>
+                  <p className="font-sans text-[9px] uppercase tracking-[0.2em] text-white/40 mb-0.5">
+                    The New Home for Off-The-Plan Property
+                  </p>
+                  <h2 className="font-sans font-bold text-sm tracking-widest uppercase text-white">
+                    New Property Search
+                  </h2>
+                </div>
+                <div className="flex items-center gap-4">
+                  {["ACT","NSW","NT","QLD","SA","TAS","VIC","WA"].map((abbr) => (
+                    <a
+                      key={abbr}
+                      href={`/search?state=${abbr}`}
+                      className="font-mono text-[10px] uppercase tracking-[0.15em] text-white/50 hover:text-orange transition-colors"
+                    >
+                      {abbr}
+                    </a>
+                  ))}
+                </div>
+              </div>
+              {/* Input row */}
+              <form action="/search" method="GET" className="flex items-stretch gap-0">
+                <input
+                  name="suburb"
+                  placeholder="Suburb or postcode"
+                  className="font-sans text-sm text-[#1a2340] placeholder:text-[#1a2340]/40 px-4 py-2 bg-white outline-none w-48 border-r border-[#dde1e9] flex-shrink-0"
+                />
+                <div className="relative flex-1 bg-white border-r border-[#dde1e9] flex items-center">
+                  <select name="state" className="appearance-none bg-transparent font-sans text-sm text-[#1a2340] px-4 py-2 pr-8 outline-none cursor-pointer w-full">
+                    <option value="">State</option>
+                    {[["ACT","Australian Capital Territory"],["NSW","New South Wales"],["NT","Northern Territory"],["QLD","Queensland"],["SA","South Australia"],["TAS","Tasmania"],["VIC","Victoria"],["WA","Western Australia"]].map(([a,f])=>(
+                      <option key={a} value={a}>{f}</option>
+                    ))}
+                  </select>
+                  <svg className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#1a2340" strokeWidth="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div className="relative flex-1 bg-white border-r border-[#dde1e9] flex items-center">
+                  <select name="type" className="appearance-none bg-transparent font-sans text-sm text-[#1a2340] px-4 py-2 pr-8 outline-none cursor-pointer w-full">
+                    <option value="">Category</option>
+                    {["New Apartments","Townhouses","Land and Estates","Commercial","House & Land","New Home Design"].map(c=>(
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                  <svg className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#1a2340" strokeWidth="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div className="relative flex-1 bg-white border-r border-[#dde1e9] flex items-center">
+                  <select name="price_range" className="appearance-none bg-transparent font-sans text-sm text-[#1a2340] px-4 py-2 pr-8 outline-none cursor-pointer w-full">
+                    <option value="">Price Range</option>
+                    {[["0-600000","$0 – $600,000"],["600000-1000000","$600,000 – $1 Mil"],["1000000-1500000","$1 Mil – $1.5 Mil"],["1500000-2500000","$1.5 Mil – $2.5 Mil"],["2500000+","More than $2.5 Mil"]].map(([v,l])=>(
+                      <option key={v} value={v}>{l}</option>
+                    ))}
+                  </select>
+                  <svg className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#1a2340" strokeWidth="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <button
+                  type="submit"
+                  style={{ background: "#e85d26" }}
+                  className="font-mono text-[11px] uppercase tracking-widest px-6 py-2 text-white hover:opacity-90 transition-opacity flex items-center gap-2 flex-shrink-0"
+                >
+                  Search
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                </button>
+              </form>
+            </div>
+          </div>
         </div>
       </section>
 
