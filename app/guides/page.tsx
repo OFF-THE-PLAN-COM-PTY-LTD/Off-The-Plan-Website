@@ -10,6 +10,8 @@ export const metadata: Metadata = {
   description: "Property guides to help you buy, invest and navigate off-the-plan developments in Australia.",
 };
 
+const PAGE_SIZE = 9; // 3-col grid fits 9 neatly
+
 /** Strip HTML and remove the social-share boilerplate at the top of every scraped article. */
 function extractExcerpt(html: string | null, maxLen = 180): string {
   if (!html) return "";
@@ -21,24 +23,51 @@ function extractExcerpt(html: string | null, maxLen = 180): string {
   return afterShare.slice(0, maxLen);
 }
 
-export default async function GuidesPage() {
-  const { data } = await supabase
+/** Placeholder tile shown when an article has no hero image. */
+function ImagePlaceholder() {
+  return (
+    <div className="absolute inset-0 flex items-center justify-center bg-navy/80">
+      <Image
+        src="/logo.png"
+        alt=""
+        width={120}
+        height={32}
+        className="h-8 w-auto object-contain brightness-0 invert opacity-30"
+      />
+    </div>
+  );
+}
+
+interface GuidesPageProps {
+  searchParams: Promise<{ page?: string }>;
+}
+
+export default async function GuidesPage({ searchParams }: GuidesPageProps) {
+  const { page: pageParam } = await searchParams;
+  const page = Math.max(1, parseInt(pageParam ?? "1", 10) || 1);
+  const from = (page - 1) * PAGE_SIZE;
+  const to = from + PAGE_SIZE - 1;
+
+  const { data, count } = await supabase
     .from("journal_articles")
-    .select("*")
+    .select("*", { count: "exact" })
     .eq("is_published", true)
     .eq("category", "Guide")
-    .order("published_at", { ascending: false });
+    .order("published_at", { ascending: false })
+    .range(from, to);
 
   const articles = (data ?? []) as unknown as JournalArticle[];
+  const totalPages = Math.ceil((count ?? 0) / PAGE_SIZE);
 
-  const featured  = articles.slice(0, 2);
-  const secondary = articles.slice(2, 5);
-  const list      = articles.slice(5);
+  // Page 1: top 2 featured large + ad slot, then rest in 3-col grid
+  // Other pages: all in 3-col grid
+  const featured = page === 1 ? articles.slice(0, 2) : [];
+  const rest = page === 1 ? articles.slice(2) : articles;
 
   return (
     <div className="min-h-screen bg-[#f5f4f1] pt-16">
 
-      {/* ── Hero ── */}
+      {/* ── Page header ── */}
       <section className="bg-[#eeecea] border-b border-line py-10">
         <div className="container-padded">
           <h1 className="font-mono text-[2rem] uppercase tracking-[0.18em] text-navy font-medium">
@@ -55,27 +84,26 @@ export default async function GuidesPage() {
           </p>
         ) : (
           <>
-            {/* ── Section label ── */}
-            <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-navy font-semibold mb-8">
-              Latest Property Guides
-            </p>
-
-            {/* ── Top featured 2 + ad banner ── */}
+            {/* ── Featured top 2 + portrait ad slot (page 1 only) ── */}
             {featured.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                 {featured.map((article) => (
-                  <div key={article.id} className="flex flex-col bg-white border border-line">
+                  <Link
+                    key={article.id}
+                    href={`/journal/${article.slug}`}
+                    className="group flex flex-col bg-white border border-line hover:border-navy/30 transition-colors"
+                  >
                     <div className="relative h-48 overflow-hidden bg-navy/10 flex-shrink-0">
                       {article.hero_image_url ? (
                         <Image
                           src={article.hero_image_url}
                           alt={article.title}
                           fill
-                          className="object-cover"
+                          className="object-cover transition-transform duration-500 group-hover:scale-105"
                           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                         />
                       ) : (
-                        <div className="absolute inset-0 bg-gradient-to-br from-navy to-navy/60" />
+                        <ImagePlaceholder />
                       )}
                     </div>
                     <div className="flex flex-col flex-1 p-5">
@@ -84,7 +112,7 @@ export default async function GuidesPage() {
                           {formatDate(article.published_at)}
                         </p>
                       )}
-                      <h3 className="font-sans font-semibold text-navy text-[0.95rem] leading-snug mb-2">
+                      <h3 className="font-sans font-semibold text-navy text-[0.95rem] leading-snug mb-2 group-hover:text-orange transition-colors">
                         {article.title}
                       </h3>
                       {article.body_html && (
@@ -93,20 +121,17 @@ export default async function GuidesPage() {
                         </p>
                       )}
                       <div className="mt-auto">
-                        <Link
-                          href={`/journal/${article.slug}`}
-                          className="inline-block font-mono text-[10px] uppercase tracking-widest px-5 py-2 bg-navy text-white hover:bg-orange transition-colors"
-                        >
+                        <span className="inline-block font-mono text-[10px] uppercase tracking-widest px-5 py-2 border border-navy text-navy group-hover:bg-navy group-hover:text-white transition-colors">
                           Read More
-                        </Link>
+                        </span>
                       </div>
                     </div>
-                  </div>
+                  </Link>
                 ))}
 
-                {/* Ad banner slot — portrait image */}
+                {/* Portrait ad slot — desktop only */}
                 <div className="hidden lg:flex flex-col bg-white border border-line overflow-hidden">
-                  <div className="relative flex-1">
+                  <div className="relative flex-1 min-h-[280px]">
                     <Image
                       src="/off-the-plan-banner-portrait.png"
                       alt="Off The Plan Partner Network"
@@ -118,22 +143,26 @@ export default async function GuidesPage() {
               </div>
             )}
 
-            {/* ── Secondary row of 3 ── */}
-            {secondary.length > 0 && (
+            {/* ── Rest / all articles — 3-col grid ── */}
+            {rest.length > 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
-                {secondary.map((article) => (
-                  <div key={article.id} className="flex flex-col bg-white border border-line">
-                    <div className="relative h-40 overflow-hidden bg-navy/10 flex-shrink-0">
+                {rest.map((article) => (
+                  <Link
+                    key={article.id}
+                    href={`/journal/${article.slug}`}
+                    className="group flex flex-col bg-white border border-line hover:border-navy/30 transition-colors"
+                  >
+                    <div className="relative h-44 overflow-hidden bg-navy/10 flex-shrink-0">
                       {article.hero_image_url ? (
                         <Image
                           src={article.hero_image_url}
                           alt={article.title}
                           fill
-                          className="object-cover"
+                          className="object-cover transition-transform duration-500 group-hover:scale-105"
                           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                         />
                       ) : (
-                        <div className="absolute inset-0 bg-gradient-to-br from-navy to-navy/60" />
+                        <ImagePlaceholder />
                       )}
                     </div>
                     <div className="flex flex-col flex-1 p-5">
@@ -142,62 +171,60 @@ export default async function GuidesPage() {
                           {formatDate(article.published_at)}
                         </p>
                       )}
-                      <h3 className="font-sans font-semibold text-navy text-[0.9rem] leading-snug mb-4 flex-1">
+                      <h3 className="font-sans font-semibold text-navy text-[0.9rem] leading-snug mb-4 flex-1 group-hover:text-orange transition-colors">
                         {article.title}
                       </h3>
-                      {article.body_html && (
-                        <p className="font-sans text-[13px] text-ink/60 leading-relaxed mb-4 line-clamp-2">
-                          {extractExcerpt(article.body_html)}
-                        </p>
-                      )}
-                      <Link
-                        href={`/journal/${article.slug}`}
-                        className="inline-block font-mono text-[10px] uppercase tracking-widest px-5 py-2 bg-navy text-white hover:bg-orange transition-colors self-start"
-                      >
+                      <span className="inline-block font-mono text-[10px] uppercase tracking-widest px-5 py-2 border border-navy text-navy group-hover:bg-navy group-hover:text-white transition-colors self-start">
                         Read More
-                      </Link>
+                      </span>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             )}
 
-            {/* ── List format for remaining ── */}
-            {list.length > 0 && (
-              <div className="flex flex-col divide-y divide-line border-t border-line mb-10">
-                {list.map((article) => (
-                  <div key={article.id} className="flex gap-5 py-5 bg-white px-4">
-                    <div className="relative w-28 h-20 flex-shrink-0 overflow-hidden bg-navy/10">
-                      {article.hero_image_url ? (
-                        <Image
-                          src={article.hero_image_url}
-                          alt={article.title}
-                          fill
-                          className="object-cover"
-                          sizes="112px"
-                        />
-                      ) : (
-                        <div className="absolute inset-0 bg-gradient-to-br from-navy to-navy/60" />
-                      )}
-                    </div>
-                    <div className="flex flex-col justify-center flex-1 min-w-0">
-                      {article.published_at && (
-                        <p className="font-mono text-[9px] uppercase tracking-widest text-ink/30 mb-1">
-                          {formatDate(article.published_at)}
-                        </p>
-                      )}
-                      <h3 className="font-sans font-semibold text-navy text-[0.9rem] leading-snug mb-3">
-                        {article.title}
-                      </h3>
-                      <Link
-                        href={`/journal/${article.slug}`}
-                        className="inline-block font-mono text-[10px] uppercase tracking-widest px-5 py-1.5 bg-navy text-white hover:bg-orange transition-colors self-start"
-                      >
-                        Read More
-                      </Link>
-                    </div>
-                  </div>
+            {/* ── Pagination ── */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-1 py-4">
+                {page > 1 ? (
+                  <Link
+                    href={page === 2 ? "/guides" : `/guides?page=${page - 1}`}
+                    className="font-mono text-[11px] uppercase tracking-widest px-4 py-2 border border-line text-ink/60 hover:border-navy hover:text-navy transition-colors"
+                  >
+                    Previous
+                  </Link>
+                ) : (
+                  <span className="font-mono text-[11px] uppercase tracking-widest px-4 py-2 border border-line text-ink/20 cursor-not-allowed">
+                    Previous
+                  </span>
+                )}
+
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                  <Link
+                    key={p}
+                    href={p === 1 ? "/guides" : `/guides?page=${p}`}
+                    className={`font-mono text-[11px] tracking-widest w-9 h-9 flex items-center justify-center border transition-colors ${
+                      p === page
+                        ? "border-navy bg-navy text-white"
+                        : "border-line text-ink/60 hover:border-navy hover:text-navy"
+                    }`}
+                  >
+                    {p}
+                  </Link>
                 ))}
+
+                {page < totalPages ? (
+                  <Link
+                    href={`/guides?page=${page + 1}`}
+                    className="font-mono text-[11px] uppercase tracking-widest px-4 py-2 border border-line text-ink/60 hover:border-navy hover:text-navy transition-colors"
+                  >
+                    Next
+                  </Link>
+                ) : (
+                  <span className="font-mono text-[11px] uppercase tracking-widest px-4 py-2 border border-line text-ink/20 cursor-not-allowed">
+                    Next
+                  </span>
+                )}
               </div>
             )}
           </>
@@ -205,7 +232,7 @@ export default async function GuidesPage() {
       </div>
 
       {/* ── Partner banner ── */}
-      <div className="container-padded pb-14 px-16 md:px-24">
+      <div className="container-padded pb-14">
         <Image
           src="/off-the-plan-banner-landscape.png"
           alt="Off The Plan Partner Network"

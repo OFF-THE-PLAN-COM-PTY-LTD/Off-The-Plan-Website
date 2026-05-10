@@ -10,12 +10,12 @@ export const metadata: Metadata = {
   description: "The latest property news and market updates from Off The Plan.",
 };
 
-/** Strip HTML tags and remove the social-share boilerplate that lives at the
- *  top of every scraped article ("Share Print Email LinkedIn Instagram Facebook"). */
+const PAGE_SIZE = 10; // articles per page
+
+/** Strip HTML and remove the social-share boilerplate at the top of every scraped article. */
 function extractExcerpt(html: string | null, maxLen = 180): string {
   if (!html) return "";
   const plain = html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
-  // The scraped pages always start with the social-share bar — skip past it
   const afterShare = plain.replace(
     /^(Share\s*)?(Print\s*)?(Email\s*)?(LinkedIn\s*)?(Instagram\s*)?(Facebook\s*)?(Twitter\s*)?(WhatsApp\s*)?/i,
     ""
@@ -24,14 +24,9 @@ function extractExcerpt(html: string | null, maxLen = 180): string {
 }
 
 /** Placeholder tile shown when an article has no hero image. */
-function ImagePlaceholder({ category }: { category: string }) {
-  const isGuide = category === "Guide";
+function ImagePlaceholder() {
   return (
-    <div
-      className={`absolute inset-0 flex items-center justify-center ${
-        isGuide ? "bg-navy/80" : "bg-ink/70"
-      }`}
-    >
+    <div className="absolute inset-0 flex items-center justify-center bg-ink/70">
       <Image
         src="/logo.png"
         alt=""
@@ -43,18 +38,31 @@ function ImagePlaceholder({ category }: { category: string }) {
   );
 }
 
-export default async function NewsPage() {
-  const { data } = await supabase
+interface NewsPageProps {
+  searchParams: Promise<{ page?: string }>;
+}
+
+export default async function NewsPage({ searchParams }: NewsPageProps) {
+  const { page: pageParam } = await searchParams;
+  const page = Math.max(1, parseInt(pageParam ?? "1", 10) || 1);
+  const from = (page - 1) * PAGE_SIZE;
+  const to = from + PAGE_SIZE - 1;
+
+  const { data, count } = await supabase
     .from("journal_articles")
-    .select("*")
+    .select("*", { count: "exact" })
     .eq("is_published", true)
     .eq("category", "News")
-    .order("published_at", { ascending: false });
+    .order("published_at", { ascending: false })
+    .range(from, to);
 
   const articles = (data ?? []) as unknown as JournalArticle[];
+  const totalPages = Math.ceil((count ?? 0) / PAGE_SIZE);
 
-  const featured = articles.slice(0, 2);    // top 2 — large cards
-  const rest = articles.slice(2);           // remaining — smaller cards
+  // First page: show top 2 as large featured cards, rest as 3-col grid
+  // Other pages: all articles in 3-col grid
+  const featured = page === 1 ? articles.slice(0, 2) : [];
+  const rest = page === 1 ? articles.slice(2) : articles;
 
   return (
     <div className="min-h-screen bg-cream pt-16">
@@ -76,7 +84,7 @@ export default async function NewsPage() {
           </p>
         ) : (
           <>
-            {/* ── Featured top 2 — large cards ── */}
+            {/* ── Featured top 2 — large cards (page 1 only) ── */}
             {featured.length > 0 && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 {featured.map((article) => (
@@ -85,7 +93,6 @@ export default async function NewsPage() {
                     href={`/journal/${article.slug}`}
                     className="group flex flex-col bg-white border border-line hover:border-navy/30 transition-colors"
                   >
-                    {/* Image */}
                     <div className="relative h-56 overflow-hidden bg-ink/10 flex-shrink-0">
                       {article.hero_image_url ? (
                         <Image
@@ -96,11 +103,9 @@ export default async function NewsPage() {
                           sizes="(max-width: 768px) 100vw, 50vw"
                         />
                       ) : (
-                        <ImagePlaceholder category={article.category} />
+                        <ImagePlaceholder />
                       )}
                     </div>
-
-                    {/* Content */}
                     <div className="flex flex-col flex-1 p-6">
                       {article.published_at && (
                         <p className="font-mono text-[10px] uppercase tracking-widest text-ink/40 mb-3">
@@ -126,16 +131,15 @@ export default async function NewsPage() {
               </div>
             )}
 
-            {/* ── Remaining articles — smaller 3-column grid ── */}
+            {/* ── Remaining / all articles — 3-col grid ── */}
             {rest.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
                 {rest.map((article) => (
                   <Link
                     key={article.id}
                     href={`/journal/${article.slug}`}
                     className="group flex flex-col bg-white border border-line hover:border-navy/30 transition-colors"
                   >
-                    {/* Image */}
                     <div className="relative h-44 overflow-hidden bg-ink/10 flex-shrink-0">
                       {article.hero_image_url ? (
                         <Image
@@ -146,11 +150,9 @@ export default async function NewsPage() {
                           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                         />
                       ) : (
-                        <ImagePlaceholder category={article.category} />
+                        <ImagePlaceholder />
                       )}
                     </div>
-
-                    {/* Content */}
                     <div className="flex flex-col flex-1 p-5">
                       {article.published_at && (
                         <p className="font-mono text-[10px] uppercase tracking-widest text-ink/40 mb-2">
@@ -166,6 +168,54 @@ export default async function NewsPage() {
                     </div>
                   </Link>
                 ))}
+              </div>
+            )}
+
+            {/* ── Pagination ── */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-1 py-4">
+                {/* Previous */}
+                {page > 1 ? (
+                  <Link
+                    href={page === 2 ? "/news" : `/news?page=${page - 1}`}
+                    className="font-mono text-[11px] uppercase tracking-widest px-4 py-2 border border-line text-ink/60 hover:border-navy hover:text-navy transition-colors"
+                  >
+                    Previous
+                  </Link>
+                ) : (
+                  <span className="font-mono text-[11px] uppercase tracking-widest px-4 py-2 border border-line text-ink/20 cursor-not-allowed">
+                    Previous
+                  </span>
+                )}
+
+                {/* Page numbers */}
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                  <Link
+                    key={p}
+                    href={p === 1 ? "/news" : `/news?page=${p}`}
+                    className={`font-mono text-[11px] tracking-widest w-9 h-9 flex items-center justify-center border transition-colors ${
+                      p === page
+                        ? "border-navy bg-navy text-white"
+                        : "border-line text-ink/60 hover:border-navy hover:text-navy"
+                    }`}
+                  >
+                    {p}
+                  </Link>
+                ))}
+
+                {/* Next */}
+                {page < totalPages ? (
+                  <Link
+                    href={`/news?page=${page + 1}`}
+                    className="font-mono text-[11px] uppercase tracking-widest px-4 py-2 border border-line text-ink/60 hover:border-navy hover:text-navy transition-colors"
+                  >
+                    Next
+                  </Link>
+                ) : (
+                  <span className="font-mono text-[11px] uppercase tracking-widest px-4 py-2 border border-line text-ink/20 cursor-not-allowed">
+                    Next
+                  </span>
+                )}
               </div>
             )}
           </>
