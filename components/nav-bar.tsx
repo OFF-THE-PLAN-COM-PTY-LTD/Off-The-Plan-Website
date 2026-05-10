@@ -40,7 +40,7 @@ export function NavBar({ tone = "light", position = "fixed", user = null }: NavB
         )}
       >
         {/* Logo */}
-        <Link href="/" className="flex items-center flex-shrink-0">
+        <a href="/" className="flex items-center flex-shrink-0">
           <Image
             src="/logo.png"
             alt="Off The Plan"
@@ -52,7 +52,7 @@ export function NavBar({ tone = "light", position = "fixed", user = null }: NavB
             )}
             priority
           />
-        </Link>
+        </a>
 
         {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-6" aria-label="Main navigation">
