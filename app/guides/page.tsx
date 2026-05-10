@@ -10,9 +10,15 @@ export const metadata: Metadata = {
   description: "Property guides to help you buy, invest and navigate off-the-plan developments in Australia.",
 };
 
-function stripHtml(html: string | null): string {
+/** Strip HTML and remove the social-share boilerplate at the top of every scraped article. */
+function extractExcerpt(html: string | null, maxLen = 180): string {
   if (!html) return "";
-  return html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 160);
+  const plain = html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  const afterShare = plain.replace(
+    /^(Share\s*)?(Print\s*)?(Email\s*)?(LinkedIn\s*)?(Instagram\s*)?(Facebook\s*)?(Twitter\s*)?(WhatsApp\s*)?/i,
+    ""
+  ).trim();
+  return afterShare.slice(0, maxLen);
 }
 
 export default async function GuidesPage() {
@@ -83,7 +89,7 @@ export default async function GuidesPage() {
                       </h3>
                       {article.body_html && (
                         <p className="font-sans text-[13px] text-ink/60 leading-relaxed mb-4 line-clamp-3">
-                          {stripHtml(article.body_html)}
+                          {extractExcerpt(article.body_html)}
                         </p>
                       )}
                       <div className="mt-auto">
@@ -141,7 +147,7 @@ export default async function GuidesPage() {
                       </h3>
                       {article.body_html && (
                         <p className="font-sans text-[13px] text-ink/60 leading-relaxed mb-4 line-clamp-2">
-                          {stripHtml(article.body_html)}
+                          {extractExcerpt(article.body_html)}
                         </p>
                       )}
                       <Link
