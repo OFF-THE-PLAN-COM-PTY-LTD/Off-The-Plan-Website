@@ -7,6 +7,7 @@ import { HeroCarousel } from "@/components/hero-carousel";
 import { PropertiesTable } from "@/components/properties-table";
 import { ReadMore } from "@/components/read-more";
 import { FormattedDescription } from "@/components/formatted-description";
+import { ListingDescription } from "@/components/listing-description";
 import { CheckIcon, MailIcon } from "@/components/icons";
 import { PhoneReveal } from "@/components/phone-reveal";
 import { ShareButton } from "@/components/share-button";
@@ -212,13 +213,10 @@ export default async function DossierPage({ params }: Props) {
       <section className="bg-cream py-16">
         <div className="container-padded grid grid-cols-1 lg:grid-cols-3 gap-10">
           {/* Left: description */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 min-w-0 overflow-hidden">
             <p className="font-mono text-[11px] uppercase tracking-widest text-ink/40 mb-6">About</p>
             {dev.description_html ? (
-              <div
-                className="listing-description font-sans text-[14px] text-ink/80 leading-relaxed"
-                dangerouslySetInnerHTML={{ __html: dev.description_html }}
-              />
+              <ListingDescription html={dev.description_html} />
             ) : dev.summary ? (
               <FormattedDescription text={dev.summary} />
             ) : (
