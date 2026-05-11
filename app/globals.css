@@ -81,6 +81,13 @@
   }
 
   /* ── Listing description (scraped HTML from offtheplan.com.au) ── */
+  .listing-description pre {
+    white-space: normal;
+    font-family: inherit;
+    font-size: inherit;
+    margin: 0;
+    padding: 0;
+  }
   .listing-description .project-features__title {
     @apply font-sans font-semibold text-[15px] text-orange leading-relaxed mb-3;
   }
