@@ -126,7 +126,9 @@ export default async function DossierPage({ params }: Props) {
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 mb-5">
               <h1 className="font-mono text-[18px] md:text-[22px] uppercase tracking-[0.1em] text-white font-semibold leading-tight">
                 {dev.name}
-                {dev.suburb ? `, ${dev.suburb}` : ""}
+                {dev.suburb && !dev.name.toLowerCase().includes(dev.suburb.toLowerCase())
+                  ? `, ${dev.suburb}`
+                  : ""}
               </h1>
               <p className="font-sans text-[12px] text-white/60 sm:text-right sm:ml-6 flex-shrink-0">
                 {[dev.suburb, dev.state, "Australia"].filter(Boolean).join(", ")}
@@ -285,10 +287,17 @@ export default async function DossierPage({ params }: Props) {
                   )}
                   <div className="min-w-0">
                     <p className="font-sans font-semibold text-[14px] text-ink leading-tight mb-1">
-                      {dev.developer?.name ? `${dev.developer.name} Sales Team` : "Sales Team"}
+                      {dev.agent_name ?? (dev.developer?.name ? `${dev.developer.name} Sales Team` : "Sales Team")}
                     </p>
                     {dev.agent_phone ? (
                       <PhoneReveal phone={dev.agent_phone} developmentId={dev.id} />
+                    ) : dev.agent_email ? (
+                      <a
+                        href={`mailto:${dev.agent_email}`}
+                        className="font-sans text-[13px] text-orange hover:text-orange/70 transition-colors truncate block"
+                      >
+                        {dev.agent_email}
+                      </a>
                     ) : (
                       <a
                         href="#enquire"
