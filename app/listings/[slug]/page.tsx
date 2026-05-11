@@ -516,16 +516,17 @@ export default async function DossierPage({ params }: Props) {
             </div>
           </div>
           {/* Map embed — Google Maps, no API key required */}
-          <div className="w-full h-[420px]">
-            <iframe
-              src={`https://maps.google.com/maps?q=${encodeURIComponent([dev.suburb, dev.state, dev.postcode, "Australia"].filter(Boolean).join(" "))}&output=embed&z=15`}
-              className="w-full h-full border-0 block"
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-              title={`Map showing ${dev.suburb}`}
-            />
+          <div className="container-padded pb-8">
+            <div className="w-full h-[420px]">
+              <iframe
+                src={`https://maps.google.com/maps?q=${encodeURIComponent([dev.suburb, dev.state, dev.postcode, "Australia"].filter(Boolean).join(" "))}&output=embed&z=15`}
+                className="w-full h-full border-0 block"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title={`Map showing ${dev.suburb}`}
+              />
+            </div>
           </div>
-          <div className="container-padded pb-8" />
         </section>
       )}
 
