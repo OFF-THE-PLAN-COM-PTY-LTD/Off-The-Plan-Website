@@ -23,14 +23,24 @@ interface TableRow {
 
 function buildRows(floorPlans: DevelopmentFloorPlan[], bedsMin: number | null, bedsMax: number | null): TableRow[] {
   if (floorPlans.length > 0) {
-    return floorPlans.map((fp) => ({
-      beds: null,
-      baths: null,
-      cars: null,
-      sqm: fp.internal_sqm,
-      price: fp.price_from ? formatPrice(fp.price_from) : null,
-      planType: fp.plan_type,
-    }));
+    return floorPlans.map((fp) => {
+      // Prefer explicit price_display (e.g. "Contact Agent"), then format price_from
+      let price: string | null = null;
+      if (fp.price_display) {
+        price = fp.price_display;
+      } else if (fp.price_from) {
+        price = formatPrice(fp.price_from);
+      }
+
+      return {
+        beds: fp.beds ?? null,
+        baths: fp.bath ?? null,
+        cars: fp.garage ?? null,
+        sqm: fp.internal_sqm,
+        price,
+        planType: fp.plan_type,
+      };
+    });
   }
 
   const min = bedsMin ?? 1;
@@ -149,7 +159,7 @@ export function PropertiesTable({ floorPlans, bedsMin, bedsMax }: PropertiesTabl
                   {row.sqm ? `${row.sqm} m²` : "–"}
                 </td>
                 <td className="font-mono text-label-lg text-ink px-4 py-3 text-right">
-                  {row.price ?? "Contact Agent"}
+                  {row.price ?? "–"}
                 </td>
               </tr>
             ))}

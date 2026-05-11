@@ -66,7 +66,11 @@ export interface DevelopmentFloorPlan {
   config: string | null;
   internal_sqm: number | null;
   price_from: number | null;
+  price_display: string | null;
   image_url: string | null;
+  beds: number | null;
+  bath: number | null;
+  garage: number | null;
 }
 
 export interface DevelopmentFilters {
