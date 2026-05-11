@@ -120,35 +120,14 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       {/* ── Search header ── */}
       <div className="shadow-md" style={{ background: "#1a2340" }}>
 
-        {/* Top strip: subtitle + List/Map */}
-        <div className="container-padded flex items-center justify-between pt-3 pb-1.5">
-          <div>
-            <p className="font-sans text-[9px] uppercase tracking-[0.2em] text-white/40 mb-0.5">
-              The New Home for Off-The-Plan Property
-            </p>
-            <h2 className="font-sans font-bold text-base tracking-widest uppercase text-white">
-              New Property Search
-            </h2>
-          </div>
-          {/* List / Map toggle */}
-          <div className="flex overflow-hidden border border-white/20 flex-shrink-0">
-            <Link
-              href={listUrl}
-              className={`px-5 py-1.5 font-mono text-[10px] uppercase tracking-widest transition-colors ${
-                view === "list" ? "bg-white text-[#1a2340]" : "text-white/60 hover:text-white"
-              }`}
-            >
-              List
-            </Link>
-            <Link
-              href={mapUrl}
-              className={`px-5 py-1.5 font-mono text-[10px] uppercase tracking-widest border-l border-white/20 transition-colors ${
-                view === "map" ? "bg-white text-[#1a2340]" : "text-white/60 hover:text-white"
-              }`}
-            >
-              Map
-            </Link>
-          </div>
+        {/* Top strip: subtitle + title */}
+        <div className="container-padded pt-3 pb-1.5">
+          <p className="font-sans text-[9px] uppercase tracking-[0.2em] text-white/40 mb-0.5">
+            The New Home for Off-The-Plan Property
+          </p>
+          <h2 className="font-sans font-bold text-base tracking-widest uppercase text-white">
+            New Property Search
+          </h2>
         </div>
 
         {/* State quick-tabs */}
