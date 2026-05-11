@@ -23,7 +23,6 @@ interface SearchPageProps {
   };
 }
 
-const PAGE_SIZE = 24;
 
 const AU_STATES = [
   { abbr: "ACT", full: "Australian Capital Territory" },
@@ -54,8 +53,6 @@ const PRICE_RANGES = [
 ];
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
-  const view = searchParams.view === "map" ? "map" : "list";
-
   let query = supabase
     .from("developments")
     .select("*, developer:developers(*), images:development_images(*)")
@@ -85,22 +82,19 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   const { data } = await query;
   const results = (data ?? []) as unknown as Development[];
+  const pageResults = results;
 
-  const page    = parseInt(searchParams.page ?? "1");
-  const totalPages = Math.ceil(results.length / PAGE_SIZE);
-  const pageResults = results.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-
-  const buildUrl = (overrides: Record<string, string | undefined>) => {
-    const p = new URLSearchParams(searchParams as Record<string, string>);
-    Object.entries(overrides).forEach(([k, v]) => {
-      if (v == null) p.delete(k); else p.set(k, v);
-    });
-    p.delete("page");
+  const buildFilterUrl = (overrides: Record<string, string | undefined>) => {
+    const p = new URLSearchParams();
+    const base: Record<string, string> = {};
+    if (searchParams.suburb) base.suburb = searchParams.suburb;
+    if (searchParams.state) base.state = searchParams.state;
+    if (searchParams.type) base.type = searchParams.type;
+    if (searchParams.price_range) base.price_range = searchParams.price_range;
+    Object.assign(base, overrides);
+    Object.entries(base).forEach(([k, v]) => { if (v != null) p.set(k, v); });
     return `/search?${p.toString()}`;
   };
-
-  const listUrl = buildUrl({ view: undefined });
-  const mapUrl  = buildUrl({ view: "map" });
 
   const selSt  = searchParams.state       ?? "";
   const selCat = searchParams.type        ?? "";
@@ -135,7 +129,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           {AU_STATES.map((st) => (
             <Link
               key={st.abbr}
-              href={buildUrl({ state: selSt === st.abbr ? undefined : st.abbr })}
+              href={buildFilterUrl({ state: selSt === st.abbr ? undefined : st.abbr })}
               className={`font-mono text-[10px] uppercase tracking-[0.15em] transition-all pb-0.5 border-b-2 ${
                 selSt === st.abbr
                   ? "text-orange border-orange"
@@ -211,22 +205,22 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           {[selSt, selCat, selPr, searchParams.suburb].some(Boolean) && (
             <div className="flex flex-wrap gap-2 mt-2">
               {searchParams.suburb && (
-                <Link href={buildUrl({ suburb: undefined })} className="inline-flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-widest px-2.5 py-1 border border-white/20 text-white/60 hover:border-orange hover:text-orange transition-colors">
+                <Link href={buildFilterUrl({ suburb: undefined })} className="inline-flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-widest px-2.5 py-1 border border-white/20 text-white/60 hover:border-orange hover:text-orange transition-colors">
                   {searchParams.suburb} <span>×</span>
                 </Link>
               )}
               {selSt && (
-                <Link href={buildUrl({ state: undefined })} className="inline-flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-widest px-2.5 py-1 border border-white/20 text-white/60 hover:border-orange hover:text-orange transition-colors">
+                <Link href={buildFilterUrl({ state: undefined })} className="inline-flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-widest px-2.5 py-1 border border-white/20 text-white/60 hover:border-orange hover:text-orange transition-colors">
                   {selSt} <span>×</span>
                 </Link>
               )}
               {selCat && (
-                <Link href={buildUrl({ type: undefined })} className="inline-flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-widest px-2.5 py-1 border border-white/20 text-white/60 hover:border-orange hover:text-orange transition-colors">
+                <Link href={buildFilterUrl({ type: undefined })} className="inline-flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-widest px-2.5 py-1 border border-white/20 text-white/60 hover:border-orange hover:text-orange transition-colors">
                   {selCat} <span>×</span>
                 </Link>
               )}
               {selPr && (
-                <Link href={buildUrl({ price_range: undefined })} className="inline-flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-widest px-2.5 py-1 border border-white/20 text-white/60 hover:border-orange hover:text-orange transition-colors">
+                <Link href={buildFilterUrl({ price_range: undefined })} className="inline-flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-widest px-2.5 py-1 border border-white/20 text-white/60 hover:border-orange hover:text-orange transition-colors">
                   {PRICE_RANGES.find((r) => r.value === selPr)?.label} <span>×</span>
                 </Link>
               )}
@@ -264,24 +258,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             </div>
           )}
 
-          {totalPages > 1 && (
-            <div className="flex justify-center gap-2 mt-12">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                <Link
-                  key={p}
-                  href={buildUrl({ page: String(p) })}
-                  className={`font-mono text-[11px] px-3 py-1.5 border transition-colors ${
-                    p === page
-                      ? "bg-[#1a2340] text-white border-[#1a2340]"
-                      : "border-[#c8cdd8] text-ink hover:border-orange hover:text-orange"
-                  }`}
-                  aria-current={p === page ? "page" : undefined}
-                >
-                  {p}
-                </Link>
-              ))}
-            </div>
-          )}
         </div>
       )}
     </div>
