@@ -75,16 +75,24 @@ LISTINGS = [
     ("perth-hub",                              "new-apartments/perth-hub"),
 ]
 
-YOUTUBE_RE = re.compile(
-    r'(?:https?://)?(?:www\.)?(?:youtube\.com/(?:embed/|watch\?v=)|youtu\.be/)([A-Za-z0-9_\-]{11})'
+VIDEO_RE = re.compile(
+    r'(?:youtube\.com/(?:embed/|watch\?v=|v/)|youtu\.be/|youtube\.com/shorts/)([A-Za-z0-9_\-]{11})'
+    r'|vimeo\.com/(?:video/)?(\d{6,10})'
 )
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
-def extract_youtube_id(html: str) -> str | None:
-    """Find the first YouTube video ID anywhere in the page HTML."""
-    m = YOUTUBE_RE.search(html)
-    return m.group(1) if m else None
+def extract_video_url(html: str) -> str | None:
+    """Find a YouTube or Vimeo video URL anywhere in the page HTML/JS."""
+    m = VIDEO_RE.search(html)
+    if not m:
+        return None
+    yt_id, vimeo_id = m.group(1), m.group(2)
+    if yt_id:
+        return f"https://www.youtube.com/watch?v={yt_id}"
+    if vimeo_id:
+        return f"https://vimeo.com/{vimeo_id}"
+    return None
 
 
 def save_video_url(slug: str, video_url: str, client: httpx.Client) -> bool:
@@ -113,22 +121,70 @@ async def main():
                 print(f"{slug[:50]}", end=" ... ", flush=True)
 
                 try:
-                    await page.goto(url, wait_until="networkidle", timeout=25000)
-                    await page.wait_for_timeout(2000)
+                    await page.goto(url, wait_until="domcontentloaded", timeout=30000)
+                    await page.wait_for_timeout(3000)
                 except Exception as e:
                     print(f"LOAD FAIL ({e})")
                     failed += 1
                     continue
 
-                html = await page.content()
-                vid_id = extract_youtube_id(html)
+                video_url = None
 
-                if not vid_id:
+                # Strategy 1: check HTML/data attributes before clicking
+                html = await page.content()
+                # Also scrape data-* attributes that may hold the video URL
+                try:
+                    for attr in ["data-video", "data-video-url", "data-src", "data-youtube", "data-url"]:
+                        els = await page.query_selector_all(f"[{attr}]")
+                        for el in els:
+                            val = await el.get_attribute(attr) or ""
+                            html += f" {val}"
+                except Exception:
+                    pass
+                video_url = extract_video_url(html)
+
+                # Strategy 2: click the Watch/video button, wait for YouTube iframe to appear
+                if not video_url:
+                    try:
+                        # Find a button/element that looks like a Watch/video trigger
+                        watch_btn = await page.query_selector(
+                            "a[href*='youtube'], button[data-video], "
+                            ".video-btn, .watch-btn, [class*='video'], "
+                            "a[class*='video'], button[class*='video'], "
+                            ".listing-video, [data-fancybox], [data-lightbox]"
+                        )
+                        if watch_btn:
+                            await watch_btn.click()
+                            await page.wait_for_timeout(3000)
+                            # Now check for iframe that appeared
+                            iframes = await page.query_selector_all("iframe")
+                            for iframe in iframes:
+                                src = await iframe.get_attribute("src") or ""
+                                video_url = extract_video_url(src)
+                                if video_url:
+                                    break
+                    except Exception:
+                        pass
+
+                # Strategy 3: get ALL iframe srcs after waiting (some may be lazy-loaded)
+                if not video_url:
+                    try:
+                        iframes = await page.query_selector_all("iframe")
+                        for iframe in iframes:
+                            src = await iframe.get_attribute("src") or ""
+                            data_src = await iframe.get_attribute("data-src") or ""
+                            combined = src + " " + data_src
+                            video_url = extract_video_url(combined)
+                            if video_url:
+                                break
+                    except Exception:
+                        pass
+
+                if not video_url:
                     print("no video found")
                     not_found += 1
                     continue
 
-                video_url = f"https://www.youtube.com/watch?v={vid_id}"
                 if save_video_url(slug, video_url, client):
                     print(f"OK  {video_url}")
                     success += 1
