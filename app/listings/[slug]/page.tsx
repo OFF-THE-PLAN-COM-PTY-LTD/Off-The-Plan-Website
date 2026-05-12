@@ -192,14 +192,6 @@ export default async function DossierPage({ params }: Props) {
                   className="object-cover"
                   sizes="120px"
                 />
-                <div className="absolute inset-0 bg-black/30 flex flex-col items-center justify-end">
-                  <div className="flex items-center gap-1 bg-black/50 w-full justify-center py-1.5">
-                    <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor" className="text-white" aria-hidden="true">
-                      <path d="M5 4l12 6-12 6V4z" />
-                    </svg>
-                    <span className="font-mono text-white text-[9px] uppercase tracking-widest">Watch</span>
-                  </div>
-                </div>
               </div>
             ) : null}
             <EnquiryButton
