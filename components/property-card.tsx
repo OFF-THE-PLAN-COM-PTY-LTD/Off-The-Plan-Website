@@ -207,10 +207,9 @@ export function PropertyCard({
       <Link
         href={`/listings/${development.slug}`}
         className={cn(
-          "group relative block transition-all duration-500 ease-out hover:z-10 hover:scale-[1.025] hover:-translate-y-2",
+          "group relative block transform-gpu transition-transform duration-500 ease-out hover:z-10 hover:scale-[1.02] outline-none focus-visible:ring-2 focus-visible:ring-orange",
           className
         )}
-        style={{ willChange: "transform" }}
       >
         <div className={cn("relative bg-navy overflow-hidden", imageHeight ?? "h-[440px]")}>
           {heroImageUrl ? (
