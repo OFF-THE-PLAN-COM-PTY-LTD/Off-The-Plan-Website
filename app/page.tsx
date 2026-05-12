@@ -63,17 +63,29 @@ const MOCK_TIER2: Development[] = [
   mockDev("m14", "bayview-terraces",     "Bayview Terraces",     "Manly",       "NSW", "From $980,000", 2, 4, "Selling now", "Townhouses", U("1538688525198-9b3b1c98d25d")),
 ];
 
-const CATEGORIES: SliderItem[] = [
-  { label: "Apartments",     href: "/search?type=Apartment",       image: U("1460317442991-0ec209397118") },
-  { label: "Townhouses",     href: "/search?type=Townhouse",       image: U("1512917774080-9991f1c4c750") },
-  { label: "House & Land",   href: "/search?type=House+%26+Land",  image: U("1600585154340-be6161a56a0c") },
-  { label: "New Apartments", href: "/search?type=Apartment",       image: U("1545324418-cc1a3fa10c00")    },
-];
+// Fallback images per category (Unsplash) — used only if no real listing exists for that type
+const CATEGORY_FALLBACKS: Record<string, string> = {
+  Apartments:   U("1460317442991-0ec209397118"),
+  Townhouses:   U("1512917774080-9991f1c4c750"),
+  Houses:       U("1600585154340-be6161a56a0c"),
+};
+
+function pickImage(dev: { hero_image_url?: string | null; images?: { url: string }[] } | null, fallback: string): string {
+  if (!dev) return fallback;
+  return dev.images?.find(Boolean)?.url ?? dev.hero_image_url ?? fallback;
+}
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default async function HomePage() {
-  const [{ data: tier1Data }, { data: tier2Data }, { data: articlesData }] = await Promise.all([
+  const [
+    { data: tier1Data },
+    { data: tier2Data },
+    { data: articlesData },
+    { data: aptData },
+    { data: thData },
+    { data: housesData },
+  ] = await Promise.all([
     supabase
       .from("developments")
       .select("*, developer:developers(*), images:development_images(*)")
@@ -94,7 +106,39 @@ export default async function HomePage() {
       .eq("is_published", true)
       .order("published_at", { ascending: false })
       .limit(3),
+    supabase
+      .from("developments")
+      .select("hero_image_url, images:development_images(url)")
+      .eq("type", "Apartments")
+      .eq("is_published", true)
+      .limit(1)
+      .single(),
+    supabase
+      .from("developments")
+      .select("hero_image_url, images:development_images(url)")
+      .eq("type", "Townhouses")
+      .eq("is_published", true)
+      .limit(1)
+      .single(),
+    supabase
+      .from("developments")
+      .select("hero_image_url, images:development_images(url)")
+      .eq("type", "Houses")
+      .eq("is_published", true)
+      .limit(1)
+      .single(),
   ]);
+
+  const aptImg  = pickImage(aptData    as never, CATEGORY_FALLBACKS.Apartments);
+  const thImg   = pickImage(thData     as never, CATEGORY_FALLBACKS.Townhouses);
+  const housImg = pickImage(housesData as never, CATEGORY_FALLBACKS.Houses);
+
+  const CATEGORIES: SliderItem[] = [
+    { label: "Apartments",     href: "/search?type=Apartments",       image: aptImg  },
+    { label: "Townhouses",     href: "/search?type=Townhouses",       image: thImg   },
+    { label: "House & Land",   href: "/search?type=Houses",           image: housImg },
+    { label: "New Apartments", href: "/search?type=Apartments",       image: aptImg  },
+  ];
 
   const tier1 = (tier1Data ?? []).length > 0
     ? (tier1Data as unknown as Development[])
