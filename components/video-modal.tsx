@@ -63,10 +63,10 @@ export function VideoModal({ videoUrl, thumbnailUrl, title }: VideoModalProps) {
             />
             <button
               onClick={() => setOpen(false)}
-              className="absolute -top-9 right-0 flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-widest text-white/70 hover:text-white transition-colors"
+              className="absolute -top-4 -right-4 z-10 w-8 h-8 rounded-full bg-white text-black flex items-center justify-center hover:bg-white/80 transition-colors shadow-lg text-[16px] leading-none"
               aria-label="Close video"
             >
-              Close <span className="text-[14px] leading-none">×</span>
+              ×
             </button>
           </div>
         </div>
