@@ -9,8 +9,8 @@ interface VideoModalProps {
 }
 
 function getYouTubeEmbedUrl(url: string): string | null {
-  // Handles: youtube.com/watch?v=ID  and  youtu.be/ID
-  const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_\-]{11})/);
+  // Handles: watch?v=ID, youtu.be/ID, and /shorts/ID
+  const match = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/)([A-Za-z0-9_\-]{11})/);
   if (!match) return null;
   return `https://www.youtube.com/embed/${match[1]}?autoplay=1&rel=0`;
 }
