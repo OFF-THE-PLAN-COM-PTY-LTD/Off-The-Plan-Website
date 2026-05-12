@@ -15,6 +15,7 @@ import { EnquiryButton } from "@/components/enquiry-button";
 import { VideoModal } from "@/components/video-modal";
 import { ViewTracker } from "@/components/view-tracker";
 import { formatListingTitle } from "@/lib/utils";
+import { GalleryGrid } from "@/components/gallery-grid";
 import { supabase } from "@/lib/supabase/public";
 import type { Development, DevelopmentFloorPlan } from "@/types/development";
 
@@ -440,19 +441,13 @@ export default async function DossierPage({ params }: Props) {
                   {galleryImages.length} {galleryImages.length === 1 ? "image" : "images"}
                 </span>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                {galleryImages.map((img, i) => (
-                  <div key={img.id ?? i} className="relative h-52 overflow-hidden bg-navy/5">
-                    <Image
-                      src={img.url}
-                      alt={`${img.alt} ${i + 1}`}
-                      fill
-                      className="object-cover hover:scale-105 transition-transform duration-500"
-                      sizes="(max-width: 768px) 50vw, 33vw"
-                    />
-                  </div>
-                ))}
-              </div>
+              <GalleryGrid
+                images={galleryImages.map((img, i) => ({
+                  url: img.url,
+                  alt: `${img.alt} ${i + 1}`,
+                  id: img.id,
+                }))}
+              />
             </div>
           </section>
         );
