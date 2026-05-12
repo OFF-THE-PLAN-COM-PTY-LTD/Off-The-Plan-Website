@@ -2,7 +2,6 @@
 
 import { usePathname } from "next/navigation";
 import { NavBar } from "@/components/nav-bar";
-import { SideRail } from "@/components/side-rail";
 import { Footer } from "@/components/footer";
 import { CirclePopup } from "@/components/circle-popup";
 
@@ -23,8 +22,7 @@ export default function SiteLayout({ user, children }: SiteLayoutProps) {
   return (
     <>
       <NavBar user={user} />
-      <SideRail />
-      <main id="main-content">{children}</main>
+<main id="main-content">{children}</main>
       <Footer />
       <CirclePopup />
     </>
