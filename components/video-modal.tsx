@@ -63,10 +63,13 @@ export function VideoModal({ videoUrl, thumbnailUrl, title }: VideoModalProps) {
             />
             <button
               onClick={() => setOpen(false)}
-              className="absolute -top-4 -right-4 z-10 w-8 h-8 rounded-full bg-white text-black flex items-center justify-center hover:bg-white/80 transition-colors shadow-lg text-[16px] leading-none"
+              className="absolute -top-4 -right-4 z-10 w-9 h-9 rounded-full bg-white flex items-center justify-center hover:bg-white/80 transition-colors shadow-lg"
               aria-label="Close video"
             >
-              ×
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="black" strokeWidth="2.5" strokeLinecap="round">
+                <line x1="3" y1="3" x2="15" y2="15" />
+                <line x1="15" y1="3" x2="3" y2="15" />
+              </svg>
             </button>
           </div>
         </div>
