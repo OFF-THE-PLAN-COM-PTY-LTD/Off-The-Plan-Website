@@ -26,13 +26,13 @@ export function JournalCard({ article, variant = "compact", className }: Journal
         className={cn("group block", className)}
       >
         {/* Image */}
-        <div className="relative h-64 mb-4 bg-navy/10 overflow-hidden">
+        <div className="relative aspect-[4/3] mb-4 bg-navy/10 overflow-hidden">
           {article.hero_image_url ? (
             <Image
               src={article.hero_image_url}
               alt={article.title}
               fill
-              className="object-cover transition-transform duration-700 group-hover:scale-105"
+              className="object-contain transition-transform duration-700 group-hover:scale-105"
               sizes="(max-width: 768px) 100vw, 50vw"
             />
           ) : (

@@ -93,13 +93,13 @@ export default async function GuidesPage({ searchParams }: GuidesPageProps) {
                     href={`/journal/${article.slug}`}
                     className="group flex flex-col bg-white border border-line hover:border-navy/30 transition-colors"
                   >
-                    <div className="relative h-48 overflow-hidden bg-navy/10 flex-shrink-0">
+                    <div className="relative aspect-[4/3] overflow-hidden bg-navy/10 flex-shrink-0">
                       {article.hero_image_url ? (
                         <Image
                           src={article.hero_image_url}
                           alt={article.title}
                           fill
-                          className="object-cover transition-transform duration-500 group-hover:scale-105"
+                          className="object-contain transition-transform duration-500 group-hover:scale-105"
                           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                         />
                       ) : (
@@ -152,13 +152,13 @@ export default async function GuidesPage({ searchParams }: GuidesPageProps) {
                     href={`/journal/${article.slug}`}
                     className="group flex flex-col bg-white border border-line hover:border-navy/30 transition-colors"
                   >
-                    <div className="relative h-44 overflow-hidden bg-navy/10 flex-shrink-0">
+                    <div className="relative aspect-[4/3] overflow-hidden bg-navy/10 flex-shrink-0">
                       {article.hero_image_url ? (
                         <Image
                           src={article.hero_image_url}
                           alt={article.title}
                           fill
-                          className="object-cover transition-transform duration-500 group-hover:scale-105"
+                          className="object-contain transition-transform duration-500 group-hover:scale-105"
                           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                         />
                       ) : (
