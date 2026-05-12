@@ -42,7 +42,10 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  // getSession reads the cookie locally — no network round-trip on every page load.
+  // getUser() was causing ~1s delay per navigation because it verifies the JWT with Supabase.
+  const { data: { session } } = await supabase.auth.getSession();
+  const user = session?.user ?? null;
 
   let isAdmin = false;
   let isPortalMember = false;
