@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { cn } from "@/lib/utils";
+import { cn, formatListingTitle } from "@/lib/utils";
 import { Pill } from "@/components/pill";
 import { ShareModal } from "@/components/share-modal";
 import { EnquiryModal } from "@/components/enquiry-modal";
@@ -304,8 +304,7 @@ export function PropertyCard({
       <div className="flex items-start justify-between px-4 pt-4 pb-3 border-b border-line">
         <div className="flex-1 min-w-0 pr-3">
           <h3 className="font-sans font-bold text-ink text-[16px] leading-snug group-hover:text-orange transition-colors">
-            {development.name}
-            {development.suburb ? `, ${development.suburb}` : ""}
+            {formatListingTitle(development.name, development.suburb)}
           </h3>
           <p className="font-sans text-[12px] text-ink/40 mt-0.5">
             {[development.suburb, development.state].filter(Boolean).join(", ")}

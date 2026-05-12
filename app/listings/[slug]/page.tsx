@@ -14,6 +14,7 @@ import { ShareButton } from "@/components/share-button";
 import { EnquiryButton } from "@/components/enquiry-button";
 import { VideoModal } from "@/components/video-modal";
 import { ViewTracker } from "@/components/view-tracker";
+import { formatListingTitle } from "@/lib/utils";
 import { supabase } from "@/lib/supabase/public";
 import type { Development, DevelopmentFloorPlan } from "@/types/development";
 
@@ -30,7 +31,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!dev) return { title: "Not Found" };
   const d = dev as unknown as Development;
   return {
-    title: `${d.name} — ${d.suburb}, ${d.state}`,
+    title: `${formatListingTitle(d.name, d.suburb)} — ${d.state}`,
     description: d.summary ?? undefined,
     openGraph: {
       title: `${d.name} | Off The Plan`,
@@ -542,7 +543,7 @@ export default async function DossierPage({ params }: Props) {
                 <Image src={heroImageUrl} alt={dev.name} fill className="object-cover" sizes="420px" />
                 <div className="absolute bottom-0 left-0 right-0 bg-navy/70 px-4 py-3">
                   <p className="font-sans text-white text-[13px] font-medium">
-                    {dev.name}{dev.suburb ? `, ${dev.suburb}` : ""}
+                    {formatListingTitle(dev.name, dev.suburb)}
                   </p>
                 </div>
               </div>

@@ -30,6 +30,14 @@ export function truncate(str: string, maxLength: number): string {
   return str.slice(0, maxLength).trim() + "…";
 }
 
+/** Append suburb to listing name only if the name doesn't already contain it */
+export function formatListingTitle(name: string, suburb?: string | null): string {
+  if (!suburb) return name;
+  return name.toLowerCase().includes(suburb.toLowerCase())
+    ? name
+    : `${name}, ${suburb}`;
+}
+
 /** Format ISO date to display string e.g. "28 April 2026" */
 export function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-AU", {
