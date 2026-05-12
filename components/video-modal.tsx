@@ -51,7 +51,7 @@ export function VideoModal({ videoUrl, thumbnailUrl, title }: VideoModalProps) {
           onClick={() => setOpen(false)}
         >
           <div
-            className="relative w-full max-w-[90vw] aspect-video bg-black"
+            className="relative w-full max-w-[70vw] aspect-video bg-black"
             onClick={(e) => e.stopPropagation()}
           >
             <iframe
@@ -63,10 +63,10 @@ export function VideoModal({ videoUrl, thumbnailUrl, title }: VideoModalProps) {
             />
             <button
               onClick={() => setOpen(false)}
-              className="absolute -top-8 right-0 font-mono text-[10px] uppercase tracking-widest text-white/70 hover:text-white transition-colors"
+              className="absolute top-2 right-2 z-10 w-8 h-8 flex items-center justify-center bg-black/60 hover:bg-black/90 text-white transition-colors rounded-sm"
               aria-label="Close video"
             >
-              Close ✕
+              ✕
             </button>
           </div>
         </div>
