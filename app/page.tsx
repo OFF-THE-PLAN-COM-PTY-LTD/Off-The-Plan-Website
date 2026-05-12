@@ -68,8 +68,6 @@ const CATEGORIES: SliderItem[] = [
   { label: "Townhouses",     href: "/search?type=Townhouse",       image: U("1512917774080-9991f1c4c750") },
   { label: "House & Land",   href: "/search?type=House+%26+Land",  image: U("1600585154340-be6161a56a0c") },
   { label: "New Apartments", href: "/search?type=Apartment",       image: U("1545324418-cc1a3fa10c00")    },
-  { label: "Penthouses",     href: "/search?type=Penthouse",       image: U("1522708323590-d24dbb6b0267") },
-  { label: "Villas",         href: "/search?type=Villa",           image: U("1570129477492-45c003edd2be") },
 ];
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
