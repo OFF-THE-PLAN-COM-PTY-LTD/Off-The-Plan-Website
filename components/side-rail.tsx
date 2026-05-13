@@ -52,6 +52,7 @@ const quickAccessLinks = [
 
 export function SideRail({ tone = "light" }: SideRailProps) {
   const [scrollPct, setScrollPct] = useState(0);
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     const onScroll = () => {
@@ -59,7 +60,10 @@ export function SideRail({ tone = "light" }: SideRailProps) {
       const scrollable = el.scrollHeight - el.clientHeight;
       if (scrollable <= 0) { setScrollPct(0); return; }
       setScrollPct(Math.round((el.scrollTop / scrollable) * 100));
+      // Hide while the hero (assumed ≤ 65vh tall) is still in view
+      setVisible(el.scrollTop > window.innerHeight * 0.5);
     };
+    onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
@@ -69,8 +73,9 @@ export function SideRail({ tone = "light" }: SideRailProps) {
   return (
     <aside
       className={cn(
-        "fixed right-6 top-1/2 -translate-y-1/2 z-30 hidden lg:flex flex-col items-center gap-5",
-        isDark ? "text-ink-light/60" : "text-ink/40"
+        "fixed right-6 top-1/2 -translate-y-1/2 z-30 hidden lg:flex flex-col items-center gap-5 transition-opacity duration-300",
+        isDark ? "text-ink-light/60" : "text-ink/40",
+        visible ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
       )}
       aria-label="Quick access"
     >
