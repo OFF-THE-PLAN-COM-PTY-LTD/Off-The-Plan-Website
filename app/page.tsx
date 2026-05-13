@@ -137,7 +137,7 @@ export default async function HomePage() {
     { label: "Apartments",     href: "/search?type=Apartments",       image: aptImg  },
     { label: "Townhouses",     href: "/search?type=Townhouses",       image: thImg   },
     { label: "House & Land",   href: "/search?type=Houses",           image: housImg },
-    { label: "New Apartments", href: "/search?type=Apartments",       image: aptImg  },
+    { label: "New Apartments", href: "/search?type=New+Apartments",   image: U("1600596542815-ffad4c1539a9") },
   ];
 
   const tier1 = (tier1Data ?? []).length > 0
