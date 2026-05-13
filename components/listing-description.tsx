@@ -9,10 +9,24 @@ interface ListingDescriptionProps {
 }
 
 /**
+ * If the string has no HTML block tags, treat it as plain text and wrap
+ * each double-newline-separated paragraph in <p> tags.
+ */
+function prepareHtml(raw: string): string {
+  if (/<(p|div|br|ul|ol|h[1-6])\b/i.test(raw)) return raw;
+  return raw
+    .split(/\n{2,}/)
+    .map((block) => `<p>${block.replace(/\n/g, "<br>")}</p>`)
+    .filter((p) => p !== "<p></p>")
+    .join("");
+}
+
+/**
  * Renders scraped listing description HTML with a Read More / Read Less toggle.
  * The collapsed state shows the first `collapseAt` px with a fade-out gradient.
  */
 export function ListingDescription({ html, collapseAt = 320 }: ListingDescriptionProps) {
+  const prepared = prepareHtml(html);
   const [expanded, setExpanded] = useState(false);
 
   return (
@@ -21,7 +35,7 @@ export function ListingDescription({ html, collapseAt = 320 }: ListingDescriptio
         <div
           className="listing-description font-sans text-[14px] text-ink/80 leading-relaxed overflow-hidden"
           style={{ maxHeight: expanded ? "none" : collapseAt }}
-          dangerouslySetInnerHTML={{ __html: html }}
+          dangerouslySetInnerHTML={{ __html: prepared }}
         />
 
         {/* Fade gradient when collapsed */}
