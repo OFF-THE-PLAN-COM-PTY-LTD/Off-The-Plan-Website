@@ -313,12 +313,12 @@ export function PropertyCard({
         {development.developer && (
           <div className="flex-shrink-0 ml-2">
             {development.developer.logo_url ? (
-              <div className="w-[110px] h-[44px] flex items-center justify-end">
+              <div className="w-[80px] h-[30px] flex items-center justify-end">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={development.developer.logo_url}
                   alt={development.developer.name}
-                  className="max-h-[44px] max-w-[110px] w-auto h-auto object-contain"
+                  className="max-h-[30px] max-w-[80px] w-auto h-auto object-contain"
                 />
               </div>
             ) : (
