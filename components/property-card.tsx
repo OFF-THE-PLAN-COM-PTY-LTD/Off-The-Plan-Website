@@ -317,7 +317,7 @@ export function PropertyCard({
               <img
                 src={development.developer.logo_url}
                 alt={development.developer.name}
-                className="w-[110px] h-[40px] object-contain ml-auto"
+                className="h-[40px] w-auto max-w-[110px] object-contain ml-auto"
               />
             ) : (
               /* Text logo lockup — thin rule + stacked all-caps name */
