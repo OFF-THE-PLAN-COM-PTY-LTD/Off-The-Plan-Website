@@ -224,13 +224,15 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
 
       {/* ── Partner banner ── */}
       <div className="container-padded pb-14">
-        <Image
-          src="/off-the-plan-banner-landscape.png"
-          alt="Off The Plan Partner Network"
-          width={1200}
-          height={200}
-          className="w-full h-auto object-contain"
-        />
+        <div className="max-w-3xl mx-auto">
+          <Image
+            src="/off-the-plan-banner-landscape.png"
+            alt="Off The Plan Partner Network"
+            width={1200}
+            height={200}
+            className="w-full h-auto object-contain"
+          />
+        </div>
       </div>
 
     </div>
