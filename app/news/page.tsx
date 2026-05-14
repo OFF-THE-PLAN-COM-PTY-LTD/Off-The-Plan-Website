@@ -12,6 +12,8 @@ export const metadata: Metadata = {
 
 // Always fetch fresh from Supabase — prevents stale cached page after content updates
 export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+export const revalidate = 0;
 
 const PAGE_SIZE = 10; // articles per page
 
@@ -181,6 +183,7 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
                 {page > 1 ? (
                   <Link
                     href={page === 2 ? "/news" : `/news?page=${page - 1}`}
+                    prefetch={false}
                     className="font-mono text-[11px] uppercase tracking-widest px-4 py-2 border border-line text-ink/60 hover:border-navy hover:text-navy transition-colors"
                   >
                     Previous
@@ -196,6 +199,7 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
                   <Link
                     key={p}
                     href={p === 1 ? "/news" : `/news?page=${p}`}
+                    prefetch={false}
                     className={`font-mono text-[11px] tracking-widest w-9 h-9 flex items-center justify-center border transition-colors ${
                       p === page
                         ? "border-navy bg-navy text-white"
@@ -210,6 +214,7 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
                 {page < totalPages ? (
                   <Link
                     href={`/news?page=${page + 1}`}
+                    prefetch={false}
                     className="font-mono text-[11px] uppercase tracking-widest px-4 py-2 border border-line text-ink/60 hover:border-navy hover:text-navy transition-colors"
                   >
                     Next
