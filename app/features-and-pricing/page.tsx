@@ -2,6 +2,9 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { ImageAutoSlider } from "@/components/ui/image-auto-slider";
 import type { SliderItem } from "@/components/ui/image-auto-slider";
+import { supabase } from "@/lib/supabase/public";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Features and Pricing | Off The Plan",
@@ -9,34 +12,29 @@ export const metadata: Metadata = {
     "Start listing with Off The Plan. Affordable plans for developers, agencies and builders showcasing off-the-plan properties across Australia.",
 };
 
-// ── Category data ─────────────────────────────────────────────────────────────
-const CATEGORIES: SliderItem[] = [
-  {
-    label: "Townhouses",
-    image: "https://images.unsplash.com/photo-1558036117-15d82a90b9b1?w=600&h=400&fit=crop&auto=format&q=75",
-    href: "/search?type=townhouse",
-  },
-  {
-    label: "Land And Estates",
-    image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=600&h=400&fit=crop&auto=format&q=75",
-    href: "/search?type=land",
-  },
-  {
-    label: "Commercial",
-    image: "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=600&h=400&fit=crop&auto=format&q=75",
-    href: "/search?type=commercial",
-  },
-  {
-    label: "House & Land",
-    image: "https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=600&h=400&fit=crop&auto=format&q=75",
-    href: "/search?type=house-and-land",
-  },
-  {
-    label: "New Home Design",
-    image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&h=400&fit=crop&auto=format&q=75",
-    href: "/search?type=new-home-design",
-  },
-];
+// ── Unsplash helper ───────────────────────────────────────────────────────────
+const U = (id: string) =>
+  `https://images.unsplash.com/photo-${id}?w=1200&h=800&fit=crop&auto=format&q=80`;
+
+// ── Fallback images per category ──────────────────────────────────────────────
+const FALLBACKS: Record<string, string> = {
+  Apartments:       U("1460317442991-0ec209397118"),
+  "New Apartments": U("1600596542815-ffad4c1539a9"),
+  Townhouses:       U("1512917774080-9991f1c4c750"),
+  Houses:           U("1600585154340-be6161a56a0c"),
+  Penthouses:       U("1545324418-cc1a3fa10c00"),
+  "Land and Estates": U("1500382017468-9049fed747ef"),
+  Commercial:       U("1486325212027-8081e485255e"),
+  "New Home Design":  U("1580587771525-78b9dba3b914"),
+};
+
+function pickImage(
+  dev: { hero_image_url?: string | null; images?: { url: string }[] } | null,
+  fallback: string,
+): string {
+  if (!dev) return fallback;
+  return dev.images?.find(Boolean)?.url ?? dev.hero_image_url ?? fallback;
+}
 
 // ── Feature bullets ────────────────────────────────────────────────────────────
 const FEATURES = [
@@ -102,7 +100,48 @@ function CheckIcon({ orange = false }: { orange?: boolean }) {
 }
 
 // ── Page ──────────────────────────────────────────────────────────────────────
-export default function FeaturesAndPricingPage() {
+export default async function FeaturesAndPricingPage() {
+  // Fetch one real listing image per category type — fall back to Unsplash
+  const query = (type: string) =>
+    supabase
+      .from("developments")
+      .select("hero_image_url, images:development_images(url)")
+      .eq("type", type)
+      .eq("is_published", true)
+      .limit(1)
+      .single();
+
+  const [
+    { data: aptData },
+    { data: newAptData },
+    { data: thData },
+    { data: housesData },
+    { data: penthouseData },
+    { data: landData },
+    { data: commercialData },
+    { data: newHomeData },
+  ] = await Promise.all([
+    query("Apartments"),
+    query("New Apartments"),
+    query("Townhouses"),
+    query("Houses"),
+    query("Penthouses"),
+    query("Land and Estates"),
+    query("Commercial"),
+    query("New Home Design"),
+  ]);
+
+  const CATEGORIES: SliderItem[] = [
+    { label: "Apartments",       href: "/search?type=Apartments",         image: pickImage(aptData        as never, FALLBACKS["Apartments"])        },
+    { label: "New Apartments",   href: "/search?type=New+Apartments",     image: pickImage(newAptData     as never, FALLBACKS["New Apartments"])    },
+    { label: "Townhouses",       href: "/search?type=Townhouses",         image: pickImage(thData         as never, FALLBACKS["Townhouses"])        },
+    { label: "House & Land",     href: "/search?type=Houses",             image: pickImage(housesData     as never, FALLBACKS["Houses"])            },
+    { label: "Penthouses",       href: "/search?type=Penthouses",         image: pickImage(penthouseData  as never, FALLBACKS["Penthouses"])        },
+    { label: "Land And Estates", href: "/search?type=Land+and+Estates",   image: pickImage(landData       as never, FALLBACKS["Land and Estates"])  },
+    { label: "Commercial",       href: "/search?type=Commercial",         image: pickImage(commercialData as never, FALLBACKS["Commercial"])        },
+    { label: "New Home Design",  href: "/search?type=New+Home+Design",    image: pickImage(newHomeData    as never, FALLBACKS["New Home Design"])   },
+  ];
+
   return (
     <div className="min-h-screen bg-cream pt-16">
 
