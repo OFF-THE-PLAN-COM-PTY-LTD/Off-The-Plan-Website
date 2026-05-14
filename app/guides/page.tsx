@@ -194,6 +194,7 @@ export default async function GuidesPage({ searchParams }: GuidesPageProps) {
                 {page > 1 ? (
                   <Link
                     href={page === 2 ? "/guides" : `/guides?page=${page - 1}`}
+                    prefetch={false}
                     className="font-mono text-[11px] uppercase tracking-widest px-4 py-2 border border-line text-ink/60 hover:border-navy hover:text-navy transition-colors"
                   >
                     Previous
@@ -208,6 +209,7 @@ export default async function GuidesPage({ searchParams }: GuidesPageProps) {
                   <Link
                     key={p}
                     href={p === 1 ? "/guides" : `/guides?page=${p}`}
+                    prefetch={false}
                     className={`font-mono text-[11px] tracking-widest w-9 h-9 flex items-center justify-center border transition-colors ${
                       p === page
                         ? "border-navy bg-navy text-white"
@@ -221,6 +223,7 @@ export default async function GuidesPage({ searchParams }: GuidesPageProps) {
                 {page < totalPages ? (
                   <Link
                     href={`/guides?page=${page + 1}`}
+                    prefetch={false}
                     className="font-mono text-[11px] uppercase tracking-widest px-4 py-2 border border-line text-ink/60 hover:border-navy hover:text-navy transition-colors"
                   >
                     Next
