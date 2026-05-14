@@ -15,7 +15,10 @@ export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 export const revalidate = 0;
 
-const PAGE_SIZE = 9; // 3-col grid fits 9 neatly
+// Page 1 = 2 featured + 9 in 3-col grid = 11 cards (3 clean rows of 3)
+// Subsequent pages = 12 cards in 3-col grid (4 clean rows of 3)
+const PAGE_ONE_SIZE = 11;
+const PAGE_SIZE = 12;
 
 /** Strip HTML and remove the social-share boilerplate at the top of every scraped article. */
 function extractExcerpt(html: string | null, maxLen = 180): string {
@@ -50,22 +53,27 @@ interface GuidesPageProps {
 export default async function GuidesPage({ searchParams }: GuidesPageProps) {
   const { page: pageParam } = await searchParams;
   const page = Math.max(1, parseInt(pageParam ?? "1", 10) || 1);
-  const from = (page - 1) * PAGE_SIZE;
-  const to = from + PAGE_SIZE - 1;
+
+  const pageSize = page === 1 ? PAGE_ONE_SIZE : PAGE_SIZE;
+  const from = page === 1 ? 0 : PAGE_ONE_SIZE + (page - 2) * PAGE_SIZE;
+  const to = from + pageSize - 1;
 
   const fields = page === 1
     ? "id,slug,title,category,hero_image_url,author,read_time_minutes,published_at,body_html"
     : "id,slug,title,category,hero_image_url,author,read_time_minutes,published_at";
   const { data, count } = await supabase
     .from("journal_articles")
-    .select(fields, { count: "estimated" })
+    .select(fields, { count: "exact" })
     .eq("is_published", true)
     .eq("category", "Guide")
     .order("published_at", { ascending: false })
     .range(from, to);
 
   const articles = (data ?? []) as unknown as JournalArticle[];
-  const totalPages = Math.ceil((count ?? 0) / PAGE_SIZE);
+  const totalCount = count ?? 0;
+  const totalPages = totalCount === 0
+    ? 0
+    : 1 + Math.ceil(Math.max(0, totalCount - PAGE_ONE_SIZE) / PAGE_SIZE);
 
   // Page 1: top 2 featured large + ad slot, then rest in 3-col grid
   // Other pages: all in 3-col grid
