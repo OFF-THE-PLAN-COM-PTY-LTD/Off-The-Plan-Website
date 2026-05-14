@@ -18,9 +18,12 @@ const U = (id: string) =>
 
 // ── Fallback images per category ──────────────────────────────────────────────
 const FALLBACKS: Record<string, string> = {
-  Apartments: U("1460317442991-0ec209397118"),
-  Townhouses: U("1512917774080-9991f1c4c750"),
-  Houses:     U("1600585154340-be6161a56a0c"),
+  "New Apartments":   U("1600596542815-ffad4c1539a9"),
+  Townhouses:         U("1512917774080-9991f1c4c750"),
+  "Land and Estates": U("1500382017468-9049fed747ef"),
+  Commercial:         U("1486325212027-8081e485255e"),
+  Houses:             U("1600585154340-be6161a56a0c"),
+  "New Home Design":  U("1580587771525-78b9dba3b914"),
 };
 
 function pickImage(
@@ -107,20 +110,28 @@ export default async function FeaturesAndPricingPage() {
       .single();
 
   const [
-    { data: aptData },
+    { data: newAptData },
     { data: thData },
+    { data: landData },
+    { data: commercialData },
     { data: housesData },
+    { data: newHomeData },
   ] = await Promise.all([
-    query("Apartments"),
+    query("New Apartments"),
     query("Townhouses"),
+    query("Land and Estates"),
+    query("Commercial"),
     query("Houses"),
+    query("New Home Design"),
   ]);
 
   const CATEGORIES: SliderItem[] = [
-    { label: "Apartments",   href: "/search?type=Apartments",     image: pickImage(aptData    as never, FALLBACKS["Apartments"]) },
-    { label: "Townhouses",   href: "/search?type=Townhouses",     image: pickImage(thData     as never, FALLBACKS["Townhouses"]) },
-    { label: "House & Land", href: "/search?type=Houses",         image: pickImage(housesData as never, FALLBACKS["Houses"])     },
-    { label: "New Apartments", href: "/search?type=New+Apartments", image: U("1600596542815-ffad4c1539a9") },
+    { label: "New Apartments",   href: "/search?type=New+Apartments",   image: pickImage(newAptData     as never, FALLBACKS["New Apartments"])   },
+    { label: "Townhouses",       href: "/search?type=Townhouses",       image: pickImage(thData         as never, FALLBACKS["Townhouses"])        },
+    { label: "Land And Estates", href: "/search?type=Land+and+Estates", image: pickImage(landData       as never, FALLBACKS["Land and Estates"])  },
+    { label: "Commercial",       href: "/search?type=Commercial",       image: pickImage(commercialData as never, FALLBACKS["Commercial"])        },
+    { label: "House & Land",     href: "/search?type=Houses",           image: pickImage(housesData     as never, FALLBACKS["Houses"])            },
+    { label: "New Home Design",  href: "/search?type=New+Home+Design",  image: pickImage(newHomeData    as never, FALLBACKS["New Home Design"])   },
   ];
 
   return (

@@ -65,9 +65,12 @@ const MOCK_TIER2: Development[] = [
 
 // Fallback images per category (Unsplash) — used only if no real listing exists for that type
 const CATEGORY_FALLBACKS: Record<string, string> = {
-  Apartments:   U("1460317442991-0ec209397118"),
-  Townhouses:   U("1512917774080-9991f1c4c750"),
-  Houses:       U("1600585154340-be6161a56a0c"),
+  "New Apartments":   U("1600596542815-ffad4c1539a9"),
+  Townhouses:         U("1512917774080-9991f1c4c750"),
+  "Land and Estates": U("1500382017468-9049fed747ef"),
+  Commercial:         U("1486325212027-8081e485255e"),
+  Houses:             U("1600585154340-be6161a56a0c"),
+  "New Home Design":  U("1580587771525-78b9dba3b914"),
 };
 
 function pickImage(dev: { hero_image_url?: string | null; images?: { url: string }[] } | null, fallback: string): string {
@@ -82,9 +85,12 @@ export default async function HomePage() {
     { data: tier1Data },
     { data: tier2Data },
     { data: articlesData },
-    { data: aptData },
+    { data: newAptData },
     { data: thData },
+    { data: landData },
+    { data: commercialData },
     { data: housesData },
+    { data: newHomeData },
   ] = await Promise.all([
     supabase
       .from("developments")
@@ -109,7 +115,7 @@ export default async function HomePage() {
     supabase
       .from("developments")
       .select("hero_image_url, images:development_images(url)")
-      .eq("type", "Apartments")
+      .eq("type", "New Apartments")
       .eq("is_published", true)
       .limit(1)
       .single(),
@@ -123,21 +129,40 @@ export default async function HomePage() {
     supabase
       .from("developments")
       .select("hero_image_url, images:development_images(url)")
+      .eq("type", "Land and Estates")
+      .eq("is_published", true)
+      .limit(1)
+      .single(),
+    supabase
+      .from("developments")
+      .select("hero_image_url, images:development_images(url)")
+      .eq("type", "Commercial")
+      .eq("is_published", true)
+      .limit(1)
+      .single(),
+    supabase
+      .from("developments")
+      .select("hero_image_url, images:development_images(url)")
       .eq("type", "Houses")
+      .eq("is_published", true)
+      .limit(1)
+      .single(),
+    supabase
+      .from("developments")
+      .select("hero_image_url, images:development_images(url)")
+      .eq("type", "New Home Design")
       .eq("is_published", true)
       .limit(1)
       .single(),
   ]);
 
-  const aptImg  = pickImage(aptData    as never, CATEGORY_FALLBACKS.Apartments);
-  const thImg   = pickImage(thData     as never, CATEGORY_FALLBACKS.Townhouses);
-  const housImg = pickImage(housesData as never, CATEGORY_FALLBACKS.Houses);
-
   const CATEGORIES: SliderItem[] = [
-    { label: "Apartments",     href: "/search?type=Apartments",       image: aptImg  },
-    { label: "Townhouses",     href: "/search?type=Townhouses",       image: thImg   },
-    { label: "House & Land",   href: "/search?type=Houses",           image: housImg },
-    { label: "New Apartments", href: "/search?type=New+Apartments",   image: U("1600596542815-ffad4c1539a9") },
+    { label: "New Apartments",   href: "/search?type=New+Apartments",   image: pickImage(newAptData     as never, CATEGORY_FALLBACKS["New Apartments"])   },
+    { label: "Townhouses",       href: "/search?type=Townhouses",       image: pickImage(thData         as never, CATEGORY_FALLBACKS["Townhouses"])        },
+    { label: "Land And Estates", href: "/search?type=Land+and+Estates", image: pickImage(landData       as never, CATEGORY_FALLBACKS["Land and Estates"])  },
+    { label: "Commercial",       href: "/search?type=Commercial",       image: pickImage(commercialData as never, CATEGORY_FALLBACKS["Commercial"])        },
+    { label: "House & Land",     href: "/search?type=Houses",           image: pickImage(housesData     as never, CATEGORY_FALLBACKS["Houses"])            },
+    { label: "New Home Design",  href: "/search?type=New+Home+Design",  image: pickImage(newHomeData    as never, CATEGORY_FALLBACKS["New Home Design"])   },
   ];
 
   const tier1 = (tier1Data ?? []).length > 0
