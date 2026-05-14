@@ -53,9 +53,14 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
   const from = (page - 1) * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
 
+  // Only select fields used on the list — skip body_html for non-featured rows
+  // to keep payload small. We still fetch body_html for the page-1 featured cards.
+  const fields = page === 1
+    ? "id,slug,title,category,hero_image_url,author,read_time_minutes,published_at,body_html"
+    : "id,slug,title,category,hero_image_url,author,read_time_minutes,published_at";
   const { data, count } = await supabase
     .from("journal_articles")
-    .select("*", { count: "exact" })
+    .select(fields, { count: "estimated" })
     .eq("is_published", true)
     .eq("category", "News")
     .order("published_at", { ascending: false })
@@ -183,7 +188,6 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
                 {page > 1 ? (
                   <Link
                     href={page === 2 ? "/news" : `/news?page=${page - 1}`}
-                    prefetch={false}
                     className="font-mono text-[11px] uppercase tracking-widest px-4 py-2 border border-line text-ink/60 hover:border-navy hover:text-navy transition-colors"
                   >
                     Previous
@@ -199,7 +203,6 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
                   <Link
                     key={p}
                     href={p === 1 ? "/news" : `/news?page=${p}`}
-                    prefetch={false}
                     className={`font-mono text-[11px] tracking-widest w-9 h-9 flex items-center justify-center border transition-colors ${
                       p === page
                         ? "border-navy bg-navy text-white"
@@ -214,7 +217,6 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
                 {page < totalPages ? (
                   <Link
                     href={`/news?page=${page + 1}`}
-                    prefetch={false}
                     className="font-mono text-[11px] uppercase tracking-widest px-4 py-2 border border-line text-ink/60 hover:border-navy hover:text-navy transition-colors"
                   >
                     Next
