@@ -183,24 +183,24 @@ export default function AgenciesTable({ agencies }: { agencies: Agency[] }) {
                   <div className="flex flex-col gap-1.5 min-w-[160px]">
                     <a
                       href={`/admin/agencies/${a.id}`}
-                      className="font-mono text-[10px] uppercase tracking-widest px-3 py-1.5 border border-orange text-orange hover:bg-orange hover:text-white transition-colors text-center"
+                      className="font-mono text-[10px] uppercase tracking-widest px-3 py-2 bg-orange text-white hover:bg-orange/80 transition-colors text-center"
                     >
                       Manage Profile
                     </a>
                     {a.total_active_listings > 0 && (
                       <a
                         href={`/admin/listings?agency=${a.id}`}
-                        className="font-mono text-[10px] uppercase tracking-widest px-3 py-1.5 border border-navy text-navy hover:bg-navy hover:text-white transition-colors text-center"
+                        className="font-mono text-[10px] uppercase tracking-widest px-3 py-2 bg-navy text-white hover:bg-navy/80 transition-colors text-center"
                       >
                         View Listings ({a.total_active_listings})
                       </a>
                     )}
                     <button
                       onClick={() => openModal(a)}
-                      className={`font-mono text-[10px] uppercase tracking-widest px-3 py-1.5 border transition-colors ${
+                      className={`font-mono text-[10px] uppercase tracking-widest px-3 py-2 text-white transition-colors ${
                         a.portal_status === "active"
-                          ? "border-red-300 text-red-500 hover:bg-red-500 hover:text-white hover:border-red-500"
-                          : "border-green-400 text-green-600 hover:bg-green-500 hover:text-white hover:border-green-500"
+                          ? "bg-red-500 hover:bg-red-600"
+                          : "bg-green-600 hover:bg-green-700"
                       }`}
                     >
                       {a.portal_status === "active" ? "Deactivate Portal" : "Activate Portal"}
