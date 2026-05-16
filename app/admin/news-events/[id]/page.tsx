@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { NewsForm } from "./news-form";
 
+export const dynamic = "force-dynamic";
+
 interface Props {
   params: { id: string };
 }

@@ -2,6 +2,8 @@ import Link from "next/link";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import NewsTable from "./news-table";
 
+export const dynamic = "force-dynamic";
+
 const PAGE_SIZE = 15;
 
 interface SearchParams { page?: string }
