@@ -102,7 +102,10 @@ def main() -> None:
         raise SystemExit(f"Input file not found: {INPUT_FILE}\nRun scrape-agencies.py first.")
 
     with open(INPUT_FILE, encoding="utf-8") as f:
-        agencies: list[dict] = json.load(f)
+        raw_agencies: list[dict] = json.load(f)
+
+    # Strip private _* fields that don't exist as DB columns
+    agencies = [{k: v for k, v in a.items() if not k.startswith("_")} for a in raw_agencies]
 
     print(f"Loaded {len(agencies)} agencies from {INPUT_FILE}")
 
