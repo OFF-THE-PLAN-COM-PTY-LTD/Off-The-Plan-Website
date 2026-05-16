@@ -20,6 +20,7 @@ import json
 import os
 import re
 import time
+from datetime import datetime
 from pathlib import Path
 
 import httpx
@@ -69,12 +70,30 @@ def main() -> None:
     with open(INPUT_FILE, encoding="utf-8") as f:
         raw: list[dict] = json.load(f)
 
+    def parse_date(val: str | None) -> str | None:
+        if not val:
+            return None
+        for fmt in [
+            "%d-%m-%Y %H:%M:%S",   # 15-05-2026 15:17:46  (old admin format)
+            "%Y-%m-%d %H:%M:%S",   # 2026-05-15 15:17:46
+            "%Y-%m-%dT%H:%M:%S",   # ISO
+            "%d/%m/%Y %H:%M:%S",
+            "%Y-%m-%d",
+        ]:
+            try:
+                return datetime.strptime(val.strip(), fmt).isoformat()
+            except ValueError:
+                continue
+        return None  # unrecognised format — omit rather than error
+
     # Build records — always set category = "News", strip unknown keys
     allowed = {"title", "slug", "hero_image_url", "body_html", "is_published", "published_at"}
     records = []
     for item in raw:
         record = {k: v for k, v in item.items() if k in allowed}
         record["category"] = "News"
+        # Convert date to ISO format Postgres accepts
+        record["published_at"] = parse_date(record.get("published_at"))
         if not record.get("title") or not record.get("slug"):
             continue
         records.append(record)
