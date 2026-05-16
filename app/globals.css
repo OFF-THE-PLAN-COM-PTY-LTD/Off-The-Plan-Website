@@ -118,21 +118,29 @@
   }
   .ProseMirror h1,
   .ProseMirror h2 {
-    @apply font-sans font-bold text-navy text-[18px] leading-snug mt-6 mb-2;
+    @apply font-sans leading-snug mt-6 mb-2;
+    font-size: 20px !important;
+    font-weight: 700 !important;
     color: #0E2638 !important;
   }
   .ProseMirror h3 {
-    @apply font-sans font-bold text-navy text-[16px] leading-snug mt-5 mb-2;
+    @apply font-sans leading-snug mt-5 mb-2;
+    font-size: 17px !important;
+    font-weight: 700 !important;
     color: #0E2638 !important;
   }
   .ProseMirror h4,
   .ProseMirror h5,
   .ProseMirror h6 {
-    @apply font-sans font-bold text-navy text-[15px] leading-snug mt-4 mb-2;
+    @apply font-sans leading-snug mt-4 mb-2;
+    font-size: 15px !important;
+    font-weight: 700 !important;
     color: #0E2638 !important;
   }
   .ProseMirror p {
-    @apply font-sans font-normal text-[13px] text-ink/85 leading-[1.6] my-2.5;
+    @apply font-sans text-ink/85 leading-[1.6] my-2.5;
+    font-size: 13px !important;
+    font-weight: 400 !important;
   }
   .ProseMirror ul {
     @apply list-disc pl-6 my-2.5 space-y-1;
@@ -170,21 +178,29 @@
   /* Public-facing article body — same content rendered to readers */
   .article-body h1,
   .article-body h2 {
-    @apply font-sans font-bold text-navy text-[22px] leading-snug mt-8 mb-3;
+    @apply font-sans leading-snug mt-8 mb-3;
+    font-size: 24px !important;
+    font-weight: 700 !important;
     color: #0E2638 !important;
   }
   .article-body h3 {
-    @apply font-sans font-bold text-navy text-[19px] leading-snug mt-7 mb-3;
+    @apply font-sans leading-snug mt-7 mb-3;
+    font-size: 20px !important;
+    font-weight: 700 !important;
     color: #0E2638 !important;
   }
   .article-body h4,
   .article-body h5,
   .article-body h6 {
-    @apply font-sans font-bold text-navy text-[17px] leading-snug mt-6 mb-2;
+    @apply font-sans leading-snug mt-6 mb-2;
+    font-size: 17px !important;
+    font-weight: 700 !important;
     color: #0E2638 !important;
   }
   .article-body p {
-    @apply font-sans font-normal text-[15px] text-ink/85 leading-[1.75] my-3;
+    @apply font-sans text-ink/85 leading-[1.75] my-3;
+    font-size: 15px !important;
+    font-weight: 400 !important;
   }
   .article-body ul {
     @apply list-disc pl-6 my-3 space-y-1.5;
