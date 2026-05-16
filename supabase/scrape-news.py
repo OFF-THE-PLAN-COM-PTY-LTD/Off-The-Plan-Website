@@ -346,29 +346,80 @@ async def main() -> None:
 
         await login(page)
 
-        print(f"\nNavigating to News and Events: {NEWS_URL}")
-        await page.goto(NEWS_URL, wait_until="networkidle", timeout=30000)
-        await page.wait_for_timeout(4000)
-        print(f"  Landed at: {page.url}")
+        # ── Try direct API endpoint first (same pattern as agencies) ────────────
+        api_base = ADMIN_BASE.replace("/all_agency", "")
+        api_candidates = [
+            f"{api_base}/api/all_agency/get_all_news",
+            f"{api_base}/api/all_agency/get_all_news_details",
+            f"{api_base}/api/all_agency/get_all_news_events",
+            f"{api_base}/api/news/get_all_news",
+            f"{api_base}/api/get_all_news",
+        ]
 
-        # Scroll to trigger lazy-loaded API calls
-        await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
-        await page.wait_for_timeout(2000)
-        await page.evaluate("window.scrollTo(0, 0)")
-        await page.wait_for_timeout(1000)
+        articles_raw = None
+        for api_url in api_candidates:
+            print(f"\nTrying API: {api_url}")
+            try:
+                resp = await page.evaluate(f"""
+                    fetch("{api_url}", {{
+                        headers: {{
+                            "Accept": "application/json",
+                            "X-Requested-With": "XMLHttpRequest"
+                        }}
+                    }}).then(r => r.ok ? r.json() : null).catch(() => null)
+                """)
+                if resp:
+                    print(f"  Got response from {api_url}")
+                    intercepted.append({"url": api_url, "body": resp})
+                    articles_raw = extract_from_api([{"url": api_url, "body": resp}])
+                    if articles_raw:
+                        print(f"  Found {len(articles_raw)} articles via API!")
+                        break
+            except Exception as e:
+                print(f"  Failed: {e}")
 
-        print(f"\n  Intercepted {len(intercepted)} JSON call(s):")
-        for c in intercepted:
-            print(f"    {c['url']}")
+        if not articles_raw:
+            # ── Click "News" in the sidebar navigation ────────────────────────
+            print("\nLooking for News and Events in sidebar navigation ...")
+            news_link = None
+            for selector in [
+                'a:has-text("News and Events")',
+                'a:has-text("News & Events")',
+                'a:has-text("News")',
+                'a[href*="news"]',
+            ]:
+                if await page.locator(selector).count() > 0:
+                    news_link = page.locator(selector).first
+                    break
 
-        # Try API intercept first
-        articles_raw = extract_from_api(intercepted)
+            if news_link:
+                await news_link.click()
+                await page.wait_for_load_state("networkidle")
+                await page.wait_for_timeout(3000)
+                print(f"  Clicked news link — now at: {page.url}")
+            else:
+                print(f"  No sidebar link found — going to: {NEWS_URL}")
+                await page.goto(NEWS_URL, wait_until="networkidle", timeout=30000)
+                await page.wait_for_timeout(3000)
+                print(f"  Landed at: {page.url}")
+
+            # Scroll to trigger lazy-loaded API calls
+            await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+            await page.wait_for_timeout(2000)
+            await page.evaluate("window.scrollTo(0, 0)")
+            await page.wait_for_timeout(1000)
+
+            print(f"\n  Intercepted {len(intercepted)} JSON call(s):")
+            for c in intercepted:
+                print(f"    {c['url']}")
+
+            articles_raw = extract_from_api(intercepted)
 
         if articles_raw:
             print(f"\nUsing API data — {len(articles_raw)} articles found.")
             articles = [normalise_api_article(a) for a in articles_raw if a.get("title") or a.get("name")]
         else:
-            print("\nNo API found — falling back to HTML scraping ...")
+            print(f"\nNo API data found — falling back to HTML scraping at: {page.url}")
             raw_articles = await scrape_html_pages(page)
 
             # Enrich with body content from edit pages
