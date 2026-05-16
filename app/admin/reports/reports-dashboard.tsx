@@ -20,6 +20,7 @@ interface Props {
 }
 
 const PERIOD_OPTIONS = [
+  { label: "All Time", value: 0 },
   { label: "Past 12 Months", value: 12 },
   { label: "Past 6 Months", value: 6 },
   { label: "Past 3 Months", value: 3 },
@@ -28,7 +29,7 @@ const PERIOD_OPTIONS = [
 
 export default function ReportsDashboard({ developments }: Props) {
   const [developmentId, setDevelopmentId] = useState("");
-  const [months, setMonths] = useState(12);
+  const [months, setMonths] = useState(0);
   const [loading, setLoading] = useState(true);
 
   const [views, setViews] = useState(0);
@@ -92,7 +93,7 @@ export default function ReportsDashboard({ developments }: Props) {
       {/* Chart */}
       <div className="bg-white border border-line p-6">
         <div className="flex items-center justify-between mb-4">
-          <p className="font-sans text-sm font-semibold text-ink">Enquiries Over Time</p>
+          <p className="font-sans text-sm font-semibold text-ink">Total Enquiries</p>
           <select
             value={months}
             onChange={(e) => setMonths(Number(e.target.value))}
