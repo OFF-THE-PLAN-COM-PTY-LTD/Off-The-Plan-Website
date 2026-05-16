@@ -1,10 +1,14 @@
-export default function Page() {
-  return (
-    <div className="flex items-center justify-center h-64">
-      <div className="text-center">
-        <p className="text-sm font-bold uppercase tracking-widest text-gray-400 mb-2">Coming Soon</p>
-        <h1 className="text-2xl font-bold" style={{ color: "#1a2340" }}>Reports</h1>
-      </div>
-    </div>
-  );
+import { supabaseAdmin } from "@/lib/supabase/admin";
+import ReportsDashboard from "./reports-dashboard";
+
+export default async function ReportsPage() {
+  const { data } = await supabaseAdmin
+    .from("developments")
+    .select("id, name")
+    .eq("is_published", true)
+    .order("name");
+
+  const developments = (data ?? []).map((d: any) => ({ id: d.id, name: d.name }));
+
+  return <ReportsDashboard developments={developments} />;
 }
