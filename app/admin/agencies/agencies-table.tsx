@@ -180,27 +180,27 @@ export default function AgenciesTable({ agencies }: { agencies: Agency[] }) {
                   </span>
                 </td>
                 <td className="px-4 py-4">
-                  <div className="flex flex-col gap-1.5 min-w-[160px]">
-                    <a
-                      href={`/admin/agencies/${a.id}`}
-                      className="font-mono text-[10px] uppercase tracking-widest px-3 py-2 bg-orange text-white hover:bg-orange/80 transition-colors text-center"
-                    >
-                      Manage Profile
-                    </a>
-                    {a.total_active_listings > 0 && (
+                  <div className="flex flex-col gap-1.5 min-w-[180px]">
+                    <div className="flex gap-1.5">
                       <a
                         href={`/admin/listings?agency=${a.id}`}
-                        className="font-mono text-[10px] uppercase tracking-widest px-3 py-2 bg-navy text-white hover:bg-navy/80 transition-colors text-center"
+                        className="flex-1 text-center font-mono text-[10px] uppercase tracking-widest px-2 py-1.5 border border-line text-ink/60 hover:border-navy hover:text-navy transition-colors whitespace-nowrap"
                       >
-                        View Listings ({a.total_active_listings})
+                        View Listings {a.total_active_listings > 0 ? `(${a.total_active_listings})` : ""}
                       </a>
-                    )}
+                      <a
+                        href={`/admin/agencies/${a.id}`}
+                        className="flex-1 text-center font-mono text-[10px] uppercase tracking-widest px-2 py-1.5 border border-orange text-orange hover:bg-orange hover:text-white transition-colors whitespace-nowrap"
+                      >
+                        Manage Profile
+                      </a>
+                    </div>
                     <button
                       onClick={() => openModal(a)}
-                      className={`font-mono text-[10px] uppercase tracking-widest px-3 py-2 text-white transition-colors ${
+                      className={`w-full font-mono text-[10px] uppercase tracking-widest px-2 py-1.5 border transition-colors ${
                         a.portal_status === "active"
-                          ? "bg-red-500 hover:bg-red-600"
-                          : "bg-green-600 hover:bg-green-700"
+                          ? "border-red-300 text-red-500 hover:bg-red-500 hover:text-white hover:border-red-500"
+                          : "border-green-400 text-green-600 hover:bg-green-500 hover:text-white hover:border-green-500"
                       }`}
                     >
                       {a.portal_status === "active" ? "Deactivate Portal" : "Activate Portal"}
