@@ -4,6 +4,7 @@ import Image from "next/image";
 import { supabase } from "@/lib/supabase/public";
 import type { JournalArticle } from "@/types/journal";
 import { formatDate } from "@/lib/utils";
+import { AdSlot } from "@/components/ad-slot";
 
 export const metadata: Metadata = {
   title: "News | Off The Plan",
@@ -239,6 +240,11 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
             )}
           </>
         )}
+      </div>
+
+      {/* ── Bottom ad slot ── */}
+      <div className="container-padded pb-8">
+        <AdSlot page="news" position="bottom" />
       </div>
 
       {/* ── Partner banner ── */}

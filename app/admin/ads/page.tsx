@@ -1,10 +1,28 @@
-export default function Page() {
-  return (
-    <div className="flex items-center justify-center h-64">
-      <div className="text-center">
-        <p className="text-sm font-bold uppercase tracking-widest text-gray-400 mb-2">Coming Soon</p>
-        <h1 className="text-2xl font-bold" style={{ color: "#1a2340" }}>Ads Management</h1>
-      </div>
-    </div>
-  );
+import { supabaseAdmin } from "@/lib/supabase/admin";
+import AdsManager from "./ads-manager";
+
+export const dynamic = "force-dynamic";
+
+export default async function AdsPage() {
+  const { data } = await supabaseAdmin
+    .from("ads")
+    .select("*")
+    .order("page", { ascending: true })
+    .order("position", { ascending: true })
+    .order("created_at", { ascending: true });
+
+  return <AdsManager initial={(data ?? []) as Ad[]} />;
 }
+
+export type Ad = {
+  id: string;
+  page: "home" | "listings" | "resources" | "news" | "guides";
+  position: "top" | "middle" | "bottom" | "right";
+  ad_type: "image" | "adsense";
+  desktop_image_url: string | null;
+  mobile_image_url: string | null;
+  web_link: string | null;
+  adsense_code: string | null;
+  is_active: boolean;
+  sort_order: number;
+};

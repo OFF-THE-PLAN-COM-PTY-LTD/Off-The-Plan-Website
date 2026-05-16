@@ -6,6 +6,7 @@ import { AnimateIn } from "@/components/animate-in";
 import { ImageAutoSlider } from "@/components/ui/image-auto-slider";
 import type { SliderItem } from "@/components/ui/image-auto-slider";
 import { ChevronRightIcon } from "@/components/icons";
+import { AdSlot } from "@/components/ad-slot";
 import { supabase } from "@/lib/supabase/public";
 import type { Development } from "@/types/development";
 import type { JournalArticle } from "@/types/journal";
@@ -419,6 +420,13 @@ export default async function HomePage() {
           </div>
         </section>
       )}
+
+      {/* ─── Bottom ad slot ─────────────────────────────────────────────────── */}
+      <section className="bg-cream py-6">
+        <div className="container-padded">
+          <AdSlot page="home" position="bottom" />
+        </div>
+      </section>
 
       {/* ─── Partner Banner ─────────────────────────────────────────────────── */}
       <section className="bg-cream py-4">
