@@ -116,23 +116,32 @@
   .ProseMirror {
     @apply outline-none;
   }
+  .ProseMirror h1,
   .ProseMirror h2 {
-    @apply font-sans font-semibold text-navy text-[1.125rem] leading-snug mt-6 mb-2;
+    @apply font-sans font-bold text-navy text-[18px] leading-snug mt-6 mb-2;
+    color: #0E2638 !important;
   }
   .ProseMirror h3 {
-    @apply font-sans font-semibold text-navy text-[1rem] leading-snug mt-5 mb-2;
+    @apply font-sans font-bold text-navy text-[16px] leading-snug mt-5 mb-2;
+    color: #0E2638 !important;
+  }
+  .ProseMirror h4,
+  .ProseMirror h5,
+  .ProseMirror h6 {
+    @apply font-sans font-bold text-navy text-[15px] leading-snug mt-4 mb-2;
+    color: #0E2638 !important;
   }
   .ProseMirror p {
-    @apply font-sans text-[14px] text-ink/85 leading-relaxed my-3;
+    @apply font-sans font-normal text-[13px] text-ink/85 leading-[1.6] my-2.5;
   }
   .ProseMirror ul {
-    @apply list-disc pl-6 my-3 space-y-1;
+    @apply list-disc pl-6 my-2.5 space-y-1;
   }
   .ProseMirror ol {
-    @apply list-decimal pl-6 my-3 space-y-1;
+    @apply list-decimal pl-6 my-2.5 space-y-1;
   }
   .ProseMirror li {
-    @apply font-sans text-[14px] text-ink/85 leading-relaxed;
+    @apply font-sans text-[13px] text-ink/85 leading-[1.6];
   }
   .ProseMirror strong,
   .ProseMirror b {
@@ -159,23 +168,32 @@
   }
 
   /* Public-facing article body — same content rendered to readers */
+  .article-body h1,
   .article-body h2 {
-    @apply font-sans font-semibold text-navy text-[1.4rem] leading-snug mt-8 mb-3;
+    @apply font-sans font-bold text-navy text-[22px] leading-snug mt-8 mb-3;
+    color: #0E2638 !important;
   }
   .article-body h3 {
-    @apply font-sans font-semibold text-navy text-[1.15rem] leading-snug mt-6 mb-2;
+    @apply font-sans font-bold text-navy text-[19px] leading-snug mt-7 mb-3;
+    color: #0E2638 !important;
+  }
+  .article-body h4,
+  .article-body h5,
+  .article-body h6 {
+    @apply font-sans font-bold text-navy text-[17px] leading-snug mt-6 mb-2;
+    color: #0E2638 !important;
   }
   .article-body p {
-    @apply font-sans text-[16px] text-ink/85 leading-[1.75] my-4;
+    @apply font-sans font-normal text-[15px] text-ink/85 leading-[1.75] my-3;
   }
   .article-body ul {
-    @apply list-disc pl-6 my-4 space-y-2;
+    @apply list-disc pl-6 my-3 space-y-1.5;
   }
   .article-body ol {
-    @apply list-decimal pl-6 my-4 space-y-2;
+    @apply list-decimal pl-6 my-3 space-y-1.5;
   }
   .article-body li {
-    @apply font-sans text-[16px] text-ink/85 leading-relaxed;
+    @apply font-sans text-[15px] text-ink/85 leading-relaxed;
   }
   .article-body strong,
   .article-body b {
