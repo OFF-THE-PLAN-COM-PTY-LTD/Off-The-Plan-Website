@@ -7,7 +7,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Missing developmentId" }, { status: 400 });
   }
 
-  await supabaseAdmin.rpc("increment_view_count", { dev_id: developmentId });
+  await Promise.all([
+    supabaseAdmin.rpc("increment_view_count", { dev_id: developmentId }),
+    supabaseAdmin.from("listing_view_events").insert({ development_id: developmentId }),
+  ]);
 
   return NextResponse.json({ ok: true });
 }
