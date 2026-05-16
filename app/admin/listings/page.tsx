@@ -3,16 +3,36 @@ import Image from "next/image";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { ListingRowActions } from "./listing-row-actions";
 
-interface SearchParams { q?: string }
+interface SearchParams { q?: string; agency?: string }
 
 export default async function AdminListingsPage({ searchParams }: { searchParams: SearchParams }) {
   const q = searchParams.q?.toLowerCase().trim() ?? "";
+  const agencyId = searchParams.agency ?? "";
+
+  // If filtering by agency, look up their email first
+  let agencyLabel = "";
+  let agencyEmail = "";
+  if (agencyId) {
+    const { data: agency } = await supabaseAdmin
+      .from("agencies")
+      .select("name, org_name, email")
+      .eq("id", agencyId)
+      .single();
+    agencyEmail = agency?.email ?? "";
+    agencyLabel = agency?.org_name ?? agency?.name ?? "Agency";
+  }
+
+  let listingsQuery = supabaseAdmin
+    .from("developments")
+    .select("id, name, slug, suburb, state, is_published, is_featured, price_display, type, hero_image_url, agent_email, developer:developers(name)")
+    .order("name");
+
+  if (agencyEmail) {
+    listingsQuery = listingsQuery.eq("agent_email", agencyEmail);
+  }
 
   const [{ data: allData }, { count: enquiryCount }] = await Promise.all([
-    supabaseAdmin
-      .from("developments")
-      .select("id, name, slug, suburb, state, is_published, is_featured, price_display, type, hero_image_url, developer:developers(name)")
-      .order("name"),
+    listingsQuery,
     supabaseAdmin.from("enquiries").select("*", { count: "exact", head: true }),
   ]);
 
@@ -42,7 +62,18 @@ export default async function AdminListingsPage({ searchParams }: { searchParams
 
   return (
     <div>
-      <h1 className="font-display font-light text-navy text-section-lg mb-6">Listing List</h1>
+      {agencyId && (
+        <div className="flex items-center gap-3 mb-4">
+          <Link href="/admin/agencies" className="font-sans text-sm text-ink/40 hover:text-ink transition-colors">
+            ← All Agencies
+          </Link>
+          <span className="text-ink/20">/</span>
+          <span className="font-sans text-sm text-ink">{agencyLabel}</span>
+        </div>
+      )}
+      <h1 className="font-display font-light text-navy text-section-lg mb-6">
+        {agencyId ? `Listings — ${agencyLabel}` : "Listing List"}
+      </h1>
 
       {/* Stats row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
