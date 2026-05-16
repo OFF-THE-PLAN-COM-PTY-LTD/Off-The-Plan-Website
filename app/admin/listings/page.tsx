@@ -3,18 +3,42 @@ import Image from "next/image";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { ListingRowActions } from "./listing-row-actions";
 
-interface SearchParams { q?: string }
+interface SearchParams { q?: string; agency?: string }
 
 export default async function AdminListingsPage({ searchParams }: { searchParams: SearchParams }) {
   const q = searchParams.q?.toLowerCase().trim() ?? "";
+  const agencyId = searchParams.agency ?? "";
 
-  const [{ data: allData }, { count: enquiryCount }] = await Promise.all([
-    supabaseAdmin
-      .from("developments")
-      .select("id, name, slug, suburb, state, is_published, is_featured, price_display, type, hero_image_url, developer:developers(name)")
-      .order("name"),
+  // If filtering by agency, look up their label
+  let agencyLabel = "";
+  if (agencyId) {
+    const { data: agency } = await supabaseAdmin
+      .from("agencies")
+      .select("name, org_name")
+      .eq("id", agencyId)
+      .single();
+    agencyLabel = agency?.org_name ?? agency?.name ?? "Agency";
+  }
+
+  let listingsQuery = supabaseAdmin
+    .from("developments")
+    .select("id, name, slug, suburb, state, is_published, is_featured, price_display, type, hero_image_url, tier, agency_id, developer:developers(name)")
+    .order("name");
+
+  if (agencyId) {
+    listingsQuery = listingsQuery.eq("agency_id", agencyId);
+  }
+
+  const [{ data: allData }, { count: enquiryCount }, { data: agenciesData }] = await Promise.all([
+    listingsQuery,
     supabaseAdmin.from("enquiries").select("*", { count: "exact", head: true }),
+    supabaseAdmin.from("agencies").select("id, name, org_name").order("org_name"),
   ]);
+
+  const agencies = (agenciesData ?? []).map((a: any) => ({
+    id: a.id,
+    label: a.org_name || a.name || "—",
+  }));
 
   const all = (allData ?? []) as any[];
   const filtered = q ? all.filter((l) => l.name.toLowerCase().includes(q)) : all;
@@ -42,7 +66,18 @@ export default async function AdminListingsPage({ searchParams }: { searchParams
 
   return (
     <div>
-      <h1 className="font-display font-light text-navy text-section-lg mb-6">Listing List</h1>
+      {agencyId && (
+        <div className="flex items-center gap-3 mb-4">
+          <Link href="/admin/agencies" className="font-sans text-sm text-ink/40 hover:text-ink transition-colors">
+            ← All Agencies
+          </Link>
+          <span className="text-ink/20">/</span>
+          <span className="font-sans text-sm text-ink">{agencyLabel}</span>
+        </div>
+      )}
+      <h1 className="font-display font-light text-navy text-section-lg mb-6">
+        {agencyId ? `Listings — ${agencyLabel}` : "Listing List"}
+      </h1>
 
       {/* Stats row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
@@ -125,27 +160,27 @@ export default async function AdminListingsPage({ searchParams }: { searchParams
 
       {/* Featured Listing */}
       {featured.length > 0 && (
-        <ListingSection title="FEATURED LISTING" listings={featured} />
+        <ListingSection title="FEATURED LISTING" listings={featured} agencies={agencies} />
       )}
 
       {/* Regular Listing */}
       {regular.length > 0 && (
-        <ListingSection title="LISTING" listings={regular} />
+        <ListingSection title="LISTING" listings={regular} agencies={agencies} />
       )}
 
       {/* Pending */}
       {pending.length > 0 && (
-        <ListingSection title="PENDING" listings={pending} />
+        <ListingSection title="PENDING" listings={pending} agencies={agencies} />
       )}
 
       {/* Cancelled */}
       {cancelled.length > 0 && (
-        <ListingSection title="CANCELLED" listings={cancelled} />
+        <ListingSection title="CANCELLED" listings={cancelled} agencies={agencies} />
       )}
 
       {/* Archived */}
       {archived.length > 0 && (
-        <ListingSection title="ARCHIVED" listings={archived} />
+        <ListingSection title="ARCHIVED" listings={archived} agencies={agencies} />
       )}
 
       {filtered.length === 0 && (
@@ -157,7 +192,9 @@ export default async function AdminListingsPage({ searchParams }: { searchParams
   );
 }
 
-function ListingSection({ title, listings }: { title: string; listings: any[] }) {
+type AgencyOption = { id: string; label: string };
+
+function ListingSection({ title, listings, agencies }: { title: string; listings: any[]; agencies: AgencyOption[] }) {
   return (
     <div className="mb-10">
       <h2 className="font-mono font-bold text-sm uppercase tracking-widest text-navy mb-0 pb-2 border-b-2 border-orange inline-block">
@@ -242,7 +279,11 @@ function ListingSection({ title, listings }: { title: string; listings: any[] })
                     slug={listing.slug}
                     isPublished={listing.is_published}
                     isFeatured={listing.is_featured}
-                    tier={null}
+                    tier={listing.tier ?? null}
+                    agencyId={listing.agency_id ?? null}
+                    orgName={listing.developer?.name ?? null}
+                    listingName={listing.name}
+                    agencies={agencies}
                   />
                 </td>
               </tr>

@@ -1,10 +1,21 @@
-export default function Page() {
+import { supabaseAdmin } from "@/lib/supabase/admin";
+import AgenciesTable from "./agencies-table";
+
+export default async function AdminAgenciesPage() {
+  const { data } = await supabaseAdmin
+    .from("agencies")
+    .select("id, name, email, org_name, mobile, total_active_listings, email_verified, portal_status")
+    .order("name", { ascending: true });
+
+  const agencies = data ?? [];
+
   return (
-    <div className="flex items-center justify-center h-64">
-      <div className="text-center">
-        <p className="text-sm font-bold uppercase tracking-widest text-gray-400 mb-2">Coming Soon</p>
-        <h1 className="text-2xl font-bold" style={{ color: "#1a2340" }}>All Agencies</h1>
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="font-display font-light text-navy text-section-lg">All Agencies</h1>
+        <p className="font-sans text-sm text-ink/40 uppercase tracking-widest">{agencies.length} total</p>
       </div>
+      <AgenciesTable agencies={agencies as any} />
     </div>
   );
 }

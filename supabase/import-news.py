@@ -1,8 +1,11 @@
 """
-Off The Plan — Import scraped_news/news.json into Supabase journal_articles
-===========================================================================
-Upserts each article with all fields into the journal_articles table
-using the Supabase REST API (service role key).
+Off The Plan — Import news articles into Supabase
+===================================================
+Reads scraped_news/news.json and upserts into journal_articles
+(category = 'News') using the Supabase REST API.
+
+Run after:
+    python supabase/scrape-news.py
 
 Requirements:
     pip install httpx
@@ -14,18 +17,15 @@ Usage:
 from __future__ import annotations
 
 import json
+import os
 import re
-import sys
 import time
+from datetime import datetime
 from pathlib import Path
 
 import httpx
 
-sys.stdout.reconfigure(encoding="utf-8")
-
-NEWS_JSON = Path("scraped_news/news.json")
-DELAY = 0.1
-
+# ── Config ────────────────────────────────────────────────────────────────────
 
 def read_env(path: str) -> dict[str, str]:
     env: dict[str, str] = {}
@@ -43,82 +43,85 @@ def read_env(path: str) -> dict[str, str]:
     return env
 
 
-def parse_date(s: str | None) -> str | None:
-    """Convert DD-MM-YYYY HH:MM:SS or ISO format to ISO date string."""
-    if not s:
-        return None
-    # Already ISO
-    if re.match(r"^\d{4}-\d{2}-\d{2}", s):
-        return s[:10]
-    # DD-MM-YYYY HH:MM:SS
-    m = re.match(r"^(\d{2})-(\d{2})-(\d{4})", s)
-    if m:
-        return f"{m.group(3)}-{m.group(2)}-{m.group(1)}"
-    return None
+env = read_env(".env.local")
+SUPABASE_URL      = (env.get("NEXT_PUBLIC_SUPABASE_URL") or "").rstrip("/")
+SERVICE_ROLE_KEY  = env.get("SUPABASE_SERVICE_ROLE_KEY") or ""
 
+if not SUPABASE_URL or not SERVICE_ROLE_KEY:
+    raise SystemExit("ERROR: Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env.local")
 
-ALLOWED = {
-    "title", "slug", "subtitle", "hero_image_url", "list_page_image_url",
-    "article_image_one", "article_image_two", "body_html",
-    "is_published", "published_at", "read_time_minutes",
-    "meta_title", "meta_content",
+HEADERS = {
+    "apikey": SERVICE_ROLE_KEY,
+    "Authorization": f"Bearer {SERVICE_ROLE_KEY}",
+    "Content-Type": "application/json",
 }
 
+INPUT_FILE = Path("scraped_news/news.json")
+BATCH_SIZE = 20
+DELAY      = 0.3
+
+
+# ── Main ─────────────────────────────────────────────────────────────────────
 
 def main() -> None:
-    if not NEWS_JSON.exists():
-        raise SystemExit(f"Not found: {NEWS_JSON}")
+    if not INPUT_FILE.exists():
+        raise SystemExit(f"Input file not found: {INPUT_FILE}\nRun scrape-news.py first.")
 
-    env = read_env(".env.local")
-    supabase_url = env.get("NEXT_PUBLIC_SUPABASE_URL", "").rstrip("/")
-    service_key = env.get("SUPABASE_SERVICE_ROLE_KEY", "")
+    with open(INPUT_FILE, encoding="utf-8") as f:
+        raw: list[dict] = json.load(f)
 
-    if not supabase_url or not service_key:
-        raise SystemExit("Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env.local")
-
-    with open(NEWS_JSON, encoding="utf-8") as f:
-        articles: list[dict] = json.load(f)
-
-    print(f"Loaded {len(articles)} articles from {NEWS_JSON}")
-
-    headers = {
-        "apikey": service_key,
-        "Authorization": f"Bearer {service_key}",
-        "Content-Type": "application/json",
-        "Prefer": "resolution=merge-duplicates",
-    }
-    endpoint = f"{supabase_url}/rest/v1/journal_articles?on_conflict=slug"
-
-    ok = 0
-    errors = 0
-
-    with httpx.Client(timeout=20) as client:
-        for i, article in enumerate(articles, 1):
-            row: dict = {k: v for k, v in article.items() if k in ALLOWED and v is not None}
-
-            # Normalise date
-            row["published_at"] = parse_date(row.get("published_at"))
-
-            # Ensure required fields
-            if not row.get("title") or not row.get("slug"):
-                print(f"  [{i}] Skip — missing title or slug")
+    def parse_date(val: str | None) -> str | None:
+        if not val:
+            return None
+        for fmt in [
+            "%d-%m-%Y %H:%M:%S",   # 15-05-2026 15:17:46  (old admin format)
+            "%Y-%m-%d %H:%M:%S",   # 2026-05-15 15:17:46
+            "%Y-%m-%dT%H:%M:%S",   # ISO
+            "%d/%m/%Y %H:%M:%S",
+            "%Y-%m-%d",
+        ]:
+            try:
+                return datetime.strptime(val.strip(), fmt).isoformat()
+            except ValueError:
                 continue
+        return None  # unrecognised format — omit rather than error
 
-            row["category"] = "News"
-            row["author"] = None
+    # Build records — always set category = "News", strip unknown keys
+    allowed = {"title", "slug", "hero_image_url", "body_html", "is_published", "published_at"}
+    records = []
+    for item in raw:
+        record = {k: v for k, v in item.items() if k in allowed}
+        record["category"] = "News"
+        # Convert date to ISO format Postgres accepts
+        record["published_at"] = parse_date(record.get("published_at"))
+        if not record.get("title") or not record.get("slug"):
+            continue
+        records.append(record)
 
-            r = client.post(endpoint, headers=headers, json=row)
+    print(f"Loaded {len(records)} news articles from {INPUT_FILE}")
 
-            if r.status_code in (200, 201):
-                ok += 1
-                print(f"  [{i}/{len(articles)}] OK: {row['title'][:60]}")
+    url = f"{SUPABASE_URL}/rest/v1/journal_articles?on_conflict=slug"
+    upsert_headers = {**HEADERS, "Prefer": "resolution=merge-duplicates,return=minimal"}
+
+    success = 0
+    failures = 0
+    batches = [records[i:i + BATCH_SIZE] for i in range(0, len(records), BATCH_SIZE)]
+
+    with httpx.Client(follow_redirects=True) as client:
+        for i, batch in enumerate(batches, 1):
+            print(f"Upserting batch {i}/{len(batches)} ({len(batch)} records) ...")
+            res = client.post(url, json=batch, headers=upsert_headers, timeout=30)
+            if res.status_code in (200, 201):
+                success += len(batch)
             else:
-                errors += 1
-                print(f"  [{i}/{len(articles)}] ERROR {r.status_code}: {r.text[:120]}")
+                print(f"  Batch failed: {res.status_code} {res.text[:300]}")
+                failures += len(batch)
+            if i < len(batches):
+                time.sleep(DELAY)
 
-            time.sleep(DELAY)
-
-    print(f"\nDone: {ok} upserted, {errors} errors")
+    print(f"\nDone: {success} upserted, {failures} failed")
+    if success > 0:
+        print("News articles are now in Supabase under category='News'.")
 
 
 if __name__ == "__main__":

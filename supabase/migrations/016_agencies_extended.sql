@@ -1,0 +1,17 @@
+ALTER TABLE agencies
+  ADD COLUMN IF NOT EXISTS first_name      text,
+  ADD COLUMN IF NOT EXISTS last_name       text,
+  ADD COLUMN IF NOT EXISTS org_email       text,
+  ADD COLUMN IF NOT EXISTS org_phone       text,
+  ADD COLUMN IF NOT EXISTS about           text,
+  ADD COLUMN IF NOT EXISTS profile_pic     text,
+  ADD COLUMN IF NOT EXISTS org_logo_url    text,
+  ADD COLUMN IF NOT EXISTS dev_logo_url    text,
+  ADD COLUMN IF NOT EXISTS facebook_url    text,
+  ADD COLUMN IF NOT EXISTS twitter_url     text,
+  ADD COLUMN IF NOT EXISTS instagram_url   text,
+  ADD COLUMN IF NOT EXISTS linkedin_url    text,
+  ADD COLUMN IF NOT EXISTS pinterest_url   text,
+  ADD COLUMN IF NOT EXISTS youtube_url     text,
+  ADD COLUMN IF NOT EXISTS website_url     text,
+  ADD COLUMN IF NOT EXISTS is_developer    boolean NOT NULL DEFAULT false;
