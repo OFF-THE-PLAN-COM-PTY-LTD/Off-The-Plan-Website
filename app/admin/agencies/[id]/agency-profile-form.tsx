@@ -78,6 +78,9 @@ export default function AgencyProfileForm({ agency }: { agency: Agency }) {
     personal_postcode: agency.personal_postcode ?? "",
   });
 
+  const [newPassword, setNewPassword] = useState("");
+  const [savingPassword, setSavingPassword] = useState(false);
+
   const [company, setCompany] = useState({
     org_name: agency.org_name ?? "",
     about: agency.about ?? "",
@@ -103,11 +106,11 @@ export default function AgencyProfileForm({ agency }: { agency: Agency }) {
   const [savingPersonal, setSavingPersonal] = useState(false);
   const [savingCompany, setSavingCompany] = useState(false);
   const [savingSocials, setSavingSocials] = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
 
-  function showToast(msg: string) {
-    setToast(msg);
-    setTimeout(() => setToast(null), 3000);
+  function showToast(msg: string, ok = true) {
+    setToast({ msg, ok });
+    setTimeout(() => setToast(null), 3500);
   }
 
   async function save(fields: Record<string, string>, setSaving: (v: boolean) => void) {
@@ -118,23 +121,44 @@ export default function AgencyProfileForm({ agency }: { agency: Agency }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: agency.id, ...fields }),
       });
-      if (!res.ok) throw new Error("Failed");
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? "Failed");
       showToast("Changes saved.");
       startTransition(() => router.refresh());
-    } catch {
-      showToast("Something went wrong. Please try again.");
+    } catch (e: any) {
+      showToast(e.message ?? "Something went wrong.", false);
     } finally {
       setSaving(false);
     }
   }
 
+  async function changePassword() {
+    if (!newPassword) return;
+    setSavingPassword(true);
+    try {
+      const res = await fetch("/api/admin/agencies/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: agency.id, password: newPassword }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? "Failed");
+      showToast("Password updated.");
+      setNewPassword("");
+    } catch (e: any) {
+      showToast(e.message ?? "Something went wrong.", false);
+    } finally {
+      setSavingPassword(false);
+    }
+  }
+
   return (
-    <div className="max-w-3xl relative">
+    <div className="relative">
 
       {/* Toast */}
       {toast && (
-        <div className="fixed top-4 right-4 z-50 bg-navy text-white font-sans text-sm px-4 py-2 shadow-lg">
-          {toast}
+        <div className={`fixed top-4 right-4 z-50 font-sans text-sm px-4 py-2 shadow-lg ${toast.ok ? "bg-navy text-white" : "bg-red-600 text-white"}`}>
+          {toast.msg}
         </div>
       )}
 
@@ -147,11 +171,7 @@ export default function AgencyProfileForm({ agency }: { agency: Agency }) {
       <div className="bg-white border border-line p-5 mb-4 flex items-center gap-4">
         {agency.profile_pic ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={agency.profile_pic}
-            alt={agency.name ?? ""}
-            className="w-16 h-16 rounded-full object-cover border border-line"
-          />
+          <img src={agency.profile_pic} alt={agency.name ?? ""} className="w-16 h-16 rounded-full object-cover border border-line" />
         ) : (
           <div className="w-16 h-16 rounded-full bg-cream-alt border border-line flex items-center justify-center font-display text-navy text-2xl font-bold">
             {(agency.name ?? "?")[0].toUpperCase()}
@@ -161,88 +181,95 @@ export default function AgencyProfileForm({ agency }: { agency: Agency }) {
           <p className="font-sans font-semibold text-ink text-base leading-tight">{agency.name ?? "—"}</p>
           {agency.email && <p className="font-sans text-sm text-ink/60 mt-0.5">{agency.email}</p>}
           <div className="flex gap-2 mt-2">
-            <button className="font-sans text-xs font-semibold px-3 py-1 border border-black bg-white hover:bg-cream-alt transition-colors uppercase tracking-wide">
-              Take a Photo
-            </button>
-            <button className="font-sans text-xs font-semibold px-3 py-1 border border-black bg-white hover:bg-cream-alt transition-colors uppercase tracking-wide">
-              Upload Image
-            </button>
+            <button className="font-sans text-xs font-semibold px-3 py-1 border border-black bg-white hover:bg-cream-alt transition-colors uppercase tracking-wide">Take a Photo</button>
+            <button className="font-sans text-xs font-semibold px-3 py-1 border border-black bg-white hover:bg-cream-alt transition-colors uppercase tracking-wide">Upload Image</button>
           </div>
         </div>
       </div>
 
-      {/* Personal Details */}
-      <div className="bg-white border border-line mb-4">
-        <div className="px-5 py-3 border-b border-line">
-          <h2 className="font-sans text-xs font-semibold uppercase tracking-widest text-ink">Personal Details</h2>
-        </div>
-        <div className="px-5 py-4 space-y-3">
-          <div className="grid grid-cols-2 gap-3">
-            <FormField label="First Name" value={personal.first_name} onChange={v => setPersonal(p => ({ ...p, first_name: v }))} />
-            <FormField label="Last Name" value={personal.last_name} onChange={v => setPersonal(p => ({ ...p, last_name: v }))} />
-          </div>
-          <FormField label="Email Address" value={personal.email} onChange={v => setPersonal(p => ({ ...p, email: v }))} type="email" />
-          <FormField label="Phone" value={personal.mobile} onChange={v => setPersonal(p => ({ ...p, mobile: v }))} />
-          <FormField label="Street Address" value={personal.personal_street_address} onChange={v => setPersonal(p => ({ ...p, personal_street_address: v }))} />
-          <div className="grid grid-cols-2 gap-3">
-            <FormField label="Country" value={personal.personal_country} onChange={v => setPersonal(p => ({ ...p, personal_country: v }))} />
-            <FormField label="State" value={personal.personal_state} onChange={v => setPersonal(p => ({ ...p, personal_state: v }))} />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <FormField label="City" value={personal.personal_city} onChange={v => setPersonal(p => ({ ...p, personal_city: v }))} />
-            <FormField label="PostCode" value={personal.personal_postcode} onChange={v => setPersonal(p => ({ ...p, personal_postcode: v }))} />
-          </div>
+      {/* Two-column: Personal | Company */}
+      <div className="grid grid-cols-2 gap-4 mb-4">
 
-          {/* Change password */}
-          <div className="border-t border-line pt-3 mt-3">
-            <p className="font-sans text-xs text-ink/40 uppercase tracking-wider mb-2">Change Password</p>
-            <input
-              type="password"
-              placeholder="New password"
-              className="w-full border border-line px-3 py-2 text-sm font-sans text-ink focus:outline-none focus:border-navy"
-              disabled
-              title="Password changes must be made through the agency's own portal"
-            />
-            <p className="font-sans text-xs text-ink/30 mt-1">Password changes must be initiated by the agency user from their own portal.</p>
+        {/* Personal Details */}
+        <div className="bg-white border border-line flex flex-col">
+          <div className="px-5 py-3 border-b border-line">
+            <h2 className="font-sans text-xs font-semibold uppercase tracking-widest text-ink">Personal Details</h2>
           </div>
+          <div className="px-5 py-4 space-y-3 flex-1">
+            <div className="grid grid-cols-2 gap-3">
+              <FormField label="First Name" value={personal.first_name} onChange={v => setPersonal(p => ({ ...p, first_name: v }))} />
+              <FormField label="Last Name" value={personal.last_name} onChange={v => setPersonal(p => ({ ...p, last_name: v }))} />
+            </div>
+            <FormField label="Email Address" value={personal.email} onChange={v => setPersonal(p => ({ ...p, email: v }))} type="email" />
+            <FormField label="Phone" value={personal.mobile} onChange={v => setPersonal(p => ({ ...p, mobile: v }))} />
+            <FormField label="Street Address" value={personal.personal_street_address} onChange={v => setPersonal(p => ({ ...p, personal_street_address: v }))} />
+            <div className="grid grid-cols-2 gap-3">
+              <FormField label="Country" value={personal.personal_country} onChange={v => setPersonal(p => ({ ...p, personal_country: v }))} />
+              <FormField label="State" value={personal.personal_state} onChange={v => setPersonal(p => ({ ...p, personal_state: v }))} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <FormField label="City" value={personal.personal_city} onChange={v => setPersonal(p => ({ ...p, personal_city: v }))} />
+              <FormField label="PostCode" value={personal.personal_postcode} onChange={v => setPersonal(p => ({ ...p, personal_postcode: v }))} />
+            </div>
 
-          <div className="flex justify-end pt-2">
+            {/* Change password */}
+            <div className="border-t border-line pt-3">
+              <p className="font-sans text-xs text-ink/40 uppercase tracking-wider mb-2">Change Password</p>
+              <div className="flex gap-2">
+                <input
+                  type="password"
+                  placeholder="New password (min. 6 chars)"
+                  value={newPassword}
+                  onChange={e => setNewPassword(e.target.value)}
+                  className="flex-1 border border-line px-3 py-2 text-sm font-sans text-ink focus:outline-none focus:border-navy"
+                />
+                <button
+                  onClick={changePassword}
+                  disabled={savingPassword || newPassword.length < 6}
+                  className="font-sans text-xs font-semibold px-3 py-2 bg-black text-white uppercase tracking-wide hover:bg-ink/80 transition-colors disabled:opacity-40"
+                >
+                  {savingPassword ? "..." : "Set"}
+                </button>
+              </div>
+            </div>
+          </div>
+          <div className="px-5 py-3 border-t border-line flex justify-end">
             <MakeChangesButton saving={savingPersonal} onClick={() => save(personal, setSavingPersonal)} />
           </div>
         </div>
-      </div>
 
-      {/* Company Details */}
-      <div className="bg-white border border-line mb-4">
-        <div className="px-5 py-3 border-b border-line">
-          <h2 className="font-sans text-xs font-semibold uppercase tracking-widest text-ink">Company Details</h2>
-        </div>
-        <div className="px-5 py-4 space-y-3">
-          <FormField label="Business Name" value={company.org_name} onChange={v => setCompany(c => ({ ...c, org_name: v }))} />
-          <div>
-            <p className="font-sans text-xs text-ink/40 uppercase tracking-wider mb-1">About</p>
-            <textarea
-              value={company.about}
-              onChange={e => setCompany(c => ({ ...c, about: e.target.value }))}
-              rows={4}
-              className="w-full border border-line px-3 py-2 text-sm font-sans text-ink focus:outline-none focus:border-navy resize-y"
-            />
+        {/* Company Details */}
+        <div className="bg-white border border-line flex flex-col">
+          <div className="px-5 py-3 border-b border-line">
+            <h2 className="font-sans text-xs font-semibold uppercase tracking-widest text-ink">Company Details</h2>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <FormField label="Email Address (if different)" value={company.org_email} onChange={v => setCompany(c => ({ ...c, org_email: v }))} type="email" />
-            <FormField label="Phone" value={company.org_phone} onChange={v => setCompany(c => ({ ...c, org_phone: v }))} />
+          <div className="px-5 py-4 space-y-3 flex-1">
+            <FormField label="Business Name" value={company.org_name} onChange={v => setCompany(c => ({ ...c, org_name: v }))} />
+            <div>
+              <p className="font-sans text-xs text-ink/40 uppercase tracking-wider mb-1">About</p>
+              <textarea
+                value={company.about}
+                onChange={e => setCompany(c => ({ ...c, about: e.target.value }))}
+                rows={4}
+                className="w-full border border-line px-3 py-2 text-sm font-sans text-ink focus:outline-none focus:border-navy resize-y"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <FormField label="Email Address (if different)" value={company.org_email} onChange={v => setCompany(c => ({ ...c, org_email: v }))} type="email" />
+              <FormField label="Phone" value={company.org_phone} onChange={v => setCompany(c => ({ ...c, org_phone: v }))} />
+            </div>
+            <FormField label="Street Address" value={company.org_street_address} onChange={v => setCompany(c => ({ ...c, org_street_address: v }))} />
+            <FormField label="Street Address 2" value={company.org_street_address_2} onChange={v => setCompany(c => ({ ...c, org_street_address_2: v }))} />
+            <div className="grid grid-cols-2 gap-3">
+              <FormField label="Country" value={company.org_country} onChange={v => setCompany(c => ({ ...c, org_country: v }))} />
+              <FormField label="State" value={company.org_state} onChange={v => setCompany(c => ({ ...c, org_state: v }))} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <FormField label="City" value={company.org_city} onChange={v => setCompany(c => ({ ...c, org_city: v }))} />
+              <FormField label="PostCode" value={company.org_postcode} onChange={v => setCompany(c => ({ ...c, org_postcode: v }))} />
+            </div>
           </div>
-          <FormField label="Street Address" value={company.org_street_address} onChange={v => setCompany(c => ({ ...c, org_street_address: v }))} />
-          <FormField label="Street Address 2" value={company.org_street_address_2} onChange={v => setCompany(c => ({ ...c, org_street_address_2: v }))} />
-          <div className="grid grid-cols-2 gap-3">
-            <FormField label="Country" value={company.org_country} onChange={v => setCompany(c => ({ ...c, org_country: v }))} />
-            <FormField label="State" value={company.org_state} onChange={v => setCompany(c => ({ ...c, org_state: v }))} />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <FormField label="City" value={company.org_city} onChange={v => setCompany(c => ({ ...c, org_city: v }))} />
-            <FormField label="PostCode" value={company.org_postcode} onChange={v => setCompany(c => ({ ...c, org_postcode: v }))} />
-          </div>
-          <div className="flex justify-end pt-2">
+          <div className="px-5 py-3 border-t border-line flex justify-end">
             <MakeChangesButton saving={savingCompany} onClick={() => save(company, setSavingCompany)} />
           </div>
         </div>
@@ -262,9 +289,7 @@ export default function AgencyProfileForm({ agency }: { agency: Agency }) {
             ) : (
               <div className="h-24 flex items-center justify-center text-ink/25 text-sm font-sans italic mb-3">No logo uploaded</div>
             )}
-            <button className="font-sans text-xs font-semibold px-4 py-1.5 border border-black bg-white hover:bg-cream-alt transition-colors uppercase tracking-wide">
-              Upload Logo
-            </button>
+            <button className="font-sans text-xs font-semibold px-4 py-1.5 border border-black bg-white hover:bg-cream-alt transition-colors uppercase tracking-wide">Upload Logo</button>
           </div>
           <div className="p-5 text-center">
             <p className="font-sans text-xs font-semibold uppercase tracking-widest text-ink mb-3">Developer Logo</p>
@@ -274,33 +299,29 @@ export default function AgencyProfileForm({ agency }: { agency: Agency }) {
             ) : (
               <div className="h-24 flex items-center justify-center text-ink/25 text-sm font-sans italic mb-3">No logo uploaded</div>
             )}
-            <button className="font-sans text-xs font-semibold px-4 py-1.5 border border-black bg-white hover:bg-cream-alt transition-colors uppercase tracking-wide">
-              Upload Logo
-            </button>
+            <button className="font-sans text-xs font-semibold px-4 py-1.5 border border-black bg-white hover:bg-cream-alt transition-colors uppercase tracking-wide">Upload Logo</button>
           </div>
         </div>
       </div>
 
       {/* Social Reach */}
-      <div className="bg-white border border-line mb-4">
+      <div className="bg-white border border-line">
         <div className="px-5 py-3 border-b border-line">
           <h2 className="font-sans text-xs font-semibold uppercase tracking-widest text-ink">Social Reach</h2>
         </div>
-        <div className="divide-y divide-line">
-          {SOCIAL_PLATFORMS.map((platform) => (
-            <div key={platform.key} className="flex items-center gap-3 px-5 py-3">
-              <div className="w-5 shrink-0">{platform.icon}</div>
-              <input
-                type="url"
-                placeholder={platform.label}
-                value={(socials as any)[platform.key]}
-                onChange={e => setSocials(s => ({ ...s, [platform.key]: e.target.value }))}
-                className="flex-1 border border-line px-3 py-1.5 text-sm font-sans text-ink focus:outline-none focus:border-navy"
-              />
-            </div>
-          ))}
+        <div className="grid grid-cols-2 divide-x divide-line">
+          <div className="divide-y divide-line">
+            {SOCIAL_PLATFORMS.slice(0, 3).map(platform => (
+              <SocialRow key={platform.key} platform={platform} value={(socials as any)[platform.key]} onChange={v => setSocials(s => ({ ...s, [platform.key]: v }))} />
+            ))}
+          </div>
+          <div className="divide-y divide-line">
+            {SOCIAL_PLATFORMS.slice(3).map(platform => (
+              <SocialRow key={platform.key} platform={platform} value={(socials as any)[platform.key]} onChange={v => setSocials(s => ({ ...s, [platform.key]: v }))} />
+            ))}
+          </div>
         </div>
-        <div className="px-5 py-3 flex justify-end border-t border-line">
+        <div className="px-5 py-3 border-t border-line flex justify-end">
           <MakeChangesButton saving={savingSocials} onClick={() => save(socials, setSavingSocials)} />
         </div>
       </div>
@@ -308,17 +329,22 @@ export default function AgencyProfileForm({ agency }: { agency: Agency }) {
   );
 }
 
-function FormField({
-  label,
-  value,
-  onChange,
-  type = "text",
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  type?: string;
-}) {
+function SocialRow({ platform, value, onChange }: { platform: any; value: string; onChange: (v: string) => void }) {
+  return (
+    <div className="flex items-center gap-3 px-5 py-3">
+      <div className="w-5 shrink-0">{platform.icon}</div>
+      <input
+        type="url"
+        placeholder={platform.label}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        className="flex-1 border border-line px-3 py-1.5 text-sm font-sans text-ink focus:outline-none focus:border-navy"
+      />
+    </div>
+  );
+}
+
+function FormField({ label, value, onChange, type = "text" }: { label: string; value: string; onChange: (v: string) => void; type?: string }) {
   return (
     <div>
       <p className="font-sans text-xs text-ink/40 uppercase tracking-wider mb-1">{label}</p>
