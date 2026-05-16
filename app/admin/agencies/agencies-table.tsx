@@ -135,18 +135,24 @@ export default function AgenciesTable({ agencies }: { agencies: Agency[] }) {
                 <td className="px-4 py-4 font-sans text-sm text-ink/40">{i + 1}</td>
                 <td className="px-4 py-4">
                   <div className="space-y-0.5">
-                    <p className="font-sans text-sm font-semibold text-ink">{a.name ?? "—"}</p>
+                    <p className="font-sans text-sm text-ink">
+                      <span className="font-semibold">Name:</span> {a.name ?? "—"}
+                    </p>
                     {a.email && (
-                      <p className="font-sans text-xs text-blue-600">{a.email}</p>
+                      <p className="font-sans text-xs text-ink/70">
+                        <span className="font-semibold">Email:</span>{" "}
+                        <a href={`mailto:${a.email}`} className="text-blue-600 hover:underline">{a.email}</a>
+                      </p>
                     )}
                     {a.org_name && (
-                      <p className="font-sans text-xs text-ink/60">
-                        <span className="text-ink/40">Org:</span> {a.org_name}
+                      <p className="font-sans text-xs text-ink/70">
+                        <span className="font-semibold">Org. Name:</span>{" "}
+                        <span className="text-blue-600">{a.org_name}</span>
                       </p>
                     )}
                     {a.mobile && (
-                      <p className="font-sans text-xs text-ink/60">
-                        <span className="text-ink/40">Mobile:</span> {a.mobile}
+                      <p className="font-sans text-xs text-ink/70">
+                        <span className="font-semibold">Mobile:</span> {a.mobile}
                       </p>
                     )}
                   </div>
