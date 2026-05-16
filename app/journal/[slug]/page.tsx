@@ -93,7 +93,7 @@ export default async function ArticlePage({ params }: Props) {
         {/* Body */}
         <div className="container-padded max-w-3xl pb-16">
           <div
-            className="prose prose-lg font-sans text-ink/80 leading-relaxed"
+            className="article-body"
             dangerouslySetInnerHTML={{ __html: article.body_html ?? "" }}
           />
         </div>

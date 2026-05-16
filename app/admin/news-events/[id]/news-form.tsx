@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ImageUpload } from "@/components/admin/image-upload";
+import { RichTextEditor } from "@/components/admin/rich-text-editor";
 
 type Article = {
   id: string;
@@ -155,13 +156,7 @@ export function NewsForm({ id, existing }: Props) {
             {/* Body content */}
             <div className="bg-white border border-line p-6">
               <label className="block font-sans text-xs font-semibold uppercase tracking-wider text-ink/50 mb-2">Content *</label>
-              <textarea
-                value={bodyHtml}
-                onChange={(e) => setBodyHtml(e.target.value)}
-                rows={18}
-                className="w-full border border-line px-3 py-2 font-mono text-sm text-ink focus:outline-none focus:border-orange resize-y"
-                placeholder="<p>Article content…</p>"
-              />
+              <RichTextEditor value={bodyHtml} onChange={setBodyHtml} minHeight={420} />
               <p className="font-mono text-[10px] text-ink/30 mt-1">
                 Chars: {bodyHtml.length} · Words: {bodyHtml.replace(/<[^>]+>/g, " ").split(/\s+/).filter(Boolean).length}
               </p>

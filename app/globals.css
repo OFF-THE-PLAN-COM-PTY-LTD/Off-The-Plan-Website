@@ -111,4 +111,90 @@
   .listing-description b {
     @apply font-semibold text-ink;
   }
+
+  /* Rich text editor (TipTap) content area */
+  .ProseMirror {
+    @apply outline-none;
+  }
+  .ProseMirror h2 {
+    @apply font-sans font-semibold text-navy text-[1.125rem] leading-snug mt-6 mb-2;
+  }
+  .ProseMirror h3 {
+    @apply font-sans font-semibold text-navy text-[1rem] leading-snug mt-5 mb-2;
+  }
+  .ProseMirror p {
+    @apply font-sans text-[14px] text-ink/85 leading-relaxed my-3;
+  }
+  .ProseMirror ul {
+    @apply list-disc pl-6 my-3 space-y-1;
+  }
+  .ProseMirror ol {
+    @apply list-decimal pl-6 my-3 space-y-1;
+  }
+  .ProseMirror li {
+    @apply font-sans text-[14px] text-ink/85 leading-relaxed;
+  }
+  .ProseMirror strong,
+  .ProseMirror b {
+    @apply font-semibold text-ink;
+  }
+  .ProseMirror em,
+  .ProseMirror i {
+    @apply italic;
+  }
+  .ProseMirror a {
+    @apply text-orange underline hover:text-orange/80;
+  }
+  .ProseMirror blockquote {
+    @apply border-l-4 border-orange pl-4 my-4 italic text-ink/70;
+  }
+  .ProseMirror hr {
+    @apply border-t border-line my-6;
+  }
+  .ProseMirror img {
+    @apply max-w-full h-auto my-4 rounded;
+  }
+  .ProseMirror code {
+    @apply bg-cream-alt px-1.5 py-0.5 rounded font-mono text-[12px];
+  }
+
+  /* Public-facing article body — same content rendered to readers */
+  .article-body h2 {
+    @apply font-sans font-semibold text-navy text-[1.4rem] leading-snug mt-8 mb-3;
+  }
+  .article-body h3 {
+    @apply font-sans font-semibold text-navy text-[1.15rem] leading-snug mt-6 mb-2;
+  }
+  .article-body p {
+    @apply font-sans text-[16px] text-ink/85 leading-[1.75] my-4;
+  }
+  .article-body ul {
+    @apply list-disc pl-6 my-4 space-y-2;
+  }
+  .article-body ol {
+    @apply list-decimal pl-6 my-4 space-y-2;
+  }
+  .article-body li {
+    @apply font-sans text-[16px] text-ink/85 leading-relaxed;
+  }
+  .article-body strong,
+  .article-body b {
+    @apply font-semibold text-ink;
+  }
+  .article-body em,
+  .article-body i {
+    @apply italic;
+  }
+  .article-body a {
+    @apply text-orange underline hover:text-orange/80;
+  }
+  .article-body blockquote {
+    @apply border-l-4 border-orange pl-5 my-5 italic text-ink/70;
+  }
+  .article-body hr {
+    @apply border-t border-line my-8;
+  }
+  .article-body img {
+    @apply max-w-full h-auto my-5 rounded;
+  }
 }
