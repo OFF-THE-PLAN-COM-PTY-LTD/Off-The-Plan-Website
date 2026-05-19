@@ -16,7 +16,7 @@ export default async function AdminListingEditPage({ params }: Props) {
       .order("full_name"),
     isNew
       ? Promise.resolve({ data: null, error: null })
-      : supabaseAdmin.from("developments").select("*").eq("id", params.id).single(),
+      : supabaseAdmin.from("developments").select("*").eq("id", params.id).maybeSingle(),
     isNew
       ? Promise.resolve({ data: [], error: null })
       : supabaseAdmin

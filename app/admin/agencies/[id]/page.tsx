@@ -8,7 +8,7 @@ export default async function AgencyProfilePage({ params }: { params: { id: stri
     .from("agencies")
     .select("*")
     .eq("id", params.id)
-    .single();
+    .maybeSingle();
 
   if (!agency) notFound();
 

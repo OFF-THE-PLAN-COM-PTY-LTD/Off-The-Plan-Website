@@ -16,7 +16,7 @@ export default async function AdminListingsPage({ searchParams }: { searchParams
       .from("agencies")
       .select("name, org_name")
       .eq("id", agencyId)
-      .single();
+      .maybeSingle();
     agencyLabel = agency?.org_name ?? agency?.name ?? "Agency";
   }
 
@@ -57,6 +57,10 @@ export default async function AdminListingsPage({ searchParams }: { searchParams
   const cancelledCount = all.filter((l) => l.status === "Cancelled").length;
   const archivedCount = all.filter((l) => l.status === "Archived").length;
 
+  const totalViews = all.reduce((sum, l) => sum + (l.view_count ?? 0), 0);
+  const totalPhoneClicks = all.reduce((sum, l) => sum + (l.phone_click_count ?? 0), 0);
+  const totalShares = all.reduce((sum, l) => sum + (l.share_count ?? 0), 0);
+
   const stats = [
     { label: "All Listing", count: totalCount },
     { label: "Pending", count: pendingCount },
@@ -95,7 +99,7 @@ export default async function AdminListingsPage({ searchParams }: { searchParams
         <div className="bg-white border border-line p-5 flex items-center justify-between">
           <div>
             <p className="font-sans text-sm text-ink/60 mb-1">Total Views</p>
-            <p className="font-sans text-xl font-semibold text-orange">0</p>
+            <p className="font-sans text-xl font-semibold text-orange">{totalViews.toLocaleString()}</p>
           </div>
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-navy/20">
             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" />
@@ -115,7 +119,7 @@ export default async function AdminListingsPage({ searchParams }: { searchParams
         <div className="bg-white border border-line p-5 flex items-center justify-between">
           <div>
             <p className="font-sans text-sm text-ink/60 mb-1">Phone Clicks</p>
-            <p className="font-sans text-xl font-semibold text-orange">0</p>
+            <p className="font-sans text-xl font-semibold text-orange">{totalPhoneClicks.toLocaleString()}</p>
           </div>
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-navy/20">
             <path d="M15.05 5A5 5 0 0119 8.95M15.05 1A9 9 0 0123 8.94m-1 7.98v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.8 19.79 19.79 0 01.22 1.18 2 2 0 012.18 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.09a16 16 0 006 6z" />
@@ -125,7 +129,7 @@ export default async function AdminListingsPage({ searchParams }: { searchParams
         <div className="bg-white border border-line p-5 flex items-center justify-between">
           <div>
             <p className="font-sans text-sm text-ink/60 mb-1">Total Share</p>
-            <p className="font-sans text-xl font-semibold text-orange">0</p>
+            <p className="font-sans text-xl font-semibold text-orange">{totalShares.toLocaleString()}</p>
           </div>
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-navy/20">
             <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />

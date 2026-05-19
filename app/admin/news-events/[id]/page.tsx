@@ -19,7 +19,7 @@ export default async function NewsEditPage({ params }: Props) {
       .select("id, title, slug, subtitle, hero_image_url, list_page_image_url, article_image_one, article_image_two, body_html, is_published, published_at, read_time_minutes, meta_title, meta_content")
       .eq("id", params.id)
       .eq("category", "News")
-      .single();
+      .maybeSingle();
     if (!data) notFound();
     existing = data;
   }

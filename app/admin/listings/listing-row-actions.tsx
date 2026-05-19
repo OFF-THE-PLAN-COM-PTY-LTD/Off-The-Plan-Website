@@ -26,6 +26,8 @@ export function ListingRowActions({ id, slug, isPublished, isFeatured, tier, age
   const [selectedAgency, setSelectedAgency] = useState(agencyId ?? "");
   const [agencySearch, setAgencySearch] = useState("");
   const [moving, setMoving] = useState(false);
+  const [showInactivate, setShowInactivate] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
 
   async function patch(fields: Record<string, unknown>) {
     setLoading(true);
@@ -108,7 +110,14 @@ export function ListingRowActions({ id, slug, isPublished, isFeatured, tier, age
         {/* Row 2: Inactivate + Feature */}
         <div className="flex gap-1.5">
           <button
-            onClick={() => patch({ is_published: !isPublished })}
+            onClick={() => {
+              if (isPublished) {
+                setConfirmText("");
+                setShowInactivate(true);
+              } else {
+                patch({ is_published: true });
+              }
+            }}
             disabled={loading}
             className={`flex-1 font-mono text-[10px] uppercase tracking-widest px-2 py-1.5 border transition-colors disabled:opacity-50 ${
               isPublished
@@ -181,6 +190,61 @@ export function ListingRowActions({ id, slug, isPublished, isFeatured, tier, age
                 className="font-sans text-sm px-4 py-2 bg-black text-white font-semibold disabled:opacity-40 hover:bg-ink/80 transition-colors"
               >
                 {moving ? "Moving..." : "Move Listing"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Inactivate confirmation modal */}
+      {showInactivate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white border border-line w-full max-w-md p-6 shadow-lg">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-sans font-semibold text-navy text-base">Inactivate Listing</h2>
+              <button
+                onClick={() => setShowInactivate(false)}
+                className="text-ink/40 hover:text-ink text-lg leading-none"
+              >
+                ×
+              </button>
+            </div>
+
+            <p className="font-sans text-sm text-ink mb-2">
+              You&apos;re about to inactivate{" "}
+              <span className="font-semibold text-navy">{listingName}</span>. It
+              will be hidden from the public site immediately.
+            </p>
+            <p className="font-sans text-sm text-ink/60 mb-4">
+              Type <span className="font-mono font-semibold text-red-700">INACTIVATE</span>{" "}
+              below to confirm.
+            </p>
+
+            <input
+              type="text"
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              placeholder="Type INACTIVATE"
+              autoFocus
+              className="w-full border border-line px-3 py-2 text-sm font-sans text-ink focus:outline-none focus:border-red-500 mb-4"
+            />
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowInactivate(false)}
+                className="font-sans text-sm px-4 py-2 border border-line text-ink/60 hover:bg-cream-alt transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  setShowInactivate(false);
+                  await patch({ is_published: false });
+                }}
+                disabled={confirmText !== "INACTIVATE" || loading}
+                className="font-sans text-sm px-4 py-2 bg-black text-white font-semibold disabled:opacity-40 hover:bg-ink/80 transition-colors"
+              >
+                {loading ? "Inactivating..." : "Inactivate Listing"}
               </button>
             </div>
           </div>

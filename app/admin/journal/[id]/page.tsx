@@ -17,7 +17,7 @@ export default async function AdminJournalEditPage({ params }: Props) {
       .from("journal_articles")
       .select("*")
       .eq("id", params.id)
-      .single();
+      .maybeSingle();
     if (!data) notFound();
     existing = data as unknown as JournalArticle;
   }
