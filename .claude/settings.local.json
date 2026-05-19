@@ -21,7 +21,13 @@
       "Bash(git checkout *)",
       "Bash(git merge *)",
       "mcp__Claude_in_Chrome__list_connected_browsers",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(git remote *)",
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Bash(git reset *)",
+      "Bash(grep -r \"list_image\\\\|thumbnail\" supabase/ -l)",
+      "Bash(grep \"hero_image_url\\\\|list_image\\\\|thumbnail\" types/journal.ts)"
     ]
   }
 }

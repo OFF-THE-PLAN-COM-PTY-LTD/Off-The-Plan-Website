@@ -66,7 +66,7 @@ export default async function MapPage({ searchParams }: Props) {
               className="font-mono text-label-lg bg-white/5 border border-white/10 text-ink-light px-3 py-2 outline-none cursor-pointer"
             >
               <option value="" className="bg-navy">All states</option>
-              {["VIC", "NSW", "QLD", "WA", "SA"].map((s) => (
+              {["ACT", "NSW", "NT", "QLD", "SA", "TAS", "VIC", "WA"].map((s) => (
                 <option key={s} value={s} className="bg-navy">{s}</option>
               ))}
             </select>
@@ -76,7 +76,7 @@ export default async function MapPage({ searchParams }: Props) {
               className="font-mono text-label-lg bg-white/5 border border-white/10 text-ink-light px-3 py-2 outline-none cursor-pointer"
             >
               <option value="" className="bg-navy">All types</option>
-              {["Apartments", "Townhouses", "Houses", "Penthouses"].map((t) => (
+              {["New Apartments", "Townhouses", "Land and Estates", "Commercial", "Houses", "New Home Design"].map((t) => (
                 <option key={t} value={t} className="bg-navy">{t}</option>
               ))}
             </select>

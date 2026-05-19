@@ -27,6 +27,17 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: "Invalid portal_status" }, { status: 400 });
     }
 
+    // Validate email format if present — bad input would silently desync the
+    // agencies row from the linked Supabase Auth user (line 60 calls
+    // updateUserById with this value).
+    const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if ("email" in fields && fields.email != null && fields.email !== "" && !EMAIL_RE.test(fields.email)) {
+      return NextResponse.json({ error: "Invalid email format" }, { status: 400 });
+    }
+    if ("org_email" in fields && fields.org_email != null && fields.org_email !== "" && !EMAIL_RE.test(fields.org_email)) {
+      return NextResponse.json({ error: "Invalid organisation email format" }, { status: 400 });
+    }
+
     const allowed = [
       "portal_status",
       "first_name", "last_name", "email", "mobile",

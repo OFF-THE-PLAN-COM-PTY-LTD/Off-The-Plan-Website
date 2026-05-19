@@ -2,6 +2,13 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { requireMemberOrAdmin } from "@/lib/supabase/auth-guards";
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+function validEmailOrNull(value: unknown): { ok: true; value: string | null } | { ok: false } {
+  if (value == null || value === "") return { ok: true, value: null };
+  if (typeof value !== "string" || !EMAIL_RE.test(value)) return { ok: false };
+  return { ok: true, value };
+}
+
 async function ownsListing(userId: string, developmentId: string) {
   const { data } = await supabaseAdmin
     .from("developments")
@@ -32,9 +39,13 @@ export async function POST(req: Request) {
     if (!auth.isAdmin && !(await ownsListing(auth.user.id, development_id))) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
+    const emailCheck = validEmailOrNull(email);
+    if (!emailCheck.ok) {
+      return NextResponse.json({ error: "Invalid email format" }, { status: 400 });
+    }
     const { data, error } = await supabaseAdmin
       .from("listing_agents")
-      .insert({ development_id, name: name || null, email: email || null, mobile: mobile || null, photo_url: photo_url || null, sort_order: sort_order ?? 0 })
+      .insert({ development_id, name: name || null, email: emailCheck.value, mobile: mobile || null, photo_url: photo_url || null, sort_order: sort_order ?? 0 })
       .select("id")
       .single();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -59,11 +70,15 @@ export async function PATCH(req: Request) {
       }
     }
 
+    const emailCheck = validEmailOrNull(fields.email);
+    if (!emailCheck.ok) {
+      return NextResponse.json({ error: "Invalid email format" }, { status: 400 });
+    }
     const { error } = await supabaseAdmin
       .from("listing_agents")
       .update({
         name: fields.name || null,
-        email: fields.email || null,
+        email: emailCheck.value,
         mobile: fields.mobile || null,
         photo_url: fields.photo_url || null,
       })

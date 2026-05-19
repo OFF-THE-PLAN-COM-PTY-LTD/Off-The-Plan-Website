@@ -11,18 +11,20 @@ import {
   Newspaper,
   Globe,
   Megaphone,
+  ArrowUpCircle,
   LogOut,
 } from "lucide-react";
 
 const navItems = [
-  { label: "Dashboard",      href: "/admin",                icon: LayoutDashboard },
-  { label: "Listing",        href: "/admin/listings",       icon: ListChecks },
-  { label: "All Agencies",   href: "/admin/agencies",       icon: Building2 },
-  { label: "Reports",        href: "/admin/reports",        icon: BarChart2 },
-  { label: "Pricing",        href: "/admin/pricing",        icon: Tag },
-  { label: "News and Events",href: "/admin/news-events",    icon: Newspaper },
-  { label: "Homepage Setup", href: "/admin/homepage-setup", icon: Globe },
-  { label: "Ads Management", href: "/admin/ads",            icon: Megaphone },
+  { label: "Dashboard",         href: "/admin",                  icon: LayoutDashboard },
+  { label: "Listing",           href: "/admin/listings",         icon: ListChecks },
+  { label: "All Agencies",      href: "/admin/agencies",         icon: Building2 },
+  { label: "Reports",           href: "/admin/reports",          icon: BarChart2 },
+  { label: "Upgrade Requests",  href: "/admin/upgrade-requests", icon: ArrowUpCircle },
+  { label: "Pricing",           href: "/admin/pricing",          icon: Tag },
+  { label: "News and Events",   href: "/admin/news-events",      icon: Newspaper },
+  { label: "Homepage Setup",    href: "/admin/homepage-setup",   icon: Globe },
+  { label: "Ads Management",    href: "/admin/ads",              icon: Megaphone },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

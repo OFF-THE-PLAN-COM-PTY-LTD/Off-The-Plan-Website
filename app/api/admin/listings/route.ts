@@ -163,14 +163,19 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { _method, id, floor_plans, ...fields } = body;
 
-    const data = buildListingData(fields) as Record<string, unknown>;
+    let data = buildListingData(fields) as Record<string, unknown>;
 
     if (!data.name) {
       return NextResponse.json({ error: "Project name is required." }, { status: 400 });
     }
 
-    // Members can only create/edit listings they own.
+    // SECURITY: strip admin-only fields from member submissions. The portal UI
+    // hides these, but the API must also enforce — otherwise a member could
+    // POST is_published / is_featured / status / owner_user_id via curl/devtools
+    // and escalate their own listing.
     if (!auth.isAdmin) {
+      data = filterFields(data, MEMBER_ALLOWED_FIELDS);
+      // Always pin ownership to the requesting member.
       data.owner_user_id = auth.user.id;
     }
 

@@ -166,13 +166,21 @@ export default async function HomePage() {
     { label: "New Home Design",  href: "/search?type=New+Home+Design",  image: pickImage(newHomeData    as never, CATEGORY_FALLBACKS["New Home Design"])   },
   ];
 
+  // Use mock listings only outside production. In production, an empty tier
+  // means no featured listings — the section just doesn't render, which is
+  // safer than showing fake Unsplash listings with broken /listings/<slug> links.
+  const isProd = process.env.NODE_ENV === "production";
   const tier1 = (tier1Data ?? []).length > 0
     ? (tier1Data as unknown as Development[])
-    : MOCK_TIER1;
+    : isProd
+      ? []
+      : MOCK_TIER1;
 
   const tier2 = (tier2Data ?? []).length > 0
     ? (tier2Data as unknown as Development[])
-    : MOCK_TIER2;
+    : isProd
+      ? []
+      : MOCK_TIER2;
 
   const articles = (articlesData ?? []) as unknown as JournalArticle[];
 

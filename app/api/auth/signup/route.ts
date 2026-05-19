@@ -7,7 +7,16 @@ export async function POST(request: Request) {
   const fullName = (formData.get("full_name") as string)?.trim();
   const email = (formData.get("email") as string)?.trim();
   const password = formData.get("password") as string;
-  const interestType = (formData.get("interest_type") as string) || null;
+  const rawInterest = (formData.get("interest_type") as string) || null;
+
+  // SECURITY: never let a self-signup grant member privileges (Developer/Agent).
+  // The portal layout uses interest_type to gate access; only admins can upgrade
+  // a user to those roles via the admin panel. Anything other than the
+  // permitted "Buyer" value is coerced to null.
+  const SELF_ALLOWED_INTERESTS = new Set(["Buyer"]);
+  const interestType = rawInterest && SELF_ALLOWED_INTERESTS.has(rawInterest)
+    ? rawInterest
+    : null;
 
   const cookieStore = cookies();
   const successUrl = new URL("/account", request.url);
