@@ -428,20 +428,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ─── Partner Banner ─────────────────────────────────────────────────── */}
-      <section className="bg-cream py-4">
-        <div className="container-padded">
-          <div className="max-w-3xl mx-auto">
-            <Image
-              src="/off-the-plan-banner-landscape.png"
-              alt="Off The Plan Partner Network"
-              width={1200}
-              height={200}
-              className="w-full h-auto object-contain"
-            />
-          </div>
-        </div>
-      </section>
     </>
   );
 }
