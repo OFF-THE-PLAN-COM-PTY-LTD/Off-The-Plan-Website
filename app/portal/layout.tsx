@@ -13,13 +13,17 @@ export default async function PortalLayout({ children }: { children: React.React
 
   const { data: profile } = await supabaseAdmin
     .from("profiles")
-    .select("interest_type")
+    .select("interest_type, member_status")
     .eq("id", user.id)
     .maybeSingle();
 
   if (!profile || !["Developer", "Agent"].includes(profile.interest_type ?? "")) {
     redirect("/");
   }
+
+  // Gate portal access based on admin approval status.
+  if (profile.member_status === "pending") redirect("/account/pending");
+  if (profile.member_status === "rejected") redirect("/account/rejected");
 
   return (
     <div className="min-h-screen flex" style={{ background: "#f5f5f5" }}>
