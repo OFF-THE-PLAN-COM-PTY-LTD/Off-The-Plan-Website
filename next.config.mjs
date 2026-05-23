@@ -27,6 +27,10 @@ const nextConfig = {
         protocol: "https",
         hostname: "s3.ap-southeast-2.amazonaws.com",
       },
+      {
+        protocol: "https",
+        hostname: "test.offtheplan.com.au",
+      },
     ],
   },
 };

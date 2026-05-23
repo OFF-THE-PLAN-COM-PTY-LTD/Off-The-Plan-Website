@@ -64,14 +64,14 @@ const MOCK_TIER2: Development[] = [
   mockDev("m14", "bayview-terraces",     "Bayview Terraces",     "Manly",       "NSW", "From $980,000", 2, 4, "Selling now", "Townhouses", U("1538688525198-9b3b1c98d25d")),
 ];
 
-// Fallback images per category (Unsplash) — used only if no real listing exists for that type
+// Fallback images per category — client-supplied images from offtheplan.com.au
 const CATEGORY_FALLBACKS: Record<string, string> = {
-  "New Apartments":   U("1600596542815-ffad4c1539a9"),
-  Townhouses:         U("1512917774080-9991f1c4c750"),
-  "Land and Estates": U("1500382017468-9049fed747ef"),
-  Commercial:         U("1486325212027-8081e485255e"),
-  Houses:             U("1600585154340-be6161a56a0c"),
-  "New Home Design":  U("1580587771525-78b9dba3b914"),
+  "New Apartments":   "https://test.offtheplan.com.au/img/categories/OTP15244-Category-Apartments_560x612.jpg",
+  Townhouses:         "https://test.offtheplan.com.au/img/categories/OTP15244-Category-Townhouse_560x612.jpg",
+  "Land and Estates": "https://test.offtheplan.com.au/img/categories/OTP15244-Category-Landestate_560x612.jpg",
+  Commercial:         "https://test.offtheplan.com.au/img/categories/OTP15244-Category-Commercial_560x612.jpg",
+  Houses:             "https://test.offtheplan.com.au/img/categories/OTP15244-Category-House%20and%20Land_560x612.jpg",
+  "New Home Design":  "https://test.offtheplan.com.au/img/categories/OTP15244-Category-House%20and%20Land_560x612.jpg",
 };
 
 function pickImage(dev: { hero_image_url?: string | null; images?: { url: string }[] } | null, fallback: string): string {
