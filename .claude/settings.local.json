@@ -27,7 +27,8 @@
       "Bash(npm run *)",
       "Bash(git reset *)",
       "Bash(grep -r \"list_image\\\\|thumbnail\" supabase/ -l)",
-      "Bash(grep \"hero_image_url\\\\|list_image\\\\|thumbnail\" types/journal.ts)"
+      "Bash(grep \"hero_image_url\\\\|list_image\\\\|thumbnail\" types/journal.ts)",
+      "Bash(gh auth *)"
     ]
   }
 }

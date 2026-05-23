@@ -63,8 +63,18 @@ export async function PATCH(req: Request) {
     if ("error" in auth) return auth.error;
 
     const body = await req.json();
-    const { id, ...fields } = body;
-    if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
+    const { id } = body;
+    if (!id || typeof id !== "string") {
+      return NextResponse.json({ error: "Missing id" }, { status: 400 });
+    }
+    const parsed = schema.partial().safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid data" }, { status: 400 });
+    }
+    const { id: _id, ...fields } = parsed.data;
+    if (Object.keys(fields).length === 0) {
+      return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
+    }
     const { error } = await supabaseAdmin
       .from("ads")
       .update({ ...fields, updated_at: new Date().toISOString() })

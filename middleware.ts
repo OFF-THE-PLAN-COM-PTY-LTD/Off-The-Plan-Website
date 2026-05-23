@@ -48,19 +48,24 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const pathname = request.nextUrl.pathname;
+  const isApiRoute = pathname.startsWith("/api/");
 
   // Protected routes — must be logged in
-  const protectedPaths = ["/saved", "/account", "/admin"];
+  const protectedPaths = ["/saved", "/account", "/admin", "/api/admin"];
   const isProtected = protectedPaths.some((p) => pathname.startsWith(p));
 
   if (isProtected && !user) {
+    if (isApiRoute) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
   // Admin routes — must also have is_admin = true
-  if (pathname.startsWith("/admin") && user) {
+  const isAdminPath = pathname.startsWith("/admin") || pathname.startsWith("/api/admin");
+  if (isAdminPath && user) {
     const { data: profile } = await supabase
       .from("profiles")
       .select("is_admin")
@@ -68,6 +73,9 @@ export async function middleware(request: NextRequest) {
       .maybeSingle();
 
     if (!profile?.is_admin) {
+      if (isApiRoute) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
       return NextResponse.redirect(new URL("/", request.url));
     }
   }
@@ -76,5 +84,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/saved/:path*", "/account/:path*", "/admin/:path*"],
+  matcher: ["/saved/:path*", "/account/:path*", "/admin/:path*", "/api/admin/:path*"],
 };
