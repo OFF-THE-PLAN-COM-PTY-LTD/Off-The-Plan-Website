@@ -34,13 +34,23 @@ export default function NewsTable({ articles }: { articles: Article[] }) {
   async function togglePublish(article: Article) {
     setLoadingId(article.id);
     const nowISO = new Date().toISOString();
+
+    // When unpublishing, preserve the existing published_at but normalise to
+    // ISO if it was stored as a plain "YYYY-MM-DD" string (legacy rows from
+    // before the date-format fix).
+    let preservedISO: string | null = null;
+    if (article.published_at) {
+      const parsed = new Date(article.published_at);
+      preservedISO = isNaN(parsed.getTime()) ? null : parsed.toISOString();
+    }
+
     await fetch("/api/admin/news", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         id: article.id,
         is_published: !article.is_published,
-        published_at: !article.is_published ? nowISO : article.published_at,
+        published_at: !article.is_published ? nowISO : preservedISO,
       }),
     });
     setLoadingId(null);

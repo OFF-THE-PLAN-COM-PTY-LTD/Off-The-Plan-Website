@@ -69,6 +69,13 @@ export function NewsForm({ id, existing }: Props) {
     setError(null);
     setSuccess(false);
 
+    // The <input type="date"> control gives us "YYYY-MM-DD". Convert to a
+    // proper ISO timestamp before sending so the timestamptz column stores
+    // a real timestamp (not a string that may be parsed inconsistently).
+    const publishedAtISO = publishedAt
+      ? new Date(`${publishedAt}T00:00:00`).toISOString()
+      : null;
+
     const payload = {
       ...(isNew ? {} : { id }),
       title,
@@ -80,7 +87,7 @@ export function NewsForm({ id, existing }: Props) {
       article_image_two: articleImageTwo || null,
       body_html: bodyHtml || null,
       is_published: isPublished,
-      published_at: publishedAt || null,
+      published_at: publishedAtISO,
       read_time_minutes: readTime !== "" ? Number(readTime) : null,
       meta_title: metaTitle || null,
       meta_content: metaContent || null,

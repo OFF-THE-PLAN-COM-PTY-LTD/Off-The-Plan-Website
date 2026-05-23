@@ -169,14 +169,34 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Project name is required." }, { status: 400 });
     }
 
+    const isInsert = !(_method === "PATCH" && id);
+
+    // Member INSERTs require minimum viable data so broken listings don't reach
+    // the public pages. Admin INSERTs can save partial drafts.
+    if (!auth.isAdmin && isInsert) {
+      if (!data.suburb || !data.state) {
+        return NextResponse.json(
+          { error: "Suburb and state are required." },
+          { status: 400 },
+        );
+      }
+    }
+
     // SECURITY: strip admin-only fields from member submissions. The portal UI
     // hides these, but the API must also enforce — otherwise a member could
-    // POST is_published / is_featured / status / owner_user_id via curl/devtools
-    // and escalate their own listing.
+    // POST is_published / is_featured / owner_user_id via curl/devtools and
+    // escalate their own listing.
     if (!auth.isAdmin) {
       data = filterFields(data, MEMBER_ALLOWED_FIELDS);
       // Always pin ownership to the requesting member.
       data.owner_user_id = auth.user.id;
+      // New member listings always start as unpublished drafts awaiting admin
+      // approval. Defence-in-depth: even if a column default changes, members
+      // can never go live on insert.
+      if (isInsert) {
+        data.is_published = false;
+        data.is_featured = false;
+      }
     }
 
     if (_method === "PATCH" && id) {
@@ -220,7 +240,11 @@ export async function POST(req: Request) {
 }
 
 // Columns a member is allowed to edit on their own listing via PATCH.
-// Admins can edit anything in buildListingData, plus is_published / is_featured / status.
+// - "slug" is intentionally excluded: slugs are generated server-side on
+//   INSERT and locked thereafter to prevent SEO squatting / link breakage.
+// - "status" IS allowed so members can self-archive their own draft listings.
+// - "is_published" / "is_featured" are admin-only — members can never put
+//   listings live without admin approval (handover decision 2026-05-24).
 const MEMBER_ALLOWED_FIELDS = new Set<string>([
   "type", "tag", "tier",
   "developer_id", "portal_developer_name", "developer_website",
@@ -242,10 +266,10 @@ const MEMBER_ALLOWED_FIELDS = new Set<string>([
   "virtual_tour_url", "floor_plan_upload_url", "additional_video_url",
   "price_list_url", "specifications_url",
   "seo_title", "seo_description",
-  "name", "slug",
+  "name", "status",
 ]);
 
-const ADMIN_EXTRA_FIELDS = ["status", "is_published", "is_featured", "owner_user_id"];
+const ADMIN_EXTRA_FIELDS = ["slug", "is_published", "is_featured", "owner_user_id", "agency_id"];
 const ADMIN_ALLOWED_FIELDS = new Set<string>(
   Array.from(MEMBER_ALLOWED_FIELDS).concat(ADMIN_EXTRA_FIELDS),
 );
