@@ -16,14 +16,14 @@ export const metadata: Metadata = {
 const U = (id: string) =>
   `https://images.unsplash.com/photo-${id}?w=1200&h=800&fit=crop&auto=format&q=80`;
 
-// ── Fallback images per category — client-supplied images ────────────────────
+// ── Fallback images per category — self-hosted in /public/categories ─────────
 const FALLBACKS: Record<string, string> = {
-  "New Apartments":   "https://test.offtheplan.com.au/img/categories/OTP15244-Category-Apartments_560x612.jpg",
-  Townhouses:         "https://test.offtheplan.com.au/img/categories/OTP15244-Category-Townhouse_560x612.jpg",
-  "Land and Estates": "https://test.offtheplan.com.au/img/categories/OTP15244-Category-Landestate_560x612.jpg",
-  Commercial:         "https://test.offtheplan.com.au/img/categories/OTP15244-Category-Commercial_560x612.jpg",
-  Houses:             "https://test.offtheplan.com.au/img/categories/OTP15244-Category-House%20and%20Land_560x612.jpg",
-  "New Home Design":  "https://test.offtheplan.com.au/img/categories/OTP15244-Category-House%20and%20Land_560x612.jpg",
+  "New Apartments":   "/categories/category-apartments.jpg",
+  Townhouses:         "/categories/category-townhouse.jpg",
+  "Land and Estates": "/categories/category-landestate.jpg",
+  Commercial:         "/categories/category-commercial.jpg",
+  Houses:             "/categories/category-house-and-land.jpg",
+  "New Home Design":  "/categories/category-house-and-land.jpg",
 };
 
 function pickImage(
