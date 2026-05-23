@@ -1,5 +1,6 @@
 "use client";
 
+import { notFound } from "next/navigation";
 import { mockDevelopments, mockJournalArticles } from "@/lib/mock-data";
 import { NavBar } from "@/components/nav-bar";
 import { SideRail } from "@/components/side-rail";
@@ -28,6 +29,11 @@ function Divider() {
 // ─── page ─────────────────────────────────────────────────────────────────────
 
 export default function DevPage() {
+  // Component preview page — hidden in production.
+  if (process.env.NODE_ENV === "production") {
+    notFound();
+  }
+
   const [first, second, third, fourth] = mockDevelopments;
   const [article1, article2, article3] = mockJournalArticles;
 

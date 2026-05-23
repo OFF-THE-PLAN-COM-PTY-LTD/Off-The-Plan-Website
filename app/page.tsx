@@ -262,8 +262,15 @@ export default async function HomePage() {
                 <div className="relative flex-1 bg-white border-r border-[#dde1e9] flex items-center">
                   <select name="type" className="appearance-none bg-transparent font-sans text-sm text-[#1a2340] px-4 py-2 pr-8 outline-none cursor-pointer w-full">
                     <option value="">Category</option>
-                    {["New Apartments","Townhouses","Land and Estates","Commercial","House & Land","New Home Design"].map(c=>(
-                      <option key={c} value={c}>{c}</option>
+                    {[
+                      ["New Apartments", "New Apartments"],
+                      ["Townhouses", "Townhouses"],
+                      ["Land and Estates", "Land and Estates"],
+                      ["Commercial", "Commercial"],
+                      ["Houses", "House & Land"],
+                      ["New Home Design", "New Home Design"],
+                    ].map(([value, label]) => (
+                      <option key={value} value={value}>{label}</option>
                     ))}
                   </select>
                   <svg className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#1a2340" strokeWidth="2.5"><polyline points="6 9 12 15 18 9"/></svg>
