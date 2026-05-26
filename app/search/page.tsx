@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Metadata } from "next";
 import { PropertyCard } from "@/components/property-card";
 import { supabase } from "@/lib/supabase/public";
@@ -245,9 +246,35 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
         {results.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {results.map((dev) => (
-              <PropertyCard key={dev.id} development={dev} layout="tall" />
-            ))}
+            {(() => {
+              const florianIdx = results.findIndex(
+                (d) => d.name?.trim().toLowerCase() === "florian",
+              );
+              const banner = (
+                <div
+                  key="otp-banner-square"
+                  className="relative w-full aspect-square overflow-hidden bg-cream"
+                >
+                  <Image
+                    src="/off-the-plan-banner-square.png"
+                    alt="Off The Plan"
+                    fill
+                    sizes="(min-width: 768px) 50vw, 100vw"
+                    className="object-cover"
+                    priority={false}
+                  />
+                </div>
+              );
+              const cards = results.map((dev) => (
+                <PropertyCard key={dev.id} development={dev} layout="tall" />
+              ));
+              if (florianIdx >= 0) {
+                cards.splice(florianIdx + 1, 0, banner);
+              } else {
+                cards.push(banner);
+              }
+              return cards;
+            })()}
           </div>
         ) : (
           <div className="text-center py-20">
