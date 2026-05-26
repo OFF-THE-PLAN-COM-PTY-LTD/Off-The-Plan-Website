@@ -309,9 +309,9 @@ export default async function HomePage() {
                   Featured Developments
                 </p>
               </div>
-              <h2 className="font-display font-light text-white leading-[0.95] tracking-tight text-[clamp(2.2rem,4.5vw,4rem)] mb-6">
+              <h2 className="font-light text-white leading-[0.95] tracking-tight text-[clamp(2.6rem,5.3vw,4.8rem)] mb-6" style={{ fontFamily: "var(--font-italiana), serif" }}>
                 Australia&apos;s finest<br />
-                <em className="not-italic italic text-orange">off&#8209;the&#8209;plan properties</em>
+                <em className="not-italic text-orange">off&#8209;the&#8209;plan properties</em>
               </h2>
               <p className="font-display font-light text-white/50 text-[clamp(1rem,1.4vw,1.2rem)] leading-relaxed max-w-2xl">
                 Your future address, carefully chosen{" "}

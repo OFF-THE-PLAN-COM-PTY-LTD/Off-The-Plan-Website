@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Fraunces, JetBrains_Mono, Inter, Montserrat } from "next/font/google";
+import { Fraunces, JetBrains_Mono, Inter, Montserrat, Italiana } from "next/font/google";
 import "./globals.css";
 import SiteLayout from "@/components/site-layout";
 import { createClient } from "@/lib/supabase/server";
@@ -27,6 +27,13 @@ const inter = Inter({
 const montserrat = Montserrat({
   subsets: ["latin"],
   variable: "--font-montserrat",
+  display: "swap",
+  weight: ["400"],
+});
+
+const italiana = Italiana({
+  subsets: ["latin"],
+  variable: "--font-italiana",
   display: "swap",
   weight: ["400"],
 });
@@ -73,7 +80,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html
       lang="en-AU"
-      className={`${fraunces.variable} ${jetbrainsMono.variable} ${inter.variable} ${montserrat.variable}`}
+      className={`${fraunces.variable} ${jetbrainsMono.variable} ${inter.variable} ${montserrat.variable} ${italiana.variable}`}
     >
       <body className="relative overflow-x-hidden">
         <a
