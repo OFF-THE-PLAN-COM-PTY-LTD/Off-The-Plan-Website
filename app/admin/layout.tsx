@@ -13,6 +13,8 @@ import {
   Globe,
   Megaphone,
   ArrowUpCircle,
+  Inbox,
+  Mail,
   LogOut,
 } from "lucide-react";
 
@@ -21,6 +23,8 @@ const navItems = [
   { label: "Listing",           href: "/admin/listings",         icon: ListChecks },
   { label: "All Agencies",      href: "/admin/agencies",         icon: Building2 },
   { label: "Members",           href: "/admin/members",          icon: Users },
+  { label: "Leads",             href: "/admin/leads",            icon: Inbox },
+  { label: "Enquiries",         href: "/admin/enquiries",        icon: Mail },
   { label: "Reports",           href: "/admin/reports",          icon: BarChart2 },
   { label: "Upgrade Requests",  href: "/admin/upgrade-requests", icon: ArrowUpCircle },
   { label: "Pricing",           href: "/admin/pricing",          icon: Tag },
