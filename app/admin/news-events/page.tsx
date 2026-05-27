@@ -13,8 +13,8 @@ export default async function NewsEventsPage({ searchParams }: { searchParams: S
 
   const { data } = await supabaseAdmin
     .from("journal_articles")
-    .select("id, title, slug, is_published, published_at, created_at")
-    .eq("category", "News")
+    .select("id, title, slug, category, is_published, published_at, created_at")
+    .in("category", ["News", "Guides"])
     .order("created_at", { ascending: false });
 
   const articles = (data ?? []) as any[];

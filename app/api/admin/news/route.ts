@@ -8,6 +8,7 @@ const schema = z.object({
   id: z.string().uuid().optional(),
   title: z.string().min(1),
   slug: z.string().min(1),
+  category: z.enum(["News", "Guides"]).optional(),
   subtitle: z.string().nullable().optional(),
   hero_image_url: z.string().nullable().optional(),
   list_page_image_url: z.string().nullable().optional(),
@@ -29,11 +30,12 @@ export async function POST(req: Request) {
     const body = await req.json();
     const parsed = schema.safeParse(body);
     if (!parsed.success) return NextResponse.json({ error: "Invalid data" }, { status: 400 });
-    const { id: _id, ...data } = parsed.data;
+    const { id: _id, category, ...data } = parsed.data;
     const { error } = await supabaseAdmin
       .from("journal_articles")
-      .insert({ ...data, category: "News", author: null });
+      .insert({ ...data, category: category ?? "News", author: null });
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    revalidatePath("/news");
     revalidatePath("/guides");
     return NextResponse.json({ success: true }, { status: 201 });
   } catch {
@@ -42,7 +44,7 @@ export async function POST(req: Request) {
 }
 
 const ALLOWED_PATCH_FIELDS = new Set([
-  "title", "slug", "subtitle",
+  "title", "slug", "subtitle", "category",
   "hero_image_url", "list_page_image_url", "article_image_one", "article_image_two",
   "body_html", "published_at", "is_published",
   "read_time_minutes", "meta_title", "meta_content",
@@ -68,6 +70,7 @@ export async function PATCH(req: Request) {
       .update(fields)
       .eq("id", id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    revalidatePath("/news");
     revalidatePath("/guides");
     return NextResponse.json({ success: true });
   } catch {
@@ -87,6 +90,7 @@ export async function DELETE(req: Request) {
       .delete()
       .eq("id", id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    revalidatePath("/news");
     revalidatePath("/guides");
     return NextResponse.json({ success: true });
   } catch {

@@ -87,14 +87,14 @@ export function HeroSearch({ tone = "dark" }: HeroSearchProps) {
           <SearchIcon size={16} className={isDark ? "text-ink-light/40" : "text-ink/30"} />
           <input
             type="text"
-            placeholder="Suburb or postcode"
+            placeholder="Suburb, postcode, or project name"
             value={suburb}
             onChange={(e) => setSuburb(e.target.value)}
             className={cn(
               "flex-1 bg-transparent font-sans text-body-md outline-none placeholder:text-ink-light/40",
               isDark ? "text-ink-light" : "text-ink placeholder:text-ink/30"
             )}
-            aria-label="Suburb or postcode"
+            aria-label="Suburb, postcode, or project name"
           />
         </div>
 

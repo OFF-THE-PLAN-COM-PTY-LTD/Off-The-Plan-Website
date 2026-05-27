@@ -247,8 +247,9 @@ export default async function HomePage() {
               <form action="/search" method="GET" className="flex items-stretch gap-0">
                 <input
                   name="suburb"
-                  placeholder="Suburb or postcode"
+                  placeholder="Suburb, postcode, or project name"
                   className="font-sans text-sm text-[#1a2340] placeholder:text-[#1a2340]/40 px-4 py-2 bg-white outline-none w-48 border-r border-[#dde1e9] flex-shrink-0"
+                  aria-label="Suburb, postcode, or project name"
                 />
                 <div className="relative flex-1 bg-white border-r border-[#dde1e9] flex items-center">
                   <select name="state" className="appearance-none bg-transparent font-sans text-sm text-[#1a2340] px-4 py-2 pr-8 outline-none cursor-pointer w-full">

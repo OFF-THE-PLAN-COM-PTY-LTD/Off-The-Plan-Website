@@ -1198,6 +1198,11 @@ export function ListingForm({
                   <option value="1st Tier">1st Tier</option>
                   <option value="2nd Tier">2nd Tier</option>
                 </select>
+                <p className="font-sans text-[11px] text-ink/40 mt-1 leading-relaxed">
+                  <strong className="text-ink/60">1st Tier</strong> — featured carousel on the homepage.{" "}
+                  <strong className="text-ink/60">2nd Tier</strong> — second homepage row.{" "}
+                  <strong className="text-ink/60">No tier</strong> — listing appears in search results only.
+                </p>
               </div>
             )}
           </div>

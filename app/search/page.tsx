@@ -62,7 +62,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   if (searchParams.suburb) {
     // Strip PostgREST-meaningful characters so user input can't break out of the filter.
     const s = searchParams.suburb.replace(/[(),*"\\]/g, "").slice(0, 80);
-    if (s) query = query.or(`suburb.ilike.%${s}%,state.ilike.%${s}%`);
+    if (s) query = query.or(`suburb.ilike.%${s}%,state.ilike.%${s}%,name.ilike.%${s}%`);
   }
   if (searchParams.state) query = query.eq("state", searchParams.state);
   if (searchParams.type)  query = query.eq("type", searchParams.type);
@@ -157,9 +157,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             <input
               name="suburb"
               defaultValue={searchParams.suburb}
-              placeholder="Suburb or postcode"
+              placeholder="Suburb, postcode, or project name"
               className="font-sans text-sm text-[#1a2340] placeholder:text-[#1a2340]/40 px-4 py-2 bg-white outline-none w-44 border-r border-[#dde1e9] flex-shrink-0"
-              aria-label="Suburb"
+              aria-label="Suburb, postcode, or project name"
             />
 
             {/* State */}

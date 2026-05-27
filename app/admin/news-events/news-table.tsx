@@ -8,6 +8,7 @@ type Article = {
   id: string;
   title: string;
   slug: string;
+  category?: string | null;
   hero_image_url: string | null;
   is_published: boolean;
   published_at: string | null;
@@ -77,7 +78,7 @@ export default function NewsTable({ articles }: { articles: Article[] }) {
         <table className="w-full text-left">
           <thead>
             <tr className="border-b-2 border-orange/30">
-              {["Title", "Date & Time", "Status", "Actions"].map((h) => (
+              {["Title", "Page Type", "Date & Time", "Status", "Actions"].map((h) => (
                 <th key={h} className="font-mono text-[11px] uppercase tracking-widest text-orange px-4 py-3">
                   {h}
                 </th>
@@ -98,6 +99,17 @@ export default function NewsTable({ articles }: { articles: Article[] }) {
                     >
                       {a.title}
                     </Link>
+                  </td>
+
+                  {/* Page Type */}
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <span className={`inline-block font-mono text-[10px] uppercase tracking-wider px-2 py-0.5 border ${
+                      a.category === "Guides"
+                        ? "border-orange/40 text-orange"
+                        : "border-navy/30 text-navy"
+                    }`}>
+                      {a.category ?? "News"}
+                    </span>
                   </td>
 
                   {/* Date */}

@@ -108,9 +108,9 @@ export default async function DossierPage({ params }: Props) {
       <div className="bg-navy">
         <div className="container-padded py-6 flex flex-col lg:flex-row lg:items-start gap-6">
 
-          {/* Developer logo in white box */}
-          <div className="flex-shrink-0 bg-white p-4 w-[110px] h-[110px] flex items-center justify-center">
-            {dev.developer?.logo_url ? (
+          {/* Developer logo in white box — links to developer website if available */}
+          {(() => {
+            const logoContent = dev.developer?.logo_url ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={dev.developer.logo_url}
@@ -123,8 +123,22 @@ export default async function DossierPage({ params }: Props) {
               </p>
             ) : (
               <div className="w-full h-full bg-navy/10" />
-            )}
-          </div>
+            );
+            const wrapperClass = "flex-shrink-0 bg-white p-4 w-[110px] h-[110px] flex items-center justify-center";
+            return dev.developer?.website ? (
+              <a
+                href={dev.developer.website}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={wrapperClass + " transition-opacity hover:opacity-80"}
+                aria-label={`Visit ${dev.developer.name ?? "developer"} website`}
+              >
+                {logoContent}
+              </a>
+            ) : (
+              <div className={wrapperClass}>{logoContent}</div>
+            );
+          })()}
 
           {/* Centre: name + address + stat row */}
           <div className="flex-1 min-w-0">
