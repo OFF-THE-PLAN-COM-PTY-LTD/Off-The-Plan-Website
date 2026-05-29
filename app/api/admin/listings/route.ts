@@ -78,6 +78,7 @@ function buildListingData(fields: Record<string, unknown>) {
     // Details
     display_suite_timing: fields.display_suite_timing ?? null,
     description: fields.description ?? null,
+    description_html: fields.description_html ?? null,
     summary: fields.summary ?? null,
     status: fields.status ?? "Selling now",
     is_published: fields.is_published ?? false,
@@ -253,7 +254,7 @@ const MEMBER_ALLOWED_FIELDS = new Set<string>([
   "postcode", "suburb", "location_description",
   "sale_office_street", "sale_office_street_2",
   "sale_office_country", "sale_office_state", "sale_office_city", "sale_office_postcode",
-  "display_suite_timing", "description", "summary", "lat", "lng",
+  "display_suite_timing", "description", "description_html", "summary", "lat", "lng",
   "price_from", "search_price_max", "price_display", "show_price_on_search",
   "promotional_banner", "completion_quarter", "configuration_label",
   "beds_min", "beds_max", "baths_min", "baths_max", "cars_min", "cars_max",

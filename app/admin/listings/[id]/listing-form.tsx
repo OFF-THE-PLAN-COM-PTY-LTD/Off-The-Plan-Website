@@ -5,6 +5,36 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ImageUpload } from "@/components/admin/image-upload";
+import { RichTextEditor } from "@/components/admin/rich-text-editor";
+
+/**
+ * Wrap plain text in <p>/<br> tags so it's safe to load into a TipTap editor
+ * that expects HTML. Existing listings stored their description as raw text;
+ * this keeps that data viewable + editable once we switch to a rich editor.
+ */
+function plainTextToHtml(raw: string): string {
+  if (!raw) return "";
+  if (/<(p|div|br|ul|ol|h[1-6])\b/i.test(raw)) return raw;
+  return raw
+    .split(/\n{2,}/)
+    .map((block) => `<p>${block.replace(/\n/g, "<br>")}</p>`)
+    .filter((p) => p !== "<p></p>")
+    .join("");
+}
+
+/** Strip tags for the plain-text companion field. */
+function htmlToPlainText(html: string): string {
+  return html
+    .replace(/<br\s*\/?>(\r\n|\n)?/gi, "\n")
+    .replace(/<\/p>\s*<p[^>]*>/gi, "\n\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .trim();
+}
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -58,6 +88,7 @@ interface ListingData {
   // Details
   display_suite_timing?: string;
   description?: string;
+  description_html?: string;
   summary?: string;
   status?: string;
   is_published?: boolean;
@@ -923,7 +954,9 @@ export function ListingForm({
 
   // Description & timing
   const [displaySuiteTiming, setDisplaySuiteTiming] = useState(existing?.display_suite_timing ?? "");
-  const [description, setDescription] = useState(existing?.description ?? existing?.summary ?? "");
+  const [description, setDescription] = useState(
+    existing?.description_html ?? plainTextToHtml(existing?.description ?? existing?.summary ?? ""),
+  );
   const [status, setStatus] = useState(existing?.status ?? "Selling now");
   const [isPublished, setIsPublished] = useState(existing?.is_published ?? false);
   const [isFeatured, setIsFeatured] = useState(existing?.is_featured ?? false);
@@ -1097,8 +1130,12 @@ export function ListingForm({
       sale_office_postcode: saleOfficePostcode || null,
       // Details
       display_suite_timing: displaySuiteTiming || null,
-      description: description || null,
-      summary: description || null,
+      // `description_html` is the canonical rich content rendered on the public
+      // listing detail page. We also write a stripped plain-text mirror to
+      // `description` + `summary` for SEO, search indexing, and OG/share cards.
+      description_html: description || null,
+      description: description ? htmlToPlainText(description) || null : null,
+      summary: description ? htmlToPlainText(description) || null : null,
       status,
       is_published: isPublished,
       is_featured: isFeatured,
@@ -1429,13 +1466,14 @@ export function ListingForm({
           </div>
           <div className="mb-4">
             <label className={lbl}>Brief Description *</label>
-            <textarea
-              rows={8}
+            <RichTextEditor
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Write a detailed description of the project…"
-              className={inp + " resize-y"}
+              onChange={setDescription}
+              minHeight={260}
             />
+            <p className="font-sans text-[11px] text-ink/40 mt-1">
+              Use the toolbar to add bold, italic, headings, lists, links and images. Formatting will be preserved on the public listing page.
+            </p>
           </div>
 
           {/* ── Pricing & dates ── */}
