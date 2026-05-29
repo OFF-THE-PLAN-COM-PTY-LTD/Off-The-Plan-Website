@@ -16,6 +16,26 @@ type Agency = {
 
 type EmailFilter = "all" | "verified" | "unverified";
 
+/**
+ * Tim's proposed migration password format (May 29 reply):
+ *   month(2 digits)_clientNameWithSecondAndThirdLetterInCaps_year(2 digits)
+ * e.g. "Platino" in May 2026 -> "05_pLAtino_26"
+ *
+ * We use this only as a suggested default in the password modal — the
+ * admin can override it before saving.
+ */
+function suggestedPassword(name: string | null | undefined): string {
+  const now = new Date();
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const yy = String(now.getFullYear()).slice(-2);
+  const base = (name ?? "user").replace(/\s+/g, "").toLowerCase();
+  const transformed = base
+    .split("")
+    .map((ch, i) => (i === 1 || i === 2 ? ch.toUpperCase() : ch))
+    .join("");
+  return `${mm}_${transformed || "user"}_${yy}`;
+}
+
 export default function AgenciesTable({ agencies }: { agencies: Agency[] }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -27,6 +47,78 @@ export default function AgenciesTable({ agencies }: { agencies: Agency[] }) {
   const [modal, setModal] = useState<{ agency: Agency; action: "deactivate" | "activate" } | null>(null);
   const [confirmText, setConfirmText] = useState("");
   const [saving, setSaving] = useState(false);
+
+  // Sign-in-as-user (magic link) state
+  const [signingInId, setSigningInId] = useState<string | null>(null);
+
+  // Set-password modal state
+  const [pwModal, setPwModal] = useState<{ agency: Agency } | null>(null);
+  const [pwValue, setPwValue] = useState("");
+  const [pwSaving, setPwSaving] = useState(false);
+  const [pwError, setPwError] = useState<string | null>(null);
+  const [pwSuccess, setPwSuccess] = useState(false);
+
+  async function handleImpersonate(agency: Agency) {
+    if (!agency.email) {
+      alert("This agency has no email on file — cannot generate a sign-in link.");
+      return;
+    }
+    setSigningInId(agency.id);
+    try {
+      const res = await fetch("/api/admin/users/impersonate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: agency.email }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.url) {
+        alert(json.error ?? "Could not generate sign-in link. Make sure the user has an account.");
+        return;
+      }
+      window.open(json.url, "_blank", "noopener,noreferrer");
+    } finally {
+      setSigningInId(null);
+    }
+  }
+
+  function openPwModal(agency: Agency) {
+    setPwModal({ agency });
+    setPwValue(suggestedPassword(agency.name ?? agency.org_name));
+    setPwError(null);
+    setPwSuccess(false);
+  }
+
+  function closePwModal() {
+    setPwModal(null);
+    setPwValue("");
+    setPwError(null);
+    setPwSuccess(false);
+  }
+
+  async function handleSetPassword() {
+    if (!pwModal || !pwModal.agency.email) return;
+    if (pwValue.length < 8) {
+      setPwError("Password must be at least 8 characters.");
+      return;
+    }
+    setPwSaving(true);
+    setPwError(null);
+    try {
+      const res = await fetch("/api/admin/users/set-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: pwModal.agency.email, password: pwValue }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setPwError(json.error ?? "Failed to set password.");
+        return;
+      }
+      setPwSuccess(true);
+    } finally {
+      setPwSaving(false);
+    }
+  }
 
   const filtered = agencies.filter((a) => {
     const q = search.toLowerCase();
@@ -197,6 +289,24 @@ export default function AgenciesTable({ agencies }: { agencies: Agency[] }) {
                         Manage Profile
                       </a>
                     </div>
+                    <div className="flex gap-1.5">
+                      <button
+                        onClick={() => handleImpersonate(a)}
+                        disabled={signingInId === a.id || !a.email}
+                        title={a.email ? "Generate a one-time link and open this member's dashboard in a new tab" : "No email on file"}
+                        className="flex-1 font-mono text-[10px] uppercase tracking-widest px-2 py-1.5 border border-navy text-navy hover:bg-navy hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+                      >
+                        {signingInId === a.id ? "…" : "Sign In As User"}
+                      </button>
+                      <button
+                        onClick={() => openPwModal(a)}
+                        disabled={!a.email}
+                        title={a.email ? "Set or reset this member's password" : "No email on file"}
+                        className="flex-1 font-mono text-[10px] uppercase tracking-widest px-2 py-1.5 border border-line text-ink hover:border-navy hover:text-navy transition-colors disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+                      >
+                        Set Password
+                      </button>
+                    </div>
                     <button
                       onClick={() => openModal(a)}
                       className={`w-full font-mono text-[10px] uppercase tracking-widest px-2 py-1.5 border transition-colors ${
@@ -258,6 +368,81 @@ export default function AgenciesTable({ agencies }: { agencies: Agency[] }) {
                 {saving ? "Saving..." : modal.action === "deactivate" ? "Deactivate" : "Activate"}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Set-password modal */}
+      {pwModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={pwSaving ? undefined : closePwModal}>
+          <div className="bg-white border border-line w-full max-w-md p-6 shadow-lg" onClick={(e) => e.stopPropagation()}>
+            <h2 className="font-display font-semibold text-navy text-lg mb-1">Set Password</h2>
+            <p className="font-sans text-sm text-ink/60 mb-1">
+              For <span className="font-semibold text-ink">{pwModal.agency.name ?? pwModal.agency.org_name ?? pwModal.agency.email}</span>
+            </p>
+            <p className="font-mono text-[11px] text-ink/40 mb-4">{pwModal.agency.email}</p>
+
+            {pwSuccess ? (
+              <>
+                <div className="bg-green-50 border border-green-200 text-green-800 text-sm font-sans p-3 mb-4">
+                  Password updated. Share it with the member — they can change it once logged in.
+                </div>
+                <p className="font-sans text-xs text-ink/50 mb-2">New password (copy now — it&apos;s not stored):</p>
+                <div className="font-mono text-sm bg-cream-alt border border-line px-3 py-2 mb-4 break-all">
+                  {pwValue}
+                </div>
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={() => navigator.clipboard?.writeText(pwValue)}
+                    className="font-sans text-sm px-4 py-2 border border-line text-ink hover:bg-cream-alt transition-colors"
+                  >
+                    Copy
+                  </button>
+                  <button
+                    onClick={closePwModal}
+                    className="font-sans text-sm px-4 py-2 bg-black text-white font-semibold hover:bg-ink/80 transition-colors"
+                  >
+                    Done
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="font-sans text-sm text-ink mb-2">
+                  New password{" "}
+                  <span className="text-ink/40 text-xs">(suggested format pre-filled — edit as needed):</span>
+                </p>
+                <input
+                  autoFocus
+                  type="text"
+                  value={pwValue}
+                  onChange={(e) => { setPwValue(e.target.value); setPwError(null); }}
+                  className="w-full border border-line px-3 py-2 text-sm font-mono mb-2 focus:outline-none focus:border-navy"
+                />
+                <p className="font-sans text-[11px] text-ink/40 mb-4">
+                  Suggested format follows <span className="font-mono">MM_NameLetters_YY</span> per Tim&apos;s migration plan. Minimum 8 characters.
+                </p>
+                {pwError && (
+                  <p className="font-sans text-sm text-red-600 mb-3">{pwError}</p>
+                )}
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={closePwModal}
+                    disabled={pwSaving}
+                    className="font-sans text-sm px-4 py-2 border border-line text-ink/60 hover:bg-cream-alt transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSetPassword}
+                    disabled={pwValue.length < 8 || pwSaving}
+                    className="font-sans text-sm px-4 py-2 bg-black text-white font-semibold disabled:opacity-40 hover:bg-ink/80 transition-colors"
+                  >
+                    {pwSaving ? "Saving..." : "Set Password"}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
