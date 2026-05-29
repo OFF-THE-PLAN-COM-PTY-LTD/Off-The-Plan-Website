@@ -678,19 +678,56 @@ function GalleryManager({
   onReorder: (reordered: GalleryImage[]) => void;
 }) {
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number } | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const dragIndex = useRef<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
-  async function uploadImage(file: File) {
-    setUploading(true);
+  async function uploadSingle(file: File): Promise<string | null> {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("bucket", "development-images");
     const res = await fetch("/api/admin/upload", { method: "POST", body: formData });
+    if (!res.ok) return null;
     const json = await res.json();
-    if (res.ok) onAdd(json.url);
+    return typeof json.url === "string" ? json.url : null;
+  }
+
+  /**
+   * Accepts a batch of files. Trims to remaining capacity (20-image cap),
+   * uploads them sequentially so we don't overwhelm the API, and reports
+   * progress for each one.
+   */
+  async function uploadImages(files: File[]) {
+    setUploadError(null);
+    const remainingCapacity = Math.max(0, 20 - gallery.length);
+    if (remainingCapacity === 0) {
+      setUploadError("Maximum 20 images reached.");
+      return;
+    }
+    const toUpload = files.slice(0, remainingCapacity);
+    const skipped = files.length - toUpload.length;
+
+    setUploading(true);
+    setUploadProgress({ done: 0, total: toUpload.length });
+
+    let failed = 0;
+    for (let i = 0; i < toUpload.length; i++) {
+      const url = await uploadSingle(toUpload[i]);
+      if (url) onAdd(url);
+      else failed += 1;
+      setUploadProgress({ done: i + 1, total: toUpload.length });
+    }
+
     setUploading(false);
+    setUploadProgress(null);
+    if (failed > 0 || skipped > 0) {
+      const parts: string[] = [];
+      if (failed > 0) parts.push(`${failed} upload${failed === 1 ? "" : "s"} failed`);
+      if (skipped > 0) parts.push(`${skipped} skipped (20-image cap)`);
+      setUploadError(parts.join(" · "));
+    }
   }
 
   function handleDragStart(i: number) {
@@ -734,18 +771,41 @@ function GalleryManager({
         {/* Left: upload controls */}
         <div className="flex-shrink-0 w-72">
           <p className="font-sans text-sm font-medium text-ink/80 mb-2">
-            Select up to 20 images
+            Select up to 20 images ({gallery.length}/20)
           </p>
           <div className="flex items-center gap-3 mb-1.5">
-            <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadImage(f); e.target.value = ""; }} className="sr-only" />
-            <button type="button" onClick={() => inputRef.current?.click()} disabled={uploading || gallery.length >= 20} className="font-mono text-[10px] uppercase tracking-widest px-3 py-2 border border-orange text-orange hover:bg-orange hover:text-white transition-colors disabled:opacity-50 whitespace-nowrap">
-              {uploading ? "Uploading…" : "Select File"}
+            <input
+              ref={inputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              multiple
+              onChange={(e) => {
+                const files = Array.from(e.target.files ?? []);
+                if (files.length > 0) uploadImages(files);
+                e.target.value = "";
+              }}
+              className="sr-only"
+            />
+            <button
+              type="button"
+              onClick={() => inputRef.current?.click()}
+              disabled={uploading || gallery.length >= 20}
+              className="font-mono text-[10px] uppercase tracking-widest px-3 py-2 border border-orange text-orange hover:bg-orange hover:text-white transition-colors disabled:opacity-50 whitespace-nowrap"
+            >
+              {uploading
+                ? uploadProgress
+                  ? `Uploading ${uploadProgress.done}/${uploadProgress.total}…`
+                  : "Uploading…"
+                : "Select Files"}
             </button>
-            {!uploading && <span className="font-sans text-sm text-ink/40">No file chosen</span>}
+            {!uploading && <span className="font-sans text-sm text-ink/40">Choose one or more</span>}
           </div>
-          <p className="font-sans text-xs text-ink/40">Or upload photo from your computer.</p>
-          <p className="font-sans text-xs text-ink/40">(File size: up to 10MB, Dimensions: 1920×1080)</p>
-          {gallery.length >= 20 && (
+          <p className="font-sans text-xs text-ink/40">Hold Shift or Ctrl/Cmd in the file picker to select multiple at once.</p>
+          <p className="font-sans text-xs text-ink/40">(File size: up to 10MB each, Dimensions: 1920×1080)</p>
+          {uploadError && (
+            <p className="font-sans text-xs text-orange mt-1">{uploadError}</p>
+          )}
+          {gallery.length >= 20 && !uploadError && (
             <p className="font-sans text-xs text-orange mt-1">Maximum 20 images reached.</p>
           )}
         </div>
