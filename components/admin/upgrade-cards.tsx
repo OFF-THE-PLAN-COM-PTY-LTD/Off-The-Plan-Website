@@ -101,8 +101,9 @@ export default function UpgradeCards({ upgrades, listingImages, projects, promoF
       {/* Modal */}
       {activeModal && (
         <UpgradeModal
-          upgradeType={activeModal.toLowerCase()}
+          upgradeType={activeModal}
           projects={projects}
+          availableUpgrades={upgrades.map(({ name, price }) => ({ name, price }))}
           onClose={() => setActiveModal(null)}
         />
       )}

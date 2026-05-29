@@ -119,18 +119,22 @@ export default async function PortalPricing() {
       <div className="rounded-xl overflow-hidden mb-10" style={{ background: "#1a2340" }}>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
           {/* Left — phone mockup */}
-          <div className="flex items-center justify-center p-10">
-            <div className="relative">
+          <div className="flex items-center justify-center p-6 lg:p-10">
+            <div className="relative w-full max-w-[340px]">
               <div className="text-center mb-6">
                 <p className="text-white/60 text-xs uppercase tracking-widest mb-1">Start Listing with</p>
-                <h2 className="text-white font-bold text-xl uppercase tracking-widest">Off The Plan</h2>
+                <h2 className="text-white font-bold text-xl uppercase tracking-widest">
+                  Off The Plan<sup className="text-[0.45em] align-super ml-0.5">®</sup>
+                </h2>
               </div>
               <Image
                 src="/Phone-Mock-05.png"
                 alt="Off The Plan App"
-                width={220}
-                height={440}
-                className="mx-auto drop-shadow-2xl"
+                width={340}
+                height={680}
+                className="mx-auto drop-shadow-2xl w-full h-auto"
+                sizes="(min-width: 1024px) 340px, (min-width: 640px) 300px, 260px"
+                priority
               />
             </div>
           </div>

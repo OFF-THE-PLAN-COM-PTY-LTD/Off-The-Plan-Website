@@ -8,19 +8,42 @@ interface Project {
   name: string;
 }
 
+interface UpgradeOption {
+  name: string;
+  price: number;
+}
+
 interface UpgradeModalProps {
+  /** Pre-selected upgrade name (matches one of `availableUpgrades[].name`). */
   upgradeType: string;
   projects: Project[];
+  /** Full list of available upgrades — rendered as radio buttons. */
+  availableUpgrades?: UpgradeOption[];
   onClose: () => void;
 }
 
-export default function UpgradeModal({ upgradeType, projects, onClose }: UpgradeModalProps) {
+const DEFAULT_UPGRADES: UpgradeOption[] = [
+  { name: "Promo Flag",              price: 50 },
+  { name: "Featured Project Tier 2", price: 200 },
+  { name: "Featured Project Tier 1", price: 400 },
+  { name: "Home Page Main Banner",   price: 1000 },
+];
+
+export default function UpgradeModal({ upgradeType, projects, availableUpgrades, onClose }: UpgradeModalProps) {
   const today = new Date();
   const firstOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1)
     .toISOString().split("T")[0].split("-").reverse().join("-");
   const lastOfMonth = new Date(today.getFullYear(), today.getMonth() + 2, 0)
     .toISOString().split("T")[0].split("-").reverse().join("-");
 
+  const upgradesList = availableUpgrades && availableUpgrades.length > 0 ? availableUpgrades : DEFAULT_UPGRADES;
+
+  // Match incoming pre-selection case-insensitively so callers can pass any casing.
+  const initialSelection =
+    upgradesList.find((u) => u.name.toLowerCase() === upgradeType.toLowerCase())?.name
+    ?? upgradesList[0].name;
+
+  const [selectedUpgrade, setSelectedUpgrade] = useState(initialSelection);
   const [projectId, setProjectId] = useState("");
   const [startDate, setStartDate] = useState(firstOfMonth);
   const [endDate, setEndDate] = useState(lastOfMonth);
@@ -33,7 +56,7 @@ export default function UpgradeModal({ upgradeType, projects, onClose }: Upgrade
     await fetch("/api/admin/upgrade-request", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ projectId, upgradeType, startDate, endDate }),
+      body: JSON.stringify({ projectId, upgradeType: selectedUpgrade, startDate, endDate }),
     });
     setLoading(false);
     setSubmitted(true);
@@ -87,15 +110,36 @@ export default function UpgradeModal({ upgradeType, projects, onClose }: Upgrade
               </select>
             </div>
 
-            {/* Upgrade Type — read only */}
+            {/* Upgrade Type — radio buttons */}
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Upgrade Type:</label>
-              <input
-                type="text"
-                readOnly
-                value={upgradeType}
-                className="w-full border border-gray-200 rounded px-3 py-2 text-sm text-gray-500 bg-gray-50"
-              />
+              <label className="block text-xs text-gray-600 mb-2">Upgrade Type:</label>
+              <div className="flex flex-col gap-1.5">
+                {upgradesList.map((u) => (
+                  <label
+                    key={u.name}
+                    className={`flex items-center justify-between gap-3 px-3 py-2 border rounded cursor-pointer transition-colors ${
+                      selectedUpgrade === u.name
+                        ? "border-[#e85d26] bg-orange-50"
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <input
+                        type="radio"
+                        name="upgradeType"
+                        value={u.name}
+                        checked={selectedUpgrade === u.name}
+                        onChange={() => setSelectedUpgrade(u.name)}
+                        className="accent-[#e85d26]"
+                      />
+                      <span className="text-sm text-gray-700">{u.name}</span>
+                    </span>
+                    <span className="text-xs font-semibold text-gray-500">
+                      ${u.price.toLocaleString()}/mo
+                    </span>
+                  </label>
+                ))}
+              </div>
             </div>
 
             {/* Start Date */}
