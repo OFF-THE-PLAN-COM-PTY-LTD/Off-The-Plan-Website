@@ -21,11 +21,29 @@ export async function POST(req: NextRequest) {
   if ("error" in auth) return auth.error;
 
   const body = await req.json();
-  const { title, link, description, desktop_image_url, mobile_image_url, sort_order } = body;
+  const {
+    title,
+    link,
+    description,
+    desktop_image_url,
+    mobile_image_url,
+    video_url,
+    linked_development_id,
+    sort_order,
+  } = body;
 
   const { data, error } = await supabaseAdmin
     .from("homepage_banners")
-    .insert({ title, link, description, desktop_image_url, mobile_image_url, sort_order: sort_order ?? 0 })
+    .insert({
+      title,
+      link,
+      description,
+      desktop_image_url,
+      mobile_image_url,
+      video_url: video_url || null,
+      linked_development_id: linked_development_id || null,
+      sort_order: sort_order ?? 0,
+    })
     .select()
     .single();
 

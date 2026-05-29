@@ -27,31 +27,47 @@ export async function POST(request: Request) {
   }
 
   const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
-  const allowedTypes = ["jpg", "jpeg", "png", "webp", "gif", "pdf"];
+  const allowedTypes = ["jpg", "jpeg", "png", "webp", "gif", "pdf", "mp4", "webm", "mov"];
   if (!allowedTypes.includes(ext)) {
-    return NextResponse.json({ error: "File type not allowed. Use JPG, PNG, WebP, or PDF." }, { status: 400 });
+    return NextResponse.json({ error: "File type not allowed. Use JPG, PNG, WebP, PDF, MP4 or WebM." }, { status: 400 });
   }
 
   // Validate the actual MIME type, not just the filename extension — anyone
   // can rename evil.exe to evil.png. Different buckets accept different
   // content types: image-bearing buckets allow image/*, the brochures bucket
-  // also allows application/pdf.
+  // also allows application/pdf, and the homepage-banners bucket additionally
+  // accepts video files for the hero player.
   const mime = (file.type || "").toLowerCase();
   const IMAGE_MIMES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
+  const VIDEO_MIMES = new Set(["video/mp4", "video/webm", "video/quicktime"]);
   const PDF_MIME = "application/pdf";
-  const isImageBucket = bucket !== "brochures";
-  const mimeOk = isImageBucket
-    ? IMAGE_MIMES.has(mime)
-    : IMAGE_MIMES.has(mime) || mime === PDF_MIME;
+
+  const allowsVideo = bucket === "homepage-banners";
+  const allowsPdf = bucket === "brochures";
+
+  const mimeOk =
+    IMAGE_MIMES.has(mime) ||
+    (allowsVideo && VIDEO_MIMES.has(mime)) ||
+    (allowsPdf && mime === PDF_MIME);
+
   if (!mimeOk) {
+    const allowedDesc = allowsVideo
+      ? "image or video"
+      : allowsPdf
+      ? "image or PDF"
+      : "image";
     return NextResponse.json(
-      { error: isImageBucket ? "Only image files are allowed for this upload." : "Only image or PDF files are allowed." },
+      { error: `Only ${allowedDesc} files are allowed for this upload.` },
       { status: 400 },
     );
   }
 
-  if (file.size > 10 * 1024 * 1024) {
-    return NextResponse.json({ error: "File too large. Maximum size is 10 MB." }, { status: 400 });
+  // Image / PDF files capped at 10 MB; videos can be substantially larger.
+  const isVideo = VIDEO_MIMES.has(mime);
+  const maxBytes = isVideo ? 100 * 1024 * 1024 : 10 * 1024 * 1024;
+  if (file.size > maxBytes) {
+    const limit = isVideo ? "100 MB" : "10 MB";
+    return NextResponse.json({ error: `File too large. Maximum size is ${limit}.` }, { status: 400 });
   }
 
   const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;

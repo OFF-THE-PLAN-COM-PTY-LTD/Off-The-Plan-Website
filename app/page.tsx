@@ -83,6 +83,7 @@ function pickImage(dev: { hero_image_url?: string | null; images?: { url: string
 
 export default async function HomePage() {
   const [
+    { data: heroBannerData },
     { data: tier1Data },
     { data: tier2Data },
     { data: articlesData },
@@ -93,6 +94,12 @@ export default async function HomePage() {
     { data: housesData },
     { data: newHomeData },
   ] = await Promise.all([
+    supabase
+      .from("homepage_banners")
+      .select("title, link, video_url, desktop_image_url, mobile_image_url, linked_development:developments!linked_development_id(name, slug, suburb, state, developer:developers(name))")
+      .order("sort_order", { ascending: true })
+      .limit(1)
+      .maybeSingle(),
     supabase
       .from("developments")
       .select("*, developer:developers(*), images:development_images(*)")
@@ -185,21 +192,73 @@ export default async function HomePage() {
 
   const articles = (articlesData ?? []) as unknown as JournalArticle[];
 
+  // Derive hero media + overlay text from the first homepage banner (admin-controlled).
+  // Falls back to the static /hero-video.mp4 with the default branded overlay
+  // when no banner is configured, so the page still works on a fresh DB.
+  const heroBanner = heroBannerData as unknown as {
+    title: string | null;
+    link: string | null;
+    video_url: string | null;
+    desktop_image_url: string | null;
+    mobile_image_url: string | null;
+    linked_development:
+      | {
+          name: string | null;
+          slug: string | null;
+          suburb: string | null;
+          state: string | null;
+          developer: { name: string | null } | null;
+        }
+      | null;
+  } | null;
+
+  const heroVideoSrc = heroBanner?.video_url || "/hero-video.mp4";
+  const heroPoster = heroBanner?.desktop_image_url || null;
+  const linkedDev = heroBanner?.linked_development ?? null;
+  const heroHref = linkedDev?.slug ? `/listings/${linkedDev.slug}` : heroBanner?.link || null;
+  const heroOverlay = linkedDev
+    ? {
+        project: linkedDev.name ?? heroBanner?.title ?? "",
+        location: [linkedDev.suburb, linkedDev.state].filter(Boolean).join(", "),
+        developer: linkedDev.developer?.name ?? "",
+      }
+    : heroBanner?.title
+    ? { project: heroBanner.title, location: "", developer: "" }
+    : null;
+
   return (
     <>
       {/* ─── Hero ──────────────────────────────────────────────────────────── */}
       <section className="relative h-screen flex flex-col bg-navy overflow-hidden">
+        {/* Video background. Poster doubles as an image fallback when the
+            video file can't load (slow network, codec mismatch, etc.) and
+            also displays on the first paint before the video buffers. */}
         <video
           autoPlay muted loop playsInline
+          {...(heroPoster ? { poster: heroPoster } : {})}
           className="absolute inset-0 w-full h-full object-cover"
           aria-hidden="true"
         >
-          <source src="/hero-video.mp4" type="video/mp4" />
+          <source src={heroVideoSrc} type="video/mp4" />
+          {/* If <video> isn't supported at all, render the poster image. */}
+          {heroPoster && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={heroPoster} alt="" className="absolute inset-0 w-full h-full object-cover" />
+          )}
         </video>
         <div className="absolute inset-0 bg-navy/60" />
 
+        {/* Whole hero is clickable when a banner has a linked project / link. */}
+        {heroHref && (
+          <Link
+            href={heroHref}
+            aria-label={heroOverlay?.project ? `View ${heroOverlay.project}` : "View featured project"}
+            className="absolute inset-0 z-10"
+          />
+        )}
+
         {/* Hero text — centred in remaining space */}
-        <div className="relative z-10 flex-1 flex items-center justify-center text-center px-6">
+        <div className="relative z-10 flex-1 flex items-center justify-center text-center px-6 pointer-events-none">
           <div className="flex flex-col items-center gap-6">
             <div className="w-12 h-px bg-orange" aria-hidden="true" />
             <p className="font-brand text-label-lg uppercase tracking-[0.3em] text-ink-light/50">
@@ -214,6 +273,21 @@ export default async function HomePage() {
             <div className="w-12 h-px bg-orange" aria-hidden="true" />
           </div>
         </div>
+
+        {/* Featured-project overlay tag — anchored above the search bar.
+            Auto-populated from the linked development (Tim's spec:
+            'PROJECT NAME – Suburb, State | By Developer'). */}
+        {heroOverlay?.project && (
+          <div className="relative z-20 px-6 md:px-10 pb-3 pointer-events-none">
+            <div className="container-padded">
+              <p className="font-mono text-[10px] md:text-[11px] uppercase tracking-[0.18em] text-white/70">
+                <span className="text-white font-semibold">{heroOverlay.project}</span>
+                {heroOverlay.location && <span className="text-white/50"> &nbsp;–&nbsp; {heroOverlay.location}</span>}
+                {heroOverlay.developer && <span className="text-white/50"> &nbsp;|&nbsp; By {heroOverlay.developer}</span>}
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Search bar — overlaid at bottom of hero */}
         <div className="relative z-10">
