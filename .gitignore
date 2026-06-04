@@ -4,6 +4,11 @@
 # never commit. Re-run `node scripts/import-members.mjs --apply` to regenerate.
 /scripts/member-passwords.csv
 
+# Data migration scratch directory — scraped dashboard exports from the
+# existing live site. Contains real customer PII (names, emails, phone
+# numbers). Never commit. Files here are inputs for one-off import scripts.
+/scripts/data-import/
+
 # dependencies
 /node_modules
 /.pnp
