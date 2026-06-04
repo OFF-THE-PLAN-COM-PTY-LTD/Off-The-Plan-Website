@@ -13,12 +13,36 @@ const PAGES = [
   { value: "guides", label: "Guides" },
 ] as const;
 
-const POSITIONS = [
+const ALL_POSITIONS = [
   { value: "top", label: "Top" },
   { value: "middle", label: "Middle" },
   { value: "bottom", label: "Bottom" },
   { value: "right", label: "Right" },
 ] as const;
+
+/**
+ * Per-page valid ad positions — mirrors the existing live admin
+ * (offtheplan.com.au/ads_management_setup) exactly per Tim's May 29 reply:
+ * "current site is accurate, please match up".
+ *
+ *   Home          – Bottom only
+ *   Listings      – Middle only
+ *   Resources     – Right, Bottom
+ *   News         – Right, Bottom
+ *   Guides       – Right, Bottom
+ */
+const PAGE_POSITIONS: Record<typeof PAGES[number]["value"], readonly typeof ALL_POSITIONS[number]["value"][]> = {
+  home: ["bottom"],
+  listings: ["middle"],
+  resources: ["right", "bottom"],
+  news: ["right", "bottom"],
+  guides: ["right", "bottom"],
+};
+
+function positionsForPage(page: string): readonly { value: string; label: string }[] {
+  const allowed = PAGE_POSITIONS[page as keyof typeof PAGE_POSITIONS] ?? [];
+  return ALL_POSITIONS.filter((p) => allowed.includes(p.value));
+}
 
 // Recommended dimensions by position
 const DIMS: Record<string, { desktop: string; mobile: string }> = {
@@ -31,10 +55,11 @@ const DIMS: Record<string, { desktop: string; mobile: string }> = {
 type Draft = Omit<Ad, "id"> & { id: string; _new?: boolean; _dirty?: boolean };
 
 function emptyDraft(): Draft {
+  // Default to (home, bottom) — Home only allows Bottom per Tim's spec.
   return {
     id: `tmp_${Math.random().toString(36).slice(2, 10)}`,
     page: "home",
-    position: "bottom",
+    position: PAGE_POSITIONS.home[0],
     ad_type: "image",
     desktop_image_url: null,
     mobile_image_url: null,
@@ -167,21 +192,32 @@ export default function AdsManager({ initial }: { initial: Ad[] }) {
                   <td className="px-3 py-3">
                     <select
                       value={row.page}
-                      onChange={(e) => update(row.id, { page: e.target.value as Ad["page"] })}
+                      onChange={(e) => {
+                        const newPage = e.target.value as Ad["page"];
+                        const validPositions = PAGE_POSITIONS[newPage as keyof typeof PAGE_POSITIONS] ?? [];
+                        // If current position isn't valid on the new page, snap to
+                        // the first valid one so the row never holds an invalid combo.
+                        const nextPosition = validPositions.includes(row.position as never)
+                          ? row.position
+                          : (validPositions[0] as Ad["position"]) ?? row.position;
+                        update(row.id, { page: newPage, position: nextPosition });
+                      }}
                       className="border border-line px-2 py-1.5 font-sans text-sm text-ink focus:outline-none focus:border-orange w-full"
                     >
                       {PAGES.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
                     </select>
                   </td>
 
-                  {/* Position */}
+                  {/* Position — filtered to positions valid for the selected page */}
                   <td className="px-3 py-3">
                     <select
                       value={row.position}
                       onChange={(e) => update(row.id, { position: e.target.value as Ad["position"] })}
                       className="border border-line px-2 py-1.5 font-sans text-sm text-ink focus:outline-none focus:border-orange w-full"
                     >
-                      {POSITIONS.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
+                      {positionsForPage(row.page).map((p) => (
+                        <option key={p.value} value={p.value}>{p.label}</option>
+                      ))}
                     </select>
                   </td>
 
