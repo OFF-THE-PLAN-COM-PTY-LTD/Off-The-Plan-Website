@@ -9,7 +9,7 @@ interface Profile {
   full_name: string | null;
   interest_type: string | null;
   member_status: string;
-  created_at: string;
+  joined_at: string;
 }
 
 const STATUS_FILTERS = [
@@ -34,8 +34,8 @@ export default async function AdminMembersPage({ searchParams }: Props) {
 
   let query = supabaseAdmin
     .from("profiles")
-    .select("id, full_name, interest_type, member_status, created_at")
-    .order("created_at", { ascending: false });
+    .select("id, full_name, interest_type, member_status, joined_at")
+    .order("joined_at", { ascending: false });
 
   if (statusFilter !== "all" && STATUS_FILTERS.some((f) => f.key === statusFilter)) {
     query = query.eq("member_status", statusFilter);
@@ -129,7 +129,7 @@ export default async function AdminMembersPage({ searchParams }: Props) {
                 return (
                   <tr key={p.id} className="border-b border-line last:border-0">
                     <td className="px-4 py-3 font-sans text-[12px] text-ink/70 whitespace-nowrap">
-                      {new Date(p.created_at).toLocaleDateString("en-AU", {
+                      {new Date(p.joined_at).toLocaleDateString("en-AU", {
                         day: "2-digit", month: "short", year: "numeric",
                       })}
                     </td>
