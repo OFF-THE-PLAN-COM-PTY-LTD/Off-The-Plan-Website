@@ -256,15 +256,15 @@ export default async function FeaturesAndPricingPage() {
       <div className="bg-navy py-16">
         <div className="container-padded">
 
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-8 lg:gap-12 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-12 items-start">
 
-            {/* Left — phone mockup image (visible on mobile too) */}
-            <div className="flex items-center justify-center self-stretch overflow-hidden">
+            {/* Left — phone mockup image (desktop only) */}
+            <div className="hidden lg:flex items-center justify-center self-stretch overflow-hidden">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/Phone-Mock-05.png"
                 alt="Off The Plan on mobile"
-                className="w-full max-w-[360px] lg:max-w-none h-auto lg:h-full lg:w-auto object-contain lg:scale-110"
+                className="h-full w-auto object-contain scale-110"
               />
             </div>
 
