@@ -106,14 +106,14 @@ export default async function HomePage() {
       .maybeSingle(),
     supabase
       .from("developments")
-      .select("*, developer:developers(*), images:development_images(*)")
+      .select("*, developer:developers(*), images:development_images(*), floor_plans:development_floor_plans(*)")
       .eq("tier", "1st Tier")
       .eq("is_published", true)
       .order("updated_at", { ascending: false })
       .limit(6),
     supabase
       .from("developments")
-      .select("*, developer:developers(*), images:development_images(*)")
+      .select("*, developer:developers(*), images:development_images(*), floor_plans:development_floor_plans(*)")
       .eq("tier", "2nd Tier")
       .eq("is_published", true)
       .order("updated_at", { ascending: false })

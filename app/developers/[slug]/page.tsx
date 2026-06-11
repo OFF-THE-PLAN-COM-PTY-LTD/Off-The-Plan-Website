@@ -31,7 +31,7 @@ export default async function DeveloperProfilePage({ params }: Props) {
 
   const { data: devsData } = await supabase
     .from("developments")
-    .select("*, developer:developers(*), images:development_images(*)")
+    .select("*, developer:developers(*), images:development_images(*), floor_plans:development_floor_plans(*)")
     .eq("developer_id", rawDev.id)
     .eq("is_published", true);
 

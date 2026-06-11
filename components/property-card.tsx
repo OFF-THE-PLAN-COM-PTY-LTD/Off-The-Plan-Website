@@ -278,12 +278,20 @@ export function PropertyCard({
   type FloorRow = { beds: number | null; baths: number | null; cars: number | null; sqm: number | null; price: string | null };
   const floorRows: FloorRow[] = (() => {
     if (development.floor_plans && development.floor_plans.length > 0) {
-      return development.floor_plans.slice(0, 5).map((fp) => ({
-        beds: null,
-        baths: null,
-        cars: null,
+      // Tim refers to these as the "config summaries". Source of truth is
+      // listing_configurations on his live admin → development_floor_plans
+      // on ours. Capped at 4 entries per Tim's spec (25.05.26 reply).
+      return development.floor_plans.slice(0, 4).map((fp) => ({
+        beds: fp.beds,
+        baths: fp.bath,
+        cars: fp.garage,
         sqm: fp.internal_sqm,
-        price: fp.price_from ? `$${fp.price_from.toLocaleString()}` : "Contact Agent",
+        // Prefer the raw text label (e.g. "$605k to $710k", "Contact
+        // Agent") so the card matches the live site exactly. Fall back
+        // to the parsed integer price, then to "Contact Agent".
+        price:
+          fp.price_display
+          ?? (fp.price_from ? `$${fp.price_from.toLocaleString()}` : "Contact Agent"),
       }));
     }
     const min = development.beds_min ?? 1;

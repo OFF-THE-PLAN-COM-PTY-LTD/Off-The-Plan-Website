@@ -57,7 +57,7 @@ const PRICE_RANGES = [
 export default async function SearchPage({ searchParams }: SearchPageProps) {
   let query = supabase
     .from("developments")
-    .select("*, developer:developers(*), images:development_images(*)")
+    .select("*, developer:developers(*), images:development_images(*), floor_plans:development_floor_plans(*)")
     .eq("is_published", true);
 
   if (searchParams.suburb) {
