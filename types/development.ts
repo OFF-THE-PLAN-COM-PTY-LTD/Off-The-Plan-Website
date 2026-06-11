@@ -47,9 +47,21 @@ export interface Development {
   is_featured: boolean;
   created_at: string;
   updated_at: string;
+  // "Properties Available" — up to 20 rows, free-text per cell so we
+  // can mirror exactly what's entered on Tim's live admin (e.g.
+  // "Contact Agent" or "—" in the price column).
+  mini_stocklist?: MiniStocklistRow[] | null;
   developer?: Developer;
   images?: DevelopmentImage[];
   floor_plans?: DevelopmentFloorPlan[];
+}
+
+export interface MiniStocklistRow {
+  bed: string | null;
+  bath: string | null;
+  parking: string | null;
+  size: string | null;
+  price: string | null;
 }
 
 export interface DevelopmentImage {

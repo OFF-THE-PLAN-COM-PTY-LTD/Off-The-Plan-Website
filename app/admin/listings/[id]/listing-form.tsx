@@ -54,6 +54,18 @@ interface FloorPlan {
   image_url: string;
 }
 
+// Mini stocklist row — every cell stays a free-text string so admins
+// can enter things like "Contact Agent" or "Fr. $660,000" verbatim,
+// matching what Tim's existing site allows.
+interface MiniStocklistEntry {
+  bed: string;
+  bath: string;
+  parking: string;
+  size: string;
+  price: string;
+}
+const MAX_STOCKLIST_ROWS = 20;
+
 interface ListingData {
   id?: string;
   // Category
@@ -146,6 +158,8 @@ interface ListingData {
   // SEO
   seo_title?: string;
   seo_description?: string;
+  // Mini stocklist — see MiniStocklistEntry above. Up to 20 rows.
+  mini_stocklist?: MiniStocklistEntry[] | null;
 }
 
 interface Agent {
@@ -1032,6 +1046,15 @@ export function ListingForm({
   // Mini Stocklist
   const [floorPlans, setFloorPlans] = useState<FloorPlan[]>(initialFloorPlans);
 
+  // "Properties Available" table — separate from floor_plans. Free-text
+  // cells so an admin can enter "Contact Agent" or "Fr. $660,000" the
+  // same way Tim's existing site allows. Capped at 20 rows.
+  const [miniStocklist, setMiniStocklist] = useState<MiniStocklistEntry[]>(
+    Array.isArray(existing?.mini_stocklist)
+      ? (existing!.mini_stocklist as MiniStocklistEntry[])
+      : [],
+  );
+
   // SEO
   const [seoTitle, setSeoTitle] = useState(existing?.seo_title ?? "");
   const [seoDescription, setSeoDescription] = useState(existing?.seo_description ?? "");
@@ -1095,6 +1118,26 @@ export function ListingForm({
   function updateFloorPlan(index: number, field: keyof FloorPlan, value: string) {
     setFloorPlans((prev) =>
       prev.map((p, i) => (i === index ? { ...p, [field]: value } : p))
+    );
+  }
+
+  // ─── Mini Stocklist (Properties Available) ────────────────────────────────
+
+  function addStocklistRow() {
+    setMiniStocklist((prev) =>
+      prev.length >= MAX_STOCKLIST_ROWS
+        ? prev
+        : [...prev, { bed: "", bath: "", parking: "", size: "", price: "" }],
+    );
+  }
+
+  function removeStocklistRow(index: number) {
+    setMiniStocklist((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function updateStocklistRow(index: number, field: keyof MiniStocklistEntry, value: string) {
+    setMiniStocklist((prev) =>
+      prev.map((r, i) => (i === index ? { ...r, [field]: value } : r))
     );
   }
 
@@ -1202,6 +1245,11 @@ export function ListingForm({
       seo_description: seoDescription || null,
       // Floor plans
       floor_plans: floorPlans,
+      // Mini stocklist — only send rows where the user typed something
+      // so empty drafts don't leak through.
+      mini_stocklist: miniStocklist.filter(
+        (r) => r.bed || r.bath || r.parking || r.size || r.price,
+      ),
     };
 
     const res = await fetch("/api/admin/listings", {
@@ -1639,6 +1687,75 @@ export function ListingForm({
               </p>
             </div>
           )}
+        </AccordionSection>
+
+        {/* ── 3b. Properties Available (mini stocklist) ────────────────────
+            Renders as the "Properties Available" table on the public
+            listing page. Up to 20 rows per Tim's spec. All cells are
+            free text so admins can mirror the existing site's mixed
+            content (e.g. "Contact Agent" or "Fr. $660,000"). */}
+        <AccordionSection title="Properties Available (Mini Stocklist)">
+          <div>
+            <p className="font-sans text-sm text-ink/60 mb-4">
+              The longer per-unit availability table on the listing detail page.
+              Restricted to {MAX_STOCKLIST_ROWS} rows. All fields accept free text —
+              leave blank cells empty to show as "—" on the public table.
+            </p>
+            {miniStocklist.length > 0 && (
+              <div className="overflow-x-auto mb-4">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="border-b-2 border-orange/20">
+                      {["Bedrooms", "Bathrooms", "Parking", "Total Size", "Price From", "Action"].map((h) => (
+                        <th key={h} className="font-sans text-sm font-semibold text-ink/70 px-4 py-3 whitespace-nowrap">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {miniStocklist.map((r, i) => (
+                      <tr key={i} className="border-b border-line last:border-0">
+                        <td className="px-4 py-3">
+                          <input type="text" value={r.bed} onChange={(e) => updateStocklistRow(i, "bed", e.target.value)} placeholder="2" className="border border-line px-3 py-2 bg-white font-sans text-sm text-ink outline-none focus:border-orange/60 w-20" />
+                        </td>
+                        <td className="px-4 py-3">
+                          <input type="text" value={r.bath} onChange={(e) => updateStocklistRow(i, "bath", e.target.value)} placeholder="2" className="border border-line px-3 py-2 bg-white font-sans text-sm text-ink outline-none focus:border-orange/60 w-20" />
+                        </td>
+                        <td className="px-4 py-3">
+                          <input type="text" value={r.parking} onChange={(e) => updateStocklistRow(i, "parking", e.target.value)} placeholder="1" className="border border-line px-3 py-2 bg-white font-sans text-sm text-ink outline-none focus:border-orange/60 w-20" />
+                        </td>
+                        <td className="px-4 py-3">
+                          <input type="text" value={r.size} onChange={(e) => updateStocklistRow(i, "size", e.target.value)} placeholder="77" className="border border-line px-3 py-2 bg-white font-sans text-sm text-ink outline-none focus:border-orange/60 w-28" />
+                        </td>
+                        <td className="px-4 py-3">
+                          <input type="text" value={r.price} onChange={(e) => updateStocklistRow(i, "price", e.target.value)} placeholder="$890,000 or Contact Agent" className="border border-line px-3 py-2 bg-white font-sans text-sm text-ink outline-none focus:border-orange/60 w-56" />
+                        </td>
+                        <td className="px-4 py-3">
+                          <button
+                            type="button"
+                            onClick={() => removeStocklistRow(i)}
+                            className="font-mono text-[10px] uppercase tracking-widest px-3 py-2 border border-red-300 text-red-500 hover:bg-red-500 hover:text-white hover:border-red-500 transition-colors"
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={addStocklistRow}
+              disabled={miniStocklist.length >= MAX_STOCKLIST_ROWS}
+              className="font-mono text-[10px] uppercase tracking-widest px-4 py-2 border border-orange text-orange hover:bg-orange hover:text-white transition-colors mr-2 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              + Add row ({miniStocklist.length}/{MAX_STOCKLIST_ROWS})
+            </button>
+            <p className="font-sans text-xs text-ink/40 mt-3">
+              Changes save when you click <strong>Save changes</strong> at the bottom of the form.
+            </p>
+          </div>
         </AccordionSection>
 
         {/* ── 4. Property Features ─────────────────────────────────────────── */}

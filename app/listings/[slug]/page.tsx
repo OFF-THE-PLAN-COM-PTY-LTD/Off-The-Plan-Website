@@ -476,6 +476,7 @@ export default async function DossierPage({ params }: Props) {
             floorPlans={floorPlans}
             bedsMin={dev.beds_min}
             bedsMax={dev.beds_max}
+            miniStocklist={dev.mini_stocklist ?? null}
           />
         </div>
       </section>

@@ -2,24 +2,48 @@
 
 import { BedIcon, BathIcon, CarIcon, ExpandIcon } from "@/components/icons";
 import { formatPrice } from "@/lib/utils";
-import type { DevelopmentFloorPlan } from "@/types/development";
+import type { DevelopmentFloorPlan, MiniStocklistRow } from "@/types/development";
 
 interface PropertiesTableProps {
   floorPlans: DevelopmentFloorPlan[];
   bedsMin: number | null;
   bedsMax: number | null;
+  /**
+   * Tim's "mini stocklist" — the longer Properties-Available table
+   * (up to 20 rows). When present we render this verbatim and skip
+   * the floor_plan / beds-range fallback. Source: Tim's live admin
+   * `optional_property` → our `developments.mini_stocklist` jsonb.
+   */
+  miniStocklist?: MiniStocklistRow[] | null;
 }
 
 interface TableRow {
-  beds: number | null;
-  baths: number | null;
-  cars: number | null;
-  sqm: number | null;
+  beds: string | number | null;
+  baths: string | number | null;
+  cars: string | number | null;
+  sqm: string | number | null;
   price: string | null;
   planType: string | null;
 }
 
-function buildRows(floorPlans: DevelopmentFloorPlan[], bedsMin: number | null, bedsMax: number | null): TableRow[] {
+function buildRows(
+  floorPlans: DevelopmentFloorPlan[],
+  bedsMin: number | null,
+  bedsMax: number | null,
+  miniStocklist: MiniStocklistRow[] | null | undefined,
+): TableRow[] {
+  // 1. Mini stocklist wins when populated — matches Tim's "Properties
+  //    Available" table on the live site exactly.
+  if (miniStocklist && miniStocklist.length > 0) {
+    return miniStocklist.slice(0, 20).map((r) => ({
+      beds: r.bed,
+      baths: r.bath,
+      cars: r.parking,
+      sqm: r.size,
+      price: r.price,
+      planType: null,
+    }));
+  }
   if (floorPlans.length > 0) {
     return floorPlans.map((fp) => {
       let price: string | null = null;
@@ -52,8 +76,8 @@ function buildRows(floorPlans: DevelopmentFloorPlan[], bedsMin: number | null, b
   }));
 }
 
-export function PropertiesTable({ floorPlans, bedsMin, bedsMax }: PropertiesTableProps) {
-  const allRows = buildRows(floorPlans, bedsMin, bedsMax);
+export function PropertiesTable({ floorPlans, bedsMin, bedsMax, miniStocklist }: PropertiesTableProps) {
+  const allRows = buildRows(floorPlans, bedsMin, bedsMax, miniStocklist);
 
   return (
     <div className="mt-6 overflow-x-auto">

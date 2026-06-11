@@ -135,6 +135,12 @@ function buildListingData(fields: Record<string, unknown>) {
     // SEO
     seo_title: fields.seo_title ?? null,
     seo_description: fields.seo_description ?? null,
+    // Mini stocklist — capped at 20 rows per Tim's spec (25.05.26).
+    // Stored as jsonb so each cell can carry the original free-text
+    // (e.g. "Contact Agent", "Fr. $660,000").
+    mini_stocklist: Array.isArray(fields.mini_stocklist)
+      ? (fields.mini_stocklist as unknown[]).slice(0, 20)
+      : [],
   };
 }
 
@@ -268,6 +274,7 @@ const MEMBER_ALLOWED_FIELDS = new Set<string>([
   "price_list_url", "specifications_url",
   "seo_title", "seo_description",
   "name", "status",
+  "mini_stocklist",
 ]);
 
 const ADMIN_EXTRA_FIELDS = ["slug", "is_published", "is_featured", "owner_user_id", "agency_id"];
