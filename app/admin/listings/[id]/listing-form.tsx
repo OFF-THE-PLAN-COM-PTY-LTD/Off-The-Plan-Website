@@ -1405,7 +1405,7 @@ export function ListingForm({
               <input type="url" value={developerWebsite} onChange={(e) => setDeveloperWebsite(e.target.value)} placeholder="https://..." className={inp} />
             </div>
             <div>
-              <label className={lbl}>Number of Apartments / Lots</label>
+              <label className={lbl}>{type === "Townhouses" ? "Number of Homes" : "Number of Apartments / Lots"}</label>
               <input type="number" value={residenceCount} onChange={(e) => setResidenceCount(e.target.value === "" ? "" : Number(e.target.value))} className={inp} />
             </div>
           </div>
