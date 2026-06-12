@@ -1884,33 +1884,6 @@ export function ListingForm({
             accept="image/jpeg,image/png,image/webp,application/pdf"
           />
 
-          {/* Upload Additional Video */}
-          <div className="border-b border-line pb-5 mb-5">
-            <p className="font-sans text-sm font-medium text-ink/80 mb-2">Upload Additional Video</p>
-            <div className="flex gap-2">
-              <input
-                type="url"
-                value={additionalVideoUrl}
-                onChange={(e) => setAdditionalVideoUrl(e.target.value)}
-                placeholder="https://youtube.com/..."
-                className={inp}
-              />
-              <button
-                type="button"
-                onClick={() => setAdditionalVideoUrl("")}
-                className="font-mono text-[10px] uppercase tracking-widest px-3 py-2 border border-orange text-orange hover:bg-orange hover:text-white transition-colors whitespace-nowrap"
-              >
-                + Add
-              </button>
-              <button
-                type="button"
-                className="font-mono text-[10px] uppercase tracking-widest px-3 py-2 border border-teal-400 text-teal-600 hover:bg-teal-500 hover:text-white transition-colors whitespace-nowrap"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-
           {/* 3D Tour Link */}
           <div className="border-b border-line pb-5 mb-5">
             <p className="font-sans text-sm font-medium text-ink/80 mb-2">3D Tour Link</p>
