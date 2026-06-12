@@ -66,7 +66,12 @@ export default async function PortalDashboard() {
       {/* Header */}
       <div
         className="relative overflow-hidden rounded-sm px-8 py-6 flex items-center justify-between"
-        style={{ background: "linear-gradient(135deg, #1a2340 0%, #2d3a5e 60%, #3b4f82 100%)" }}
+        style={{
+          backgroundImage:
+            "linear-gradient(135deg, rgba(26,35,64,0.85) 0%, rgba(45,58,94,0.7) 60%, rgba(59,79,130,0.55) 100%), url('/categories/category-apartments.jpg')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
       >
         <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full opacity-10" style={{ background: "#e85d26" }} />
         <div className="absolute -bottom-8 right-32 w-32 h-32 rounded-full opacity-5" style={{ background: "#fff" }} />
