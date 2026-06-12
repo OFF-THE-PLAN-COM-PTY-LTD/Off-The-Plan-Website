@@ -327,7 +327,7 @@ export default async function HomePage() {
                 <input
                   name="suburb"
                   placeholder="Suburb, postcode, or project name"
-                  className="font-sans text-sm text-[#1a2340] placeholder:text-[#1a2340]/40 px-4 py-2 bg-white outline-none w-48 border-r border-[#dde1e9] flex-shrink-0"
+                  className="font-sans text-sm text-[#1a2340] placeholder:text-[#1a2340]/40 px-4 py-2 bg-white outline-none flex-[2] min-w-[220px] border-r border-[#dde1e9]"
                   aria-label="Suburb, postcode, or project name"
                 />
                 <div className="relative flex-1 bg-white border-r border-[#dde1e9] flex items-center">
