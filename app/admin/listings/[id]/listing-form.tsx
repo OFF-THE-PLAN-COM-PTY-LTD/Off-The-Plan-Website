@@ -65,6 +65,7 @@ interface MiniStocklistEntry {
   price: string;
 }
 const MAX_STOCKLIST_ROWS = 20;
+const MAX_CONFIG_SUMMARY_ROWS = 4;
 
 interface ListingData {
   id?: string;
@@ -1105,10 +1106,11 @@ export function ListingForm({
   // ─── Floor plans ─────────────────────────────────────────────────────────
 
   function addFloorPlan() {
-    setFloorPlans((prev) => [
-      ...prev,
-      { beds: "", bath: "", garage: "", internal_sqm: "", price_from: "", plan_type: "", config: "", image_url: "" },
-    ]);
+    setFloorPlans((prev) =>
+      prev.length >= MAX_CONFIG_SUMMARY_ROWS
+        ? prev
+        : [...prev, { beds: "", bath: "", garage: "", internal_sqm: "", price_from: "", plan_type: "", config: "", image_url: "" }],
+    );
   }
 
   function removeFloorPlan(index: number) {
@@ -1678,10 +1680,16 @@ export function ListingForm({
               <button
                 type="button"
                 onClick={addFloorPlan}
-                className="font-mono text-[10px] uppercase tracking-widest px-4 py-2 border border-orange text-orange hover:bg-orange hover:text-white transition-colors mr-2"
+                disabled={floorPlans.length >= MAX_CONFIG_SUMMARY_ROWS}
+                className="font-mono text-[10px] uppercase tracking-widest px-4 py-2 border border-orange text-orange hover:bg-orange hover:text-white transition-colors mr-2 disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                + Add
+                + Add ({floorPlans.length}/{MAX_CONFIG_SUMMARY_ROWS})
               </button>
+              {floorPlans.length >= MAX_CONFIG_SUMMARY_ROWS && (
+                <p className="font-sans text-xs text-orange mt-2">
+                  Maximum of {MAX_CONFIG_SUMMARY_ROWS} configurations reached. This is what shows on the public listing card.
+                </p>
+              )}
               <p className="font-sans text-xs text-ink/40 mt-3">
                 Changes save when you click <strong>Save changes</strong> at the bottom of the form.
               </p>
