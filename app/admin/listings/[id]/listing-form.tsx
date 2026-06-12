@@ -1856,21 +1856,6 @@ export function ListingForm({
             <input type="url" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="https://youtube.com/..." className={inp} />
           </div>
 
-          {/* Selling Agent Logos */}
-          <div className={g2}>
-            <SingleUpload
-              label="Selling Agent's Logo -1"
-              hint="(Image size up to 5MB)"
-              value={agentLogo1}
-              onChange={setAgentLogo1}
-            />
-            <SingleUpload
-              label="Selling Agent's Logo -2"
-              hint="(Image size up to 5MB)"
-              value={agentLogo2}
-              onChange={setAgentLogo2}
-            />
-          </div>
         </AccordionSection>
 
         {/* ── 8. Optional Uploads ──────────────────────────────────────────── */}
