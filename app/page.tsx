@@ -390,14 +390,10 @@ export default async function HomePage() {
                   Featured Developments
                 </p>
               </div>
-              <h2 className="text-white leading-[0.95] tracking-[0.01em] text-[clamp(3rem,6.5vw,6rem)] mb-6 uppercase font-normal" style={{ fontFamily: "var(--font-bebas-neue), sans-serif" }}>
+              <h2 className="text-white leading-[0.95] tracking-[0.01em] text-[clamp(3rem,6.5vw,6rem)] uppercase font-normal" style={{ fontFamily: "var(--font-bebas-neue), sans-serif" }}>
                 Australia&apos;s finest<br />
                 <span className="text-orange">off&#8209;the&#8209;plan properties</span>
               </h2>
-              <p className="font-display font-light text-white/50 text-[clamp(1rem,1.4vw,1.2rem)] leading-relaxed max-w-2xl">
-                Your future address, carefully chosen{" "}
-                <em className="not-italic italic text-white/70">for buyers who won&apos;t settle for ordinary.</em>
-              </p>
             </div>
           </AnimateIn>
 
