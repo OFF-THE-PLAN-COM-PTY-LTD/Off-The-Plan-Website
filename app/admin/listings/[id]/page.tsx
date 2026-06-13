@@ -28,7 +28,7 @@ export default async function AdminListingEditPage({ params }: Props) {
       ? Promise.resolve({ data: [], error: null })
       : supabaseAdmin
           .from("development_floor_plans")
-          .select("id, beds, bath, garage, internal_sqm, price_from, plan_type, config, image_url")
+          .select("id, beds, bath, garage, internal_sqm, price_from, plan_type, config, image_url, lot_number, land_area_sqm, frontage_m, depth_m")
           .eq("development_id", params.id)
           .order("id"),
     isNew
@@ -68,6 +68,10 @@ export default async function AdminListingEditPage({ params }: Props) {
     plan_type: (fp.plan_type as string) ?? "",
     config: (fp.config as string) ?? "",
     image_url: (fp.image_url as string) ?? "",
+    lot_number: (fp.lot_number as string) ?? "",
+    land_area_sqm: fp.land_area_sqm != null ? String(fp.land_area_sqm) : "",
+    frontage_m: fp.frontage_m != null ? String(fp.frontage_m) : "",
+    depth_m: fp.depth_m != null ? String(fp.depth_m) : "",
   }));
 
   const agents = (agentsResult.data ?? []).map((a) => ({

@@ -158,6 +158,10 @@ async function syncFloorPlans(developmentId: string, floorPlans: unknown[]) {
     plan_type: fp.plan_type || null,
     config: fp.config || null,
     image_url: fp.image_url || null,
+    lot_number: fp.lot_number || null,
+    land_area_sqm: fp.land_area_sqm ? Number(fp.land_area_sqm) : null,
+    frontage_m: fp.frontage_m ? Number(fp.frontage_m) : null,
+    depth_m: fp.depth_m ? Number(fp.depth_m) : null,
   }));
   await supabaseAdmin.from("development_floor_plans").insert(rows);
 }

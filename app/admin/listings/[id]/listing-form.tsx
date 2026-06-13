@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { ImageUpload } from "@/components/admin/image-upload";
 import { RichTextEditor } from "@/components/admin/rich-text-editor";
 import { featuresForCategory } from "@/lib/category-features";
+import { getCardFields } from "@/lib/listing-card-fields";
 
 /**
  * Wrap plain text in <p>/<br> tags so it's safe to load into a TipTap editor
@@ -52,6 +53,11 @@ interface FloorPlan {
   plan_type: string;
   config: string;
   image_url: string;
+  // Land Estates fields — empty string for categories that don't use them.
+  lot_number: string;
+  land_area_sqm: string;
+  frontage_m: string;
+  depth_m: string;
 }
 
 // Mini stocklist row — every cell stays a free-text string so admins
@@ -1174,7 +1180,7 @@ export function ListingForm({
     setFloorPlans((prev) =>
       prev.length >= MAX_CONFIG_SUMMARY_ROWS
         ? prev
-        : [...prev, { beds: "", bath: "", garage: "", internal_sqm: "", price_from: "", plan_type: "", config: "", image_url: "" }],
+        : [...prev, { beds: "", bath: "", garage: "", internal_sqm: "", price_from: "", plan_type: "", config: "", image_url: "", lot_number: "", land_area_sqm: "", frontage_m: "", depth_m: "" }],
     );
   }
 
@@ -1712,56 +1718,60 @@ export function ListingForm({
                   <CardPreview highlight="summary" />
                 </ExampleHint>
               </div>
-              {floorPlans.length > 0 && (
-                <div className="overflow-x-auto mb-4">
-                  <table className="w-full text-left">
-                    <thead>
-                      <tr className="border-b-2 border-orange/20">
-                        {["Beds", "Bath", "Garage", "Total Size (sqm)", "Price From ($)", "Action"].map((h) => (
-                          <th key={h} className="font-sans text-sm font-semibold text-ink/70 px-4 py-3 whitespace-nowrap">{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {floorPlans.map((fp, i) => (
-                        <tr key={i} className="border-b border-line last:border-0">
-                          <td className="px-4 py-3">
-                            <input type="number" value={fp.beds} onChange={(e) => updateFloorPlan(i, "beds", e.target.value)} placeholder="1" className="border border-line px-3 py-2 bg-white font-sans text-sm text-ink outline-none focus:border-orange/60 w-20" />
-                          </td>
-                          <td className="px-4 py-3">
-                            <input type="number" value={fp.bath} onChange={(e) => updateFloorPlan(i, "bath", e.target.value)} placeholder="1" className="border border-line px-3 py-2 bg-white font-sans text-sm text-ink outline-none focus:border-orange/60 w-20" />
-                          </td>
-                          <td className="px-4 py-3">
-                            <input type="number" value={fp.garage} onChange={(e) => updateFloorPlan(i, "garage", e.target.value)} placeholder="1" className="border border-line px-3 py-2 bg-white font-sans text-sm text-ink outline-none focus:border-orange/60 w-20" />
-                          </td>
-                          <td className="px-4 py-3">
-                            <input type="number" value={fp.internal_sqm} onChange={(e) => updateFloorPlan(i, "internal_sqm", e.target.value)} placeholder="75" className="border border-line px-3 py-2 bg-white font-sans text-sm text-ink outline-none focus:border-orange/60 w-28" />
-                          </td>
-                          <td className="px-4 py-3">
-                            <input type="number" value={fp.price_from} onChange={(e) => updateFloorPlan(i, "price_from", e.target.value)} placeholder="650000" className="border border-line px-3 py-2 bg-white font-sans text-sm text-ink outline-none focus:border-orange/60 w-32" />
-                          </td>
-                          <td className="px-4 py-3">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (isPortal) {
-                                  setFloorPlanDeleteText("");
-                                  setPendingDeleteIndex(i);
-                                } else {
-                                  removeFloorPlan(i);
-                                }
-                              }}
-                              className="font-mono text-[10px] uppercase tracking-widest px-3 py-2 border border-red-300 text-red-500 hover:bg-red-500 hover:text-white hover:border-red-500 transition-colors"
-                            >
-                              Delete
-                            </button>
-                          </td>
+              {floorPlans.length > 0 && (() => {
+                const cardFields = getCardFields(type);
+                return (
+                  <div className="overflow-x-auto mb-4">
+                    <table className="w-full text-left">
+                      <thead>
+                        <tr className="border-b-2 border-orange/20">
+                          {cardFields.map((f) => (
+                            <th key={f.key} className="font-sans text-sm font-semibold text-ink/70 px-4 py-3 whitespace-nowrap">{f.label}</th>
+                          ))}
+                          <th className="font-sans text-sm font-semibold text-ink/70 px-4 py-3 whitespace-nowrap">Price From ($)</th>
+                          <th className="font-sans text-sm font-semibold text-ink/70 px-4 py-3 whitespace-nowrap">Action</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+                      </thead>
+                      <tbody>
+                        {floorPlans.map((fp, i) => (
+                          <tr key={i} className="border-b border-line last:border-0">
+                            {cardFields.map((f) => (
+                              <td key={f.key} className="px-4 py-3">
+                                <input
+                                  type={f.type}
+                                  value={(fp[f.key as keyof FloorPlan] as string) ?? ""}
+                                  onChange={(e) => updateFloorPlan(i, f.key as keyof FloorPlan, e.target.value)}
+                                  placeholder={f.placeholder}
+                                  className={`border border-line px-3 py-2 bg-white font-sans text-sm text-ink outline-none focus:border-orange/60 ${f.inputWidth ?? "w-24"}`}
+                                />
+                              </td>
+                            ))}
+                            <td className="px-4 py-3">
+                              <input type="number" value={fp.price_from} onChange={(e) => updateFloorPlan(i, "price_from", e.target.value)} placeholder="650000" className="border border-line px-3 py-2 bg-white font-sans text-sm text-ink outline-none focus:border-orange/60 w-32" />
+                            </td>
+                            <td className="px-4 py-3">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (isPortal) {
+                                    setFloorPlanDeleteText("");
+                                    setPendingDeleteIndex(i);
+                                  } else {
+                                    removeFloorPlan(i);
+                                  }
+                                }}
+                                className="font-mono text-[10px] uppercase tracking-widest px-3 py-2 border border-red-300 text-red-500 hover:bg-red-500 hover:text-white hover:border-red-500 transition-colors"
+                              >
+                                Delete
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              })()}
               <button
                 type="button"
                 onClick={addFloorPlan}

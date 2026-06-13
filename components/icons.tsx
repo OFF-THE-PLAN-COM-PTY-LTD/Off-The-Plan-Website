@@ -160,3 +160,46 @@ export function ExpandIcon({ className, size = 20 }: IconProps) {
     </svg>
   );
 }
+
+// ─── Land Estates icons (per dev spec v4) ──────────────────────────────
+
+export function LotNumberIcon({ className, size = 20 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" className={className} aria-hidden="true">
+      <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M8 6v8M12 6v8M6 9h8M6 13h8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function FrontageIcon({ className, size = 20 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" className={className} aria-hidden="true">
+      <rect x="3" y="3" width="14" height="10" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M4 17h12" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      <path d="M4 17l2-2M4 17l2 2M16 17l-2-2M16 17l-2 2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function DepthIcon({ className, size = 20 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" className={className} aria-hidden="true">
+      <rect x="3" y="3" width="11" height="14" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M17 4v12" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      <path d="M17 4l-2 2M17 4l2 2M17 16l-2-2M17 16l2-2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function LandAreaIcon({ className, size = 20 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" className={className} aria-hidden="true">
+      <rect x="6" y="6" width="8" height="8" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M5 5L2 2M2 4V2H4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M15 5L18 2M16 2H18V4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M5 15L2 18M2 16V18H4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M15 15L18 18M16 18H18V16" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}

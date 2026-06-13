@@ -62,6 +62,12 @@ export interface MiniStocklistRow {
   parking: string | null;
   size: string | null;
   price: string | null;
+  // Land Estates fields — populated when listing type is "Land and Estates".
+  // All free-text strings to match the rest of mini_stocklist (PDF spec v4).
+  lot_number?: string | null;
+  land_area?: string | null;
+  frontage?: string | null;
+  depth?: string | null;
 }
 
 export interface DevelopmentImage {
@@ -85,6 +91,11 @@ export interface DevelopmentFloorPlan {
   beds: number | null;
   bath: number | null;
   garage: number | null;
+  // Land Estates fields (PDF spec v4, migration 030).
+  lot_number?: string | null;
+  land_area_sqm?: number | null;
+  frontage_m?: number | null;
+  depth_m?: number | null;
 }
 
 export interface DevelopmentFilters {
