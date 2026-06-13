@@ -7,10 +7,6 @@
  *
  * The 'Property Features' checkbox list in the admin listing form should
  * render the entries here that match the currently-selected `type` value.
- * Confirmed against the live admin for 6 of 7 categories. New Home Design
- * had no listings on the live site to inspect, so it falls back to the
- * residential list as a sensible placeholder; revise when Tim creates a
- * real listing of that type.
  */
 
 const NEW_APARTMENTS_FEATURES = [
@@ -197,9 +193,6 @@ const OVER_55S_FEATURES = [
  * Confirmed by direct scrape from the live admin on 2026-06-04:
  *   New Apartments, Townhouses, Commercial, Land and Estates,
  *   House & Land, Over 55's / Retirement.
- *
- * Placeholders (live admin had no example listing to inspect):
- *   New Home Design — falls back to apartments residential set.
  */
 export const CATEGORY_FEATURES: Record<string, string[]> = {
   "New Apartments":         NEW_APARTMENTS_FEATURES,
@@ -208,7 +201,6 @@ export const CATEGORY_FEATURES: Record<string, string[]> = {
   Commercial:               COMMERCIAL_FEATURES,
   "House & Land":           HOUSE_AND_LAND_FEATURES,
   Houses:                   HOUSE_AND_LAND_FEATURES, // legacy alias for House & Land
-  "New Home Design":        NEW_APARTMENTS_FEATURES, // TBD — no example on live site
   "Over 55's / Retirement": OVER_55S_FEATURES,
 };
 

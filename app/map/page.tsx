@@ -76,7 +76,7 @@ export default async function MapPage({ searchParams }: Props) {
               className="font-mono text-label-lg bg-white/5 border border-white/10 text-ink-light px-3 py-2 outline-none cursor-pointer"
             >
               <option value="" className="bg-navy">All types</option>
-              {["New Apartments", "Townhouses", "Land and Estates", "Commercial", "Houses", "New Home Design", "Over 55's / Retirement"].map((t) => (
+              {["New Apartments", "Townhouses", "Land and Estates", "Commercial", "Houses", "Over 55's / Retirement"].map((t) => (
                 <option key={t} value={t} className="bg-navy">{t}</option>
               ))}
             </select>

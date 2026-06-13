@@ -26,7 +26,6 @@ const propertyLinks = [
   { label: "Land and Estates",       href: "/search?type=Land+and+Estates" },
   { label: "Commercial",             href: "/search?type=Commercial" },
   { label: "House & Land",           href: "/search?type=Houses" },
-  { label: "New Home Design",        href: "/search?type=New+Home+Design" },
   { label: "Over 55's / Retirement", href: "/search?type=Over+55%27s+%2F+Retirement" },
 ];
 

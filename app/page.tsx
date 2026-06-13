@@ -71,11 +71,7 @@ const CATEGORY_FALLBACKS: Record<string, string> = {
   "Land and Estates":        "/categories/category-landestate.jpg",
   Commercial:                "/categories/category-commercial.jpg",
   Houses:                    "/categories/category-house-and-land.jpg",
-  "New Home Design":         "/categories/category-house-and-land.jpg",
-  // Reusing the apartments image for Over 55's / Retirement until a
-  // dedicated category image is supplied — retirement villages are
-  // typically apartment-style, so visually it reads OK.
-  "Over 55's / Retirement":  "/categories/category-apartments.jpg",
+  "Over 55's / Retirement":  "/categories/category-house-and-land.jpg",
 };
 
 function pickImage(dev: { hero_image_url?: string | null; images?: { url: string }[] } | null, fallback: string): string {
@@ -96,7 +92,6 @@ export default async function HomePage() {
     { data: landData },
     { data: commercialData },
     { data: housesData },
-    { data: newHomeData },
   ] = await Promise.all([
     supabase
       .from("homepage_banners")
@@ -159,13 +154,6 @@ export default async function HomePage() {
       .eq("is_published", true)
       .limit(1)
       .single(),
-    supabase
-      .from("developments")
-      .select("hero_image_url, images:development_images(url)")
-      .eq("type", "New Home Design")
-      .eq("is_published", true)
-      .limit(1)
-      .single(),
   ]);
 
   // Always use the client-supplied category images (not listing images)
@@ -175,7 +163,6 @@ export default async function HomePage() {
     { label: "Land And Estates",        href: "/search?type=Land+and+Estates",                image: CATEGORY_FALLBACKS["Land and Estates"]         },
     { label: "Commercial",              href: "/search?type=Commercial",                      image: CATEGORY_FALLBACKS["Commercial"]               },
     { label: "House & Land",            href: "/search?type=Houses",                          image: CATEGORY_FALLBACKS["Houses"]                   },
-    { label: "New Home Design",         href: "/search?type=New+Home+Design",                 image: CATEGORY_FALLBACKS["New Home Design"]          },
     { label: "Over 55's / Retirement",  href: "/search?type=Over+55%27s+%2F+Retirement",      image: CATEGORY_FALLBACKS["Over 55's / Retirement"]   },
   ];
 
@@ -348,7 +335,6 @@ export default async function HomePage() {
                       ["Land and Estates", "Land and Estates"],
                       ["Commercial", "Commercial"],
                       ["Houses", "House & Land"],
-                      ["New Home Design", "New Home Design"],
                       ["Over 55's / Retirement", "Over 55's / Retirement"],
                     ].map(([value, label]) => (
                       <option key={value} value={value}>{label}</option>

@@ -22,7 +22,7 @@ const plans = [
     highlighted: true,
     features: [
       "Low fixed rate per listing per month",
-      "Ideal For: House and Land, New Home Designs",
+      "Ideal For: House and Land, Over 55's / Retirement",
       "Easy to use dashboard — upload and edit your projects, includes basic analytics and lead capture",
       "6 or 12 month term, with 21 day cancellation policy",
       "List today, simply register, upload your project and begin your subscription with a credit card. [or] contact us for other payment options",

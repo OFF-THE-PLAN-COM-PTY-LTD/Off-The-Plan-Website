@@ -196,7 +196,7 @@ const TYPES = [
 
 const PORTAL_TYPES = [
   "New Apartments", "Townhouses", "Land and Estates",
-  "Commercial", "House & Land", "New Home Design",
+  "Commercial", "House & Land",
   "Over 55's / Retirement",
 ];
 

@@ -34,6 +34,23 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# claude code worktrees + scratch
+/.claude/worktrees/
+/.claire/
+/.clone/
+
+# scraped legacy-site data (one-off migration inputs)
+/scraped_news/
+/scraped_journal/
+/scraped_agencies/
+/scraped_ads.json
+
+# legacy migration export + design reference (kept locally, not in repo)
+/Off plan 2/
+/Off plan 2.zip
+/Design Reference/
+/June 1 - 7 Client Feedback/
+
 # local env files
 .env*.local
 .env.local

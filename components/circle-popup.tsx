@@ -13,7 +13,6 @@ const interestOptions = [
   "Land and Estates",
   "Commercial",
   "House & Land",
-  "New Home Design",
   "Over 55's / Retirement",
 ];
 

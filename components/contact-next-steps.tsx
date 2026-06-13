@@ -146,7 +146,7 @@ export function ContactNextSteps() {
                   </label>
                   <select className="w-full border border-line px-3 py-2.5 font-sans text-body-md outline-none cursor-pointer text-ink/50">
                     <option value="">Category</option>
-                    {["New Apartments", "Townhouses", "Land and Estates", "Commercial", "House & Land", "New Home Design", "Over 55's / Retirement"].map((t) => (
+                    {["New Apartments", "Townhouses", "Land and Estates", "Commercial", "House & Land", "Over 55's / Retirement"].map((t) => (
                       <option key={t} value={t}>{t}</option>
                     ))}
                   </select>

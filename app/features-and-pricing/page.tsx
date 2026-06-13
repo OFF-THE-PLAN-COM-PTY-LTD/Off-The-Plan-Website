@@ -24,8 +24,7 @@ const FALLBACKS: Record<string, string> = {
   "Land and Estates":        "/categories/category-landestate.jpg",
   Commercial:                "/categories/category-commercial.jpg",
   Houses:                    "/categories/category-house-and-land.jpg",
-  "New Home Design":         "/categories/category-house-and-land.jpg",
-  "Over 55's / Retirement":  "/categories/category-apartments.jpg",
+  "Over 55's / Retirement":  "/categories/category-house-and-land.jpg",
 };
 
 function pickImage(
@@ -39,7 +38,7 @@ function pickImage(
 // ── Feature bullets ────────────────────────────────────────────────────────────
 const FEATURES = [
   "Ideal for Apartments, Townhouses, Land Estates",
-  "As well as: New Home Designs, House and Land, and Commercial",
+  "As well as: House and Land, Over 55's / Retirement, and Commercial",
   "Easy to use members dashboard with Lead capture and Analytics",
   "Affordable listing upgrades, banner placements, social media and email marketing options available",
 ];
@@ -68,7 +67,7 @@ const PLANS = [
     cta: "List Today",
     features: [
       "1 low fixed rate per listing per month",
-      "Ideal for: House and Land, New Home Designs",
+      "Ideal for: House and Land, Over 55's / Retirement",
       "Easy to use dashboard – upload and sell your projects, includes basic analytics and lead capture",
       "Over 12-month terms, with 30-day cancellation policy",
       "List today, simply register, upload your project and begin your subscription with a credit card, (or) contact us for other payment options",
@@ -117,14 +116,12 @@ export default async function FeaturesAndPricingPage() {
     { data: landData },
     { data: commercialData },
     { data: housesData },
-    { data: newHomeData },
   ] = await Promise.all([
     query("New Apartments"),
     query("Townhouses"),
     query("Land and Estates"),
     query("Commercial"),
     query("Houses"),
-    query("New Home Design"),
   ]);
 
   // Always use the client-supplied category images (not listing images)
@@ -134,7 +131,6 @@ export default async function FeaturesAndPricingPage() {
     { label: "Land And Estates",        href: "/search?type=Land+and+Estates",               image: FALLBACKS["Land and Estates"]         },
     { label: "Commercial",              href: "/search?type=Commercial",                     image: FALLBACKS["Commercial"]               },
     { label: "House & Land",            href: "/search?type=Houses",                         image: FALLBACKS["Houses"]                   },
-    { label: "New Home Design",         href: "/search?type=New+Home+Design",                image: FALLBACKS["New Home Design"]          },
     { label: "Over 55's / Retirement",  href: "/search?type=Over+55%27s+%2F+Retirement",     image: FALLBACKS["Over 55's / Retirement"]   },
   ];
 
