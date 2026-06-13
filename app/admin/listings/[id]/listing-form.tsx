@@ -69,6 +69,11 @@ interface MiniStocklistEntry {
   parking: string;
   size: string;
   price: string;
+  // Land Estates fields — empty string for non-LE categories.
+  lot_number?: string;
+  land_area?: string;
+  frontage?: string;
+  depth?: string;
 }
 const MAX_STOCKLIST_ROWS = 20;
 const MAX_CONFIG_SUMMARY_ROWS = 4;
@@ -1200,7 +1205,7 @@ export function ListingForm({
     setMiniStocklist((prev) =>
       prev.length >= MAX_STOCKLIST_ROWS
         ? prev
-        : [...prev, { bed: "", bath: "", parking: "", size: "", price: "" }],
+        : [...prev, { bed: "", bath: "", parking: "", size: "", price: "", lot_number: "", land_area: "", frontage: "", depth: "" }],
     );
   }
 
@@ -1321,7 +1326,7 @@ export function ListingForm({
       // Mini stocklist — only send rows where the user typed something
       // so empty drafts don't leak through.
       mini_stocklist: miniStocklist.filter(
-        (r) => r.bed || r.bath || r.parking || r.size || r.price,
+        (r) => r.bed || r.bath || r.parking || r.size || r.price || r.lot_number || r.land_area || r.frontage || r.depth,
       ),
     };
 
@@ -1804,49 +1809,56 @@ export function ListingForm({
               Restricted to {MAX_STOCKLIST_ROWS} rows. All fields accept free text —
               leave blank cells empty to show as "—" on the public table.
             </p>
-            {miniStocklist.length > 0 && (
-              <div className="overflow-x-auto mb-4">
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="border-b-2 border-orange/20">
-                      {["Bedrooms", "Bathrooms", "Parking", "Total Size", "Price From", "Action"].map((h) => (
-                        <th key={h} className="font-sans text-sm font-semibold text-ink/70 px-4 py-3 whitespace-nowrap">{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {miniStocklist.map((r, i) => (
-                      <tr key={i} className="border-b border-line last:border-0">
-                        <td className="px-4 py-3">
-                          <input type="text" value={r.bed} onChange={(e) => updateStocklistRow(i, "bed", e.target.value)} placeholder="2" className="border border-line px-3 py-2 bg-white font-sans text-sm text-ink outline-none focus:border-orange/60 w-20" />
-                        </td>
-                        <td className="px-4 py-3">
-                          <input type="text" value={r.bath} onChange={(e) => updateStocklistRow(i, "bath", e.target.value)} placeholder="2" className="border border-line px-3 py-2 bg-white font-sans text-sm text-ink outline-none focus:border-orange/60 w-20" />
-                        </td>
-                        <td className="px-4 py-3">
-                          <input type="text" value={r.parking} onChange={(e) => updateStocklistRow(i, "parking", e.target.value)} placeholder="1" className="border border-line px-3 py-2 bg-white font-sans text-sm text-ink outline-none focus:border-orange/60 w-20" />
-                        </td>
-                        <td className="px-4 py-3">
-                          <input type="text" value={r.size} onChange={(e) => updateStocklistRow(i, "size", e.target.value)} placeholder="77" className="border border-line px-3 py-2 bg-white font-sans text-sm text-ink outline-none focus:border-orange/60 w-28" />
-                        </td>
-                        <td className="px-4 py-3">
-                          <input type="text" value={r.price} onChange={(e) => updateStocklistRow(i, "price", e.target.value)} placeholder="$890,000 or Contact Agent" className="border border-line px-3 py-2 bg-white font-sans text-sm text-ink outline-none focus:border-orange/60 w-56" />
-                        </td>
-                        <td className="px-4 py-3">
-                          <button
-                            type="button"
-                            onClick={() => removeStocklistRow(i)}
-                            className="font-mono text-[10px] uppercase tracking-widest px-3 py-2 border border-red-300 text-red-500 hover:bg-red-500 hover:text-white hover:border-red-500 transition-colors"
-                          >
-                            Delete
-                          </button>
-                        </td>
+            {miniStocklist.length > 0 && (() => {
+              const stockFields = getCardFields(type);
+              return (
+                <div className="overflow-x-auto mb-4">
+                  <table className="w-full text-left">
+                    <thead>
+                      <tr className="border-b-2 border-orange/20">
+                        {stockFields.map((f) => (
+                          <th key={f.key} className="font-sans text-sm font-semibold text-ink/70 px-4 py-3 whitespace-nowrap">{f.label}</th>
+                        ))}
+                        <th className="font-sans text-sm font-semibold text-ink/70 px-4 py-3 whitespace-nowrap">Price From</th>
+                        <th className="font-sans text-sm font-semibold text-ink/70 px-4 py-3 whitespace-nowrap">Action</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+                    </thead>
+                    <tbody>
+                      {miniStocklist.map((r, i) => (
+                        <tr key={i} className="border-b border-line last:border-0">
+                          {stockFields.map((f) => {
+                            const stockKey = (f.stocklistKey ?? f.key) as keyof MiniStocklistEntry;
+                            return (
+                              <td key={f.key} className="px-4 py-3">
+                                <input
+                                  type="text"
+                                  value={(r[stockKey] as string | undefined) ?? ""}
+                                  onChange={(e) => updateStocklistRow(i, stockKey, e.target.value)}
+                                  placeholder={f.placeholder}
+                                  className={`border border-line px-3 py-2 bg-white font-sans text-sm text-ink outline-none focus:border-orange/60 ${f.inputWidth ?? "w-24"}`}
+                                />
+                              </td>
+                            );
+                          })}
+                          <td className="px-4 py-3">
+                            <input type="text" value={r.price} onChange={(e) => updateStocklistRow(i, "price", e.target.value)} placeholder="$890,000 or Contact Agent" className="border border-line px-3 py-2 bg-white font-sans text-sm text-ink outline-none focus:border-orange/60 w-56" />
+                          </td>
+                          <td className="px-4 py-3">
+                            <button
+                              type="button"
+                              onClick={() => removeStocklistRow(i)}
+                              className="font-mono text-[10px] uppercase tracking-widest px-3 py-2 border border-red-300 text-red-500 hover:bg-red-500 hover:text-white hover:border-red-500 transition-colors"
+                            >
+                              Delete
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              );
+            })()}
             <button
               type="button"
               onClick={addStocklistRow}
