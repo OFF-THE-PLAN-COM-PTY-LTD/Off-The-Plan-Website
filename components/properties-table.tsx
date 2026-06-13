@@ -1,113 +1,90 @@
 "use client";
 
-import { BedIcon, BathIcon, CarIcon, ExpandIcon } from "@/components/icons";
 import { formatPrice } from "@/lib/utils";
 import type { DevelopmentFloorPlan, MiniStocklistRow } from "@/types/development";
+import { getCardFields } from "@/lib/listing-card-fields";
 
 interface PropertiesTableProps {
   floorPlans: DevelopmentFloorPlan[];
   bedsMin: number | null;
   bedsMax: number | null;
   /**
-   * Tim's "mini stocklist" — the longer Properties-Available table
-   * (up to 20 rows). When present we render this verbatim and skip
-   * the floor_plan / beds-range fallback. Source: Tim's live admin
-   * `optional_property` → our `developments.mini_stocklist` jsonb.
+   * "Mini stocklist" — the longer Properties-Available table (up to
+   * 20 rows). When present, rendered verbatim and the floor_plan /
+   * beds-range fallback is skipped. Source: `developments.mini_stocklist`
+   * jsonb column.
    */
   miniStocklist?: MiniStocklistRow[] | null;
+  /**
+   * Listing category — drives which columns and icons show up on the
+   * table. Per dev spec v4 (e.g. Land and Estates → Lot/Land/Frontage/Depth).
+   */
+  developmentType?: string | null;
 }
 
 interface TableRow {
-  beds: string | number | null;
-  baths: string | number | null;
-  cars: string | number | null;
-  sqm: string | number | null;
+  /** Aligned 1:1 with cardFields. Null = render blank cell. */
+  values: (string | null)[];
   price: string | null;
-  planType: string | null;
 }
 
-function buildRows(
-  floorPlans: DevelopmentFloorPlan[],
-  bedsMin: number | null,
-  bedsMax: number | null,
-  miniStocklist: MiniStocklistRow[] | null | undefined,
-): TableRow[] {
-  // 1. Mini stocklist wins when populated — matches Tim's "Properties
-  //    Available" table on the live site exactly.
-  if (miniStocklist && miniStocklist.length > 0) {
-    return miniStocklist.slice(0, 20).map((r) => ({
-      beds: r.bed,
-      baths: r.bath,
-      cars: r.parking,
-      sqm: r.size,
-      price: r.price,
-      planType: null,
+export function PropertiesTable({ floorPlans, bedsMin, bedsMax, miniStocklist, developmentType }: PropertiesTableProps) {
+  const cardFields = getCardFields(developmentType);
+
+  const allRows: TableRow[] = (() => {
+    // 1. Mini stocklist wins when populated.
+    if (miniStocklist && miniStocklist.length > 0) {
+      return miniStocklist.slice(0, 20).map((r) => ({
+        values: cardFields.map((f) => {
+          const stockKey = (f.stocklistKey ?? f.key) as keyof MiniStocklistRow;
+          const raw = r[stockKey];
+          return raw == null || raw === "" ? null : String(raw);
+        }),
+        price: r.price ?? null,
+      }));
+    }
+    // 2. Configuration Summary (development_floor_plans) — same keys as
+    //    the public card.
+    if (floorPlans.length > 0) {
+      return floorPlans.map((fp) => {
+        let price: string | null = null;
+        if (fp.price_display) price = fp.price_display;
+        else if (fp.price_from) price = formatPrice(fp.price_from);
+        return {
+          values: cardFields.map((f) => {
+            const raw = (fp as unknown as Record<string, unknown>)[f.key];
+            return raw == null || raw === "" ? null : String(raw);
+          }),
+          price,
+        };
+      });
+    }
+    // 3. Bed-range fallback — residential only.
+    if (cardFields[0]?.key !== "beds") return [];
+    const min = bedsMin ?? 1;
+    const max = bedsMax ?? min;
+    return Array.from({ length: Math.max(max - min + 1, 1) }, (_, i) => ({
+      values: cardFields.map((f) => (f.key === "beds" ? String(min + i) : null)),
+      price: null,
     }));
-  }
-  if (floorPlans.length > 0) {
-    return floorPlans.map((fp) => {
-      let price: string | null = null;
-      if (fp.price_display) {
-        price = fp.price_display;
-      } else if (fp.price_from) {
-        price = formatPrice(fp.price_from);
-      }
-
-      return {
-        beds: fp.beds ?? null,
-        baths: fp.bath ?? null,
-        cars: fp.garage ?? null,
-        sqm: fp.internal_sqm,
-        price,
-        planType: fp.plan_type,
-      };
-    });
-  }
-
-  const min = bedsMin ?? 1;
-  const max = bedsMax ?? min;
-  return Array.from({ length: Math.max(max - min + 1, 1) }, (_, i) => ({
-    beds: min + i,
-    baths: null,
-    cars: null,
-    sqm: null,
-    price: null,
-    planType: null,
-  }));
-}
-
-export function PropertiesTable({ floorPlans, bedsMin, bedsMax, miniStocklist }: PropertiesTableProps) {
-  const allRows = buildRows(floorPlans, bedsMin, bedsMax, miniStocklist);
+  })();
 
   return (
     <div className="mt-6 overflow-x-auto">
       <table className="w-full text-left border-collapse">
         <thead>
           <tr className="bg-navy text-white">
-            <th className="font-sans text-[13px] font-normal px-4 py-3">
-              <span className="flex items-center gap-2">
-                <BedIcon size={14} className="text-white/60 shrink-0" />
-                Number Of Bedrooms
-              </span>
-            </th>
-            <th className="font-sans text-[13px] font-normal px-4 py-3">
-              <span className="flex items-center gap-2">
-                <BathIcon size={14} className="text-white/60 shrink-0" />
-                Number Of Bathrooms
-              </span>
-            </th>
-            <th className="font-sans text-[13px] font-normal px-4 py-3">
-              <span className="flex items-center gap-2">
-                <CarIcon size={14} className="text-white/60 shrink-0" />
-                Parking Spaces
-              </span>
-            </th>
-            <th className="font-sans text-[13px] font-normal px-4 py-3">
-              <span className="flex items-center gap-2">
-                <ExpandIcon size={13} className="text-white/60 shrink-0" />
-                Total Apartment Size
-              </span>
-            </th>
+            {cardFields.map((f) => {
+              const Icon = f.icon;
+              return (
+                <th key={f.key} className="font-sans text-[13px] font-normal px-4 py-3">
+                  <span className="flex items-center gap-2">
+                    <Icon size={14} className="text-white/60 shrink-0" />
+                    {f.label}
+                  </span>
+                </th>
+              );
+            })}
             <th className="font-sans text-[13px] font-normal px-4 py-3 text-right">
               Price From
             </th>
@@ -116,18 +93,11 @@ export function PropertiesTable({ floorPlans, bedsMin, bedsMax, miniStocklist }:
         <tbody>
           {allRows.map((row, i) => (
             <tr key={i} className="border-b border-line bg-white hover:bg-cream/40 transition-colors">
-              <td className="font-sans text-[14px] text-ink px-4 py-3">
-                {row.beds !== null ? row.beds : row.planType ?? ""}
-              </td>
-              <td className="font-sans text-[14px] text-ink/70 px-4 py-3">
-                {row.baths ?? ""}
-              </td>
-              <td className="font-sans text-[14px] text-ink/70 px-4 py-3">
-                {row.cars ?? ""}
-              </td>
-              <td className="font-sans text-[14px] text-ink/70 px-4 py-3">
-                {row.sqm ?? ""}
-              </td>
+              {row.values.map((v, ci) => (
+                <td key={ci} className="font-sans text-[14px] text-ink/70 px-4 py-3">
+                  {v ?? ""}
+                </td>
+              ))}
               <td className="font-sans text-[14px] text-ink px-4 py-3 text-right">
                 {row.price ?? ""}
               </td>
@@ -135,7 +105,7 @@ export function PropertiesTable({ floorPlans, bedsMin, bedsMax, miniStocklist }:
           ))}
           {allRows.length === 0 && (
             <tr>
-              <td colSpan={5} className="px-4 py-8 text-center font-mono text-label-sm uppercase tracking-widest text-ink/30">
+              <td colSpan={cardFields.length + 1} className="px-4 py-8 text-center font-mono text-label-sm uppercase tracking-widest text-ink/30">
                 No properties found
               </td>
             </tr>
