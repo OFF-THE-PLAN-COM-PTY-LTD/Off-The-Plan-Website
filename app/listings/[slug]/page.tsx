@@ -524,6 +524,11 @@ export default async function DossierPage({ params }: Props) {
                 View on Google Maps →
               </a>
             </div>
+            {(dev as { location_description?: string | null }).location_description && (
+              <p className="font-sans text-ink/70 text-body-md leading-relaxed max-w-3xl mt-4">
+                {(dev as { location_description?: string | null }).location_description}
+              </p>
+            )}
           </div>
           {/* Map embed — Google Maps, no API key required */}
           <div className="container-padded pb-8">
