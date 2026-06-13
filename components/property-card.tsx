@@ -9,15 +9,12 @@ import { Pill } from "@/components/pill";
 import { ShareModal } from "@/components/share-modal";
 import { EnquiryModal } from "@/components/enquiry-modal";
 import {
-  BedIcon,
-  BathIcon,
-  CarIcon,
-  ExpandIcon,
   CameraIcon,
   ShareIcon,
   ArrowRightIcon,
   MailIcon,
 } from "@/components/icons";
+import { getCardFields } from "@/lib/listing-card-fields";
 import type { Development } from "@/types/development";
 
 interface PropertyCardProps {
@@ -273,35 +270,35 @@ export function PropertyCard({
   // Tall (default) layout
   const imageCount = (development.images?.length ?? 0) > 0 ? development.images!.length : 1;
 
-  // Build floor-plan rows — use real floor_plans when available, else
-  // generate one row per bed count from the beds range.
-  type FloorRow = { beds: number | null; baths: number | null; cars: number | null; sqm: number | null; price: string | null };
+  // Build floor-plan rows — driven by the per-category field config so
+  // Land Estates shows lot/area/frontage/depth, Commercial shows floor
+  // area/level/car spaces, etc. (See lib/listing-card-fields.ts.) Capped
+  // at 4 rows on the card per dev spec v4.
+  const cardFields = getCardFields(development.type);
+  type FloorRow = { values: (string | null)[]; price: string };
   const floorRows: FloorRow[] = (() => {
     if (development.floor_plans && development.floor_plans.length > 0) {
-      // Tim refers to these as the "config summaries". Source of truth is
-      // listing_configurations on his live admin → development_floor_plans
-      // on ours. Capped at 4 entries per Tim's spec (25.05.26 reply).
       return development.floor_plans.slice(0, 4).map((fp) => ({
-        beds: fp.beds,
-        baths: fp.bath,
-        cars: fp.garage,
-        sqm: fp.internal_sqm,
-        // Prefer the raw text label (e.g. "$605k to $710k", "Contact
-        // Agent") so the card matches the live site exactly. Fall back
-        // to the parsed integer price, then to "Contact Agent".
+        values: cardFields.map((f) => {
+          const raw = (fp as unknown as Record<string, unknown>)[f.key];
+          return raw == null || raw === "" ? null : String(raw);
+        }),
+        // Prefer the raw text label (e.g. "$605k to $710k", "Contact Agent")
+        // so the card matches what the agent typed verbatim.
         price:
           fp.price_display
           ?? (fp.price_from ? `$${fp.price_from.toLocaleString()}` : "Contact Agent"),
       }));
     }
+    // Bed-range fallback — only meaningful for residential categories
+    // whose first field is "beds". Other categories show no fallback
+    // rows; agents need to fill in Configuration Summary for those.
+    if (cardFields[0]?.key !== "beds") return [];
     const min = development.beds_min ?? 1;
     const max = development.beds_max ?? min;
     return Array.from({ length: Math.min(max - min + 1, 5) }, (_, i) => ({
-      beds: min + i,
-      baths: null,
-      cars: null,
-      sqm: null,
-      price: null,
+      values: cardFields.map((f) => (f.key === "beds" ? String(min + i) : null)),
+      price: "Contact Agent",
     }));
   })();
 
@@ -396,24 +393,17 @@ export function PropertyCard({
       <div className="px-4 pb-3 flex flex-col gap-1.5 flex-1">
         {floorRows.map((row, i) => (
           <div key={i} className="flex items-center gap-2 text-[12px]">
-            <span className="inline-flex items-center gap-0.5 min-w-[34px]">
-              <BedIcon size={14} className="text-orange flex-shrink-0" />
-              <span className="text-ink font-sans">{row.beds ?? "–"}</span>
-            </span>
-            <span className="inline-flex items-center gap-0.5 min-w-[34px]">
-              <BathIcon size={14} className="text-orange flex-shrink-0" />
-              <span className="text-ink font-sans">{row.baths ?? "–"}</span>
-            </span>
-            <span className="inline-flex items-center gap-0.5 min-w-[34px]">
-              <CarIcon size={14} className="text-orange flex-shrink-0" />
-              <span className="text-ink font-sans">{row.cars ?? "–"}</span>
-            </span>
-            <span className="inline-flex items-center gap-0.5 min-w-[34px]">
-              <ExpandIcon size={12} className="text-orange flex-shrink-0" />
-              <span className="text-ink font-sans">{row.sqm ?? "–"}</span>
-            </span>
+            {cardFields.map((f, ci) => {
+              const Icon = f.icon;
+              return (
+                <span key={f.key} className="inline-flex items-center gap-0.5 min-w-[34px]">
+                  <Icon size={14} className="text-orange flex-shrink-0" />
+                  <span className="text-ink font-sans">{row.values[ci] ?? "–"}</span>
+                </span>
+              );
+            })}
             <span className="ml-auto font-sans text-[12px] font-medium text-ink whitespace-nowrap">
-              {row.price ?? "Contact Agent"}
+              {row.price}
             </span>
           </div>
         ))}
