@@ -28,6 +28,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    // Bump the listing's enquiry_count analytics counter. Best-effort —
+    // if migration 033 hasn't been applied yet the RPC won't exist; we
+    // log and continue rather than failing the user's submission.
+    const { error: counterError } = await supabaseAdmin.rpc("increment_enquiry_count", {
+      dev_id: parsed.data.development_id,
+    });
+    if (counterError) {
+      console.error("increment_enquiry_count failed (non-fatal):", counterError);
+    }
+
     // Notify the development's contact (or admin if no contact on file),
     // CC'ing Tim + sales@. Silently no-ops when RESEND_API_KEY isn't set.
     const { data: dev } = await supabaseAdmin
