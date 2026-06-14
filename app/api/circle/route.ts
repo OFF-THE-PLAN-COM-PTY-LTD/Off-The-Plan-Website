@@ -3,7 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { z } from "zod";
 import { sendEmail } from "@/lib/email/send";
 import { EMAIL_ADMIN_TO } from "@/lib/email/client";
-import { signupNotificationTemplate } from "@/lib/email/templates";
+import { signupNotificationTemplate, signupWelcomeTemplate } from "@/lib/email/templates";
 
 const schema = z.object({
   full_name: z.string().min(1),
@@ -29,15 +29,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Could not save signup. Please try again." }, { status: 500 });
     }
 
-    // Notify admin (Tim) of the new signup. No-ops cleanly when
-    // RESEND_API_KEY isn't set so this is safe to ship before Tim
-    // provides the production Resend key.
-    const tmpl = signupNotificationTemplate({
+    // Notify admin (Tim) of the new signup, then send a welcome email
+    // back to the user. Both no-op cleanly when RESEND_API_KEY isn't
+    // set so this is safe to ship before Tim provides the production key.
+    const adminTmpl = signupNotificationTemplate({
       full_name: parsed.data.full_name,
       email: parsed.data.email,
       interest_type: parsed.data.interest_type ?? null,
     });
-    await sendEmail({ to: EMAIL_ADMIN_TO, ...tmpl });
+    await sendEmail({ to: EMAIL_ADMIN_TO, ...adminTmpl });
+
+    const welcomeTmpl = signupWelcomeTemplate();
+    await sendEmail({ to: parsed.data.email, ...welcomeTmpl });
 
     return NextResponse.json({ success: true }, { status: 201 });
   } catch {

@@ -3,7 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { z } from "zod";
 import { sendEmail } from "@/lib/email/send";
 import { EMAIL_ADMIN_TO, EMAIL_SALES_CC } from "@/lib/email/client";
-import { enquiryNotificationTemplate } from "@/lib/email/templates";
+import { enquiryNotificationTemplate, enquiryConfirmationTemplate } from "@/lib/email/templates";
 
 const schema = z.object({
   development_id: z.string().uuid(),
@@ -76,6 +76,11 @@ export async function POST(req: Request) {
         ...tmpl,
       });
     }
+
+    // Confirmation email back to the buyer ("Thanks for your enquiry").
+    // No-ops cleanly when RESEND_API_KEY is absent.
+    const confirmTmpl = enquiryConfirmationTemplate();
+    await sendEmail({ to: parsed.data.email, ...confirmTmpl });
 
     return NextResponse.json({ success: true }, { status: 201 });
   } catch {

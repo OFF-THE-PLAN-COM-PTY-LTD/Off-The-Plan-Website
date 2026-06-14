@@ -1,15 +1,16 @@
 /**
- * HTML email templates. Kept deliberately minimal — Tim asked for
- * "feeds to database / CRM (or just send to my tim@ email for now)",
- * so these are functional notifications, not designed-marketing emails.
- *
- * Templates return `{ subject, html, text }` so the send helper can pass
- * the whole object through to Resend.
+ * HTML email templates. Templates return `{ subject, html, text }` so
+ * the send helper can pass the whole object through to Resend.
  */
+
+import { socialRowHtml } from "@/lib/social-links";
 
 const BRAND = "Off The Plan";
 const PRIMARY = "#1a2340";
 const ACCENT = "#e85d26";
+const SITE_URL = "https://offtheplan.com.au";
+const PHONE_DISPLAY = "0410 313 030";
+const PHONE_HREF = "tel:0410313030";
 
 function escapeHtml(value: string | null | undefined): string {
   if (!value) return "";
@@ -121,5 +122,80 @@ export function enquiryNotificationTemplate(args: EnquiryNotificationArgs) {
     args.notes ? `\nNotes:\n${args.notes}` : null,
     args.development_url ? `\nListing: ${args.development_url}` : null,
   ].filter(Boolean).join("\n");
+  return { subject, html, text };
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// 3. Buyer enquiry confirmation — sent to the person who submitted the
+//    enquiry on a listing page. Wording matches Tim's Template 1 (14 Jun
+//    email) verbatim.
+// ──────────────────────────────────────────────────────────────────────
+
+export function enquiryConfirmationTemplate() {
+  const subject = `Thanks for your enquiry — Off The Plan`;
+  const html = shell(`
+    <p style="margin:0 0 14px;">
+      Hi, and thank you for using <a href="${SITE_URL}" style="color:${ACCENT};text-decoration:none;">Australia's Home Of New Property | Off The Plan</a>
+    </p>
+    <p style="margin:0 0 14px;">We've received your enquiry and passed it directly to the relevant team.</p>
+    <p style="margin:0 0 14px;">Someone will be in touch with you shortly to assist further.</p>
+    <p style="margin:0 0 14px;">If your enquiry is time-sensitive, feel free to contact us directly on <a href="${PHONE_HREF}" style="color:${ACCENT};text-decoration:none;">${PHONE_DISPLAY}</a></p>
+    <p style="margin:0 0 4px;">Kind regards,</p>
+    <p style="margin:0 0 18px;font-weight:600;">The team @OFFTHEPLAN</p>
+    <hr style="border:none;border-top:1px solid #e5e3df;margin:18px 0 14px;">
+    <p style="margin:0 0 6px;font-weight:600;font-size:13px;">Why not follow us socially...</p>
+    ${socialRowHtml(["Instagram", "YouTube", "LinkedIn"])}
+  `);
+  const text = [
+    `Hi, and thank you for using Australia's Home Of New Property | Off The Plan`,
+    ``,
+    `We've received your enquiry and passed it directly to the relevant team.`,
+    `Someone will be in touch with you shortly to assist further.`,
+    ``,
+    `If your enquiry is time-sensitive, feel free to contact us directly on ${PHONE_DISPLAY}`,
+    ``,
+    `Kind regards,`,
+    `The team @OFFTHEPLAN`,
+    ``,
+    `${SITE_URL}`,
+  ].join("\n");
+  return { subject, html, text };
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// 4. Newsletter / Property Alert welcome — sent to anyone who signs up
+//    via the Circle popup. Wording matches Tim's Template 2 (14 Jun
+//    email) verbatim.
+// ──────────────────────────────────────────────────────────────────────
+
+export function signupWelcomeTemplate() {
+  const subject = `Welcome to Off The Plan`;
+  const latestProjectsUrl = `${SITE_URL}/search`;
+  const html = shell(`
+    <p style="margin:0 0 14px;">Hi, and thank you for signing up with OFF-THE-PLAN.</p>
+    <p style="margin:0 0 14px;">You're now on the list to receive updates on new property releases, market insights, and opportunities tailored to your interests.</p>
+    <p style="margin:0 0 14px;">While you're here, you can start exploring available projects and opportunities:</p>
+    <p style="margin:0 0 18px;font-size:15px;">
+      👉 <a href="${latestProjectsUrl}" style="color:${ACCENT};text-decoration:none;font-weight:600;">Latest Projects</a>
+    </p>
+    <hr style="border:none;border-top:1px solid #e5e3df;margin:18px 0 14px;">
+    <p style="margin:0 0 6px;font-weight:600;font-size:13px;">Why not follow us socially...</p>
+    ${socialRowHtml(["Instagram", "YouTube", "Pinterest", "LinkedIn"])}
+    <p style="margin:24px 0 0;">Welcome aboard,</p>
+    <p style="margin:0;font-weight:600;">The team @OFFTHEPLAN</p>
+  `);
+  const text = [
+    `Hi, and thank you for signing up with OFF-THE-PLAN.`,
+    ``,
+    `You're now on the list to receive updates on new property releases, market insights, and opportunities tailored to your interests.`,
+    ``,
+    `While you're here, you can start exploring available projects and opportunities:`,
+    `→ Latest Projects: ${latestProjectsUrl}`,
+    ``,
+    `Welcome aboard,`,
+    `The team @OFFTHEPLAN`,
+    ``,
+    `${SITE_URL}`,
+  ].join("\n");
   return { subject, html, text };
 }
