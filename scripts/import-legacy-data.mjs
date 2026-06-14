@@ -156,6 +156,16 @@ async function importMediaKit() {
   console.log(`[MediaKit] prepared ${inserts.length} rows`);
   if (!APPLY) return;
 
+  // Idempotency guard — bail if a previous run already wrote our rows.
+  const { count: existing } = await supabase
+    .from("media_kit_enquiries")
+    .select("id", { count: "exact", head: true })
+    .eq("source", SOURCE_TAG);
+  if ((existing ?? 0) > 0) {
+    console.log(`[MediaKit] ⏭️  skipped — ${existing} rows already present with source='${SOURCE_TAG}'`);
+    return;
+  }
+
   const { error: insErr, count } = await supabase
     .from("media_kit_enquiries")
     .insert(inserts, { count: "exact" });
@@ -180,6 +190,16 @@ async function importLeads() {
 
   console.log(`[Leads] prepared ${inserts.length} rows`);
   if (!APPLY) return;
+
+  // Idempotency guard — bail if a previous run already wrote our rows.
+  const { count: existing } = await supabase
+    .from("developer_leads")
+    .select("id", { count: "exact", head: true })
+    .eq("source", SOURCE_TAG);
+  if ((existing ?? 0) > 0) {
+    console.log(`[Leads] ⏭️  skipped — ${existing} rows already present with source='${SOURCE_TAG}'`);
+    return;
+  }
 
   // Insert in chunks of 100 to be gentle on the API.
   const CHUNK = 100;
