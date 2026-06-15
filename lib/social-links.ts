@@ -59,6 +59,21 @@ const BY_LABEL: Record<string, SocialLink> = Object.fromEntries(
   SOCIAL_LINKS.map((s) => [s.label, s]),
 );
 
+/**
+ * Simple Icons CDN slugs for each platform. Used by socialRowHtml() to render
+ * `<img src="https://cdn.simpleicons.org/{slug}/{color}">` instead of inline
+ * `<svg>` — Gmail and most other email clients strip inline SVG, but render
+ * external `<img>` reliably.
+ */
+const SIMPLE_ICONS_SLUGS: Record<string, string> = {
+  Facebook: "facebook",
+  LinkedIn: "linkedin",
+  "X (Twitter)": "x",
+  Pinterest: "pinterest",
+  Instagram: "instagram",
+  YouTube: "youtube",
+};
+
 /** Look up a single social link by its label. Returns undefined if missing. */
 export function getSocial(label: string): SocialLink | undefined {
   return BY_LABEL[label];
@@ -66,8 +81,13 @@ export function getSocial(label: string): SocialLink | undefined {
 
 /**
  * Build an inline HTML icon-row string for use in transactional email
- * templates. Renders the given labels as `<a><svg/></a>` linked icons,
- * separated by 8px gaps. Returns "" if none of the requested labels match.
+ * templates. Renders the given labels as `<a><img/></a>` linked icons
+ * sourced from the Simple Icons CDN in brand navy. Returns "" if none of
+ * the requested labels match.
+ *
+ * Inline `<svg>` is intentionally avoided here — Gmail strips it for
+ * security, leaving invisible icons. The React footer can still use the
+ * inline SVG path from SOCIAL_LINKS because that renders in a browser.
  *
  * Used by enquiryConfirmationTemplate + signupWelcomeTemplate to match
  * Tim's "(IG icon and link) (YT icon and link) ..." trailing block.
@@ -78,10 +98,12 @@ export function socialRowHtml(labels: string[], size = 20): string {
     .filter((s): s is SocialLink => Boolean(s));
   if (items.length === 0) return "";
   const anchors = items
-    .map(
-      (s) =>
-        `<a href="${s.href}" style="display:inline-block;margin-right:12px;color:#1a2340;text-decoration:none" target="_blank" rel="noopener noreferrer" aria-label="${s.label}"><svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><path d="${s.svgPath}"/></svg></a>`,
-    )
+    .map((s) => {
+      const slug = SIMPLE_ICONS_SLUGS[s.label];
+      if (!slug) return "";
+      return `<a href="${s.href}" style="display:inline-block;margin-right:12px;text-decoration:none" target="_blank" rel="noopener noreferrer" aria-label="${s.label}"><img src="https://cdn.simpleicons.org/${slug}/1a2340" alt="${s.label}" width="${size}" height="${size}" style="display:inline-block;vertical-align:middle;border:0"/></a>`;
+    })
+    .filter(Boolean)
     .join("");
   return `<div style="margin-top:24px">${anchors}</div>`;
 }
