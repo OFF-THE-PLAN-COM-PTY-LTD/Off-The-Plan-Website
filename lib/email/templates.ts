@@ -8,7 +8,8 @@ import { socialRowHtml } from "@/lib/social-links";
 const BRAND = "Off The Plan";
 const PRIMARY = "#1a2340";
 const ACCENT = "#e85d26";
-const SITE_URL = "https://offtheplan.com.au";
+const SITE_URL =
+  process.env.NEXT_PUBLIC_APP_URL ?? "https://offtheplan.com.au";
 const PHONE_DISPLAY = "0410 313 030";
 const PHONE_HREF = "tel:0410313030";
 
