@@ -81,7 +81,7 @@ function PreviewCard({
         srcDoc={html}
         title={title}
         className="w-full h-[720px] bg-white"
-        sandbox=""
+        sandbox="allow-popups allow-popups-to-escape-sandbox"
       />
     </div>
   );

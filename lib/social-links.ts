@@ -68,9 +68,10 @@ const BY_LABEL: Record<string, SocialLink> = Object.fromEntries(
  * We use jsDelivr serving the simple-icons npm package directly (not
  * cdn.simpleicons.org) because the latter returns 404 for LinkedIn —
  * Simple Icons' branded CDN dropped LinkedIn due to LinkedIn's brand
- * policy, but the underlying npm package still ships the SVG. The
- * tradeoff: icons render in the original black, not brand-navy. Black on
- * white reads cleanly in email.
+ * policy. Pin to v13 specifically: v14 also removed LinkedIn from the
+ * npm package, but v13 still ships it. The tradeoff: icons render in
+ * the original black, not brand-navy. Black on white reads cleanly in
+ * email.
  */
 const SIMPLE_ICONS_SLUGS: Record<string, string> = {
   Facebook: "facebook",
@@ -108,7 +109,7 @@ export function socialRowHtml(labels: string[], size = 20): string {
     .map((s) => {
       const slug = SIMPLE_ICONS_SLUGS[s.label];
       if (!slug) return "";
-      return `<a href="${s.href}" style="display:inline-block;margin-right:12px;text-decoration:none" target="_blank" rel="noopener noreferrer" aria-label="${s.label}"><img src="https://cdn.jsdelivr.net/npm/simple-icons@v14/icons/${slug}.svg" alt="${s.label}" width="${size}" height="${size}" style="display:inline-block;vertical-align:middle;border:0"/></a>`;
+      return `<a href="${s.href}" style="display:inline-block;margin-right:12px;text-decoration:none" target="_blank" rel="noopener noreferrer" aria-label="${s.label}"><img src="https://cdn.jsdelivr.net/npm/simple-icons@v13/icons/${slug}.svg" alt="${s.label}" width="${size}" height="${size}" style="display:inline-block;vertical-align:middle;border:0"/></a>`;
     })
     .filter(Boolean)
     .join("");
