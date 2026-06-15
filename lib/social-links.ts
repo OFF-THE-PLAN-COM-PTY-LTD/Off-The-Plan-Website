@@ -60,10 +60,17 @@ const BY_LABEL: Record<string, SocialLink> = Object.fromEntries(
 );
 
 /**
- * Simple Icons CDN slugs for each platform. Used by socialRowHtml() to render
- * `<img src="https://cdn.simpleicons.org/{slug}/{color}">` instead of inline
- * `<svg>` — Gmail and most other email clients strip inline SVG, but render
- * external `<img>` reliably.
+ * Simple Icons npm-package slugs for each platform. Used by socialRowHtml()
+ * to render `<img src="https://cdn.jsdelivr.net/npm/simple-icons/icons/{slug}.svg">`
+ * instead of inline `<svg>` — Gmail and most other email clients strip inline
+ * SVG, but render external `<img>` reliably.
+ *
+ * We use jsDelivr serving the simple-icons npm package directly (not
+ * cdn.simpleicons.org) because the latter returns 404 for LinkedIn —
+ * Simple Icons' branded CDN dropped LinkedIn due to LinkedIn's brand
+ * policy, but the underlying npm package still ships the SVG. The
+ * tradeoff: icons render in the original black, not brand-navy. Black on
+ * white reads cleanly in email.
  */
 const SIMPLE_ICONS_SLUGS: Record<string, string> = {
   Facebook: "facebook",
@@ -101,7 +108,7 @@ export function socialRowHtml(labels: string[], size = 20): string {
     .map((s) => {
       const slug = SIMPLE_ICONS_SLUGS[s.label];
       if (!slug) return "";
-      return `<a href="${s.href}" style="display:inline-block;margin-right:12px;text-decoration:none" target="_blank" rel="noopener noreferrer" aria-label="${s.label}"><img src="https://cdn.simpleicons.org/${slug}/1a2340" alt="${s.label}" width="${size}" height="${size}" style="display:inline-block;vertical-align:middle;border:0"/></a>`;
+      return `<a href="${s.href}" style="display:inline-block;margin-right:12px;text-decoration:none" target="_blank" rel="noopener noreferrer" aria-label="${s.label}"><img src="https://cdn.jsdelivr.net/npm/simple-icons@v14/icons/${slug}.svg" alt="${s.label}" width="${size}" height="${size}" style="display:inline-block;vertical-align:middle;border:0"/></a>`;
     })
     .filter(Boolean)
     .join("");
