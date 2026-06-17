@@ -51,6 +51,9 @@ yarn-error.log*
 /Design Reference/
 /June 1 - 7 Client Feedback/
 
+# diagnostic script output — may contain DB snapshots
+/scripts/audit-output/
+
 # local env files
 .env*.local
 .env.local
