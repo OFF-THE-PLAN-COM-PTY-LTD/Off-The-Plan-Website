@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   ListChecks,
   Building2,
+  Building,
   Users,
   BarChart2,
   Tag,
@@ -13,6 +14,8 @@ import {
   Globe,
   Megaphone,
   ArrowUpCircle,
+  Mail,
+  Inbox,
   LogOut,
 } from "lucide-react";
 
@@ -20,7 +23,10 @@ const navItems = [
   { label: "Dashboard",         href: "/admin",                  icon: LayoutDashboard },
   { label: "Listing",           href: "/admin/listings",         icon: ListChecks },
   { label: "All Agencies",      href: "/admin/agencies",         icon: Building2 },
+  { label: "Developers",        href: "/admin/developers",       icon: Building },
   { label: "Members",           href: "/admin/members",          icon: Users },
+  { label: "Leads",             href: "/admin/leads",            icon: Inbox },
+  { label: "Enquiries",         href: "/admin/enquiries",        icon: Mail },
   { label: "Reports",           href: "/admin/reports",          icon: BarChart2 },
   { label: "Upgrade Requests",  href: "/admin/upgrade-requests", icon: ArrowUpCircle },
   { label: "Pricing",           href: "/admin/pricing",          icon: Tag },
