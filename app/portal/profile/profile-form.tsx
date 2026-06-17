@@ -322,7 +322,13 @@ function LogoPanel({ field, title, currentUrl, className = "" }: { field: "compa
 
 // ─── Main Form ────────────────────────────────────────────────────────────────
 
-export function ManageProfileForm({ profile }: { profile: ProfileData }) {
+export function ManageProfileForm({
+  profile,
+  developerDirectory = { eligible: false, optedIn: false },
+}: {
+  profile: ProfileData;
+  developerDirectory?: { eligible: boolean; optedIn: boolean };
+}) {
   // Personal details state
   const [firstName, setFirstName] = useState(profile.first_name ?? "");
   const [lastName, setLastName] = useState(profile.last_name ?? "");
@@ -510,6 +516,11 @@ export function ManageProfileForm({ profile }: { profile: ProfileData }) {
         </form>
       </div>
 
+      {/* ── Public Developer Directory (only for developer-members) ── */}
+      {developerDirectory.eligible && (
+        <DeveloperDirectorySection initialOptedIn={developerDirectory.optedIn} />
+      )}
+
       {/* ── Footer ── */}
       <div className="pt-5">
         <button
@@ -518,6 +529,69 @@ export function ManageProfileForm({ profile }: { profile: ProfileData }) {
         >
           View and pay invoices
         </button>
+      </div>
+    </div>
+  );
+}
+
+function DeveloperDirectorySection({ initialOptedIn }: { initialOptedIn: boolean }) {
+  const [optedIn, setOptedIn] = useState(initialOptedIn);
+  const [saving, setSaving] = useState(false);
+  const [savedAt, setSavedAt] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleToggle(next: boolean) {
+    setError(null);
+    setSaving(true);
+    const previous = optedIn;
+    setOptedIn(next); // optimistic
+    try {
+      const res = await fetch("/api/portal/developer-directory", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ show: next }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setOptedIn(previous);
+        setError(json.error ?? "Could not update directory visibility.");
+        return;
+      }
+      setSavedAt(Date.now());
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const hideSavedAfter = 4000;
+  const showSaved = savedAt !== null && Date.now() - savedAt < hideSavedAfter;
+
+  return (
+    <div className="bg-white border border-[#dde1e9] border-t-0">
+      <SectionHeader title="Public Developer Directory" />
+      <div className="px-5 py-5">
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={optedIn}
+            onChange={(e) => handleToggle(e.target.checked)}
+            disabled={saving}
+            className="w-4 h-4 accent-orange mt-0.5"
+          />
+          <div>
+            <p className="font-sans text-sm text-ink">
+              Show our company in the <a href="/developers" target="_blank" rel="noopener" className="text-orange hover:underline">public developers directory</a>.
+            </p>
+            <p className="font-sans text-xs text-ink/50 mt-1">
+              Your business name, about text, developer logo, website, and state will be pulled from the fields above. Untick any time to hide your entry.
+            </p>
+          </div>
+        </label>
+        <div className="mt-3 min-h-[20px]">
+          {saving && <span className="font-sans text-xs text-ink/40">Saving…</span>}
+          {!saving && showSaved && <span className="font-sans text-xs text-green-600">Saved.</span>}
+          {error && <span className="font-sans text-xs text-red-600">{error}</span>}
+        </div>
       </div>
     </div>
   );

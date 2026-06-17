@@ -11,7 +11,7 @@ export default async function PortalProfile() {
   const { data: profile } = await supabaseAdmin
     .from("profiles")
     .select(`
-      full_name, avatar_url,
+      full_name, avatar_url, interest_type,
       first_name, last_name, phone,
       street_address, street_address_2, country, state, city, postcode,
       business_name, about,
@@ -22,6 +22,18 @@ export default async function PortalProfile() {
     `)
     .eq("id", user.id)
     .maybeSingle();
+
+  // Check if this developer-member already has a directory entry, and whether it's published.
+  const isDeveloperMember = (profile?.interest_type as string) === "Developer";
+  let directoryOptedIn = false;
+  if (isDeveloperMember) {
+    const { data: linkedDev } = await supabaseAdmin
+      .from("developers")
+      .select("is_published")
+      .eq("profile_id", user.id)
+      .maybeSingle();
+    directoryOptedIn = Boolean(linkedDev?.is_published);
+  }
 
   return (
     <div>
@@ -63,6 +75,7 @@ export default async function PortalProfile() {
           youtube: (profile?.youtube as string) ?? null,
           website: (profile?.website as string) ?? null,
         }}
+        developerDirectory={{ eligible: isDeveloperMember, optedIn: directoryOptedIn }}
       />
     </div>
   );
