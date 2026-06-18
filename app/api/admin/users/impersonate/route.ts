@@ -33,12 +33,32 @@ export async function POST(req: NextRequest) {
   // homepage. Supabase falls back to the project's Site URL when no
   // redirectTo is supplied — fine for password resets, wrong for "Sign
   // In As" since the admin wants to see the member's dashboard immediately.
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://offtheplan.com.au";
+  //
+  // Origin sniff order:
+  //   1. The Origin header (set by browsers on POST requests)
+  //   2. The Referer header host (some browsers strip Origin)
+  //   3. NEXT_PUBLIC_APP_URL env var (set on Vercel)
+  //   4. Hardcoded prod fallback
+  // Whichever wins, it always matches a URL the admin is actually signed
+  // in on — so it'll be in the Supabase redirect-URL allow list.
+  const refererUrl = req.headers.get("referer");
+  let refererOrigin: string | null = null;
+  try {
+    if (refererUrl) refererOrigin = new URL(refererUrl).origin;
+  } catch {
+    // ignore malformed Referer
+  }
+  const origin =
+    req.headers.get("origin") ??
+    refererOrigin ??
+    process.env.NEXT_PUBLIC_APP_URL ??
+    "https://offtheplan.com.au";
+
   const { data, error } = await supabaseAdmin.auth.admin.generateLink({
     type: "magiclink",
     email,
     options: {
-      redirectTo: `${appUrl}/portal`,
+      redirectTo: `${origin}/portal`,
     },
   });
 
