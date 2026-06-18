@@ -29,9 +29,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Valid email required" }, { status: 400 });
   }
 
+  // Send the admin straight into the member's portal instead of the public
+  // homepage. Supabase falls back to the project's Site URL when no
+  // redirectTo is supplied — fine for password resets, wrong for "Sign
+  // In As" since the admin wants to see the member's dashboard immediately.
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://offtheplan.com.au";
   const { data, error } = await supabaseAdmin.auth.admin.generateLink({
     type: "magiclink",
     email,
+    options: {
+      redirectTo: `${appUrl}/portal`,
+    },
   });
 
   if (error) {
