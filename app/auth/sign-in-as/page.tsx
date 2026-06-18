@@ -5,32 +5,33 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 /**
- * Magic-link callback handler.
+ * Magic-link callback handler for the admin "Sign In As" impersonation
+ * flow. Lives on its own path (not /auth/callback, which is already
+ * taken by the OAuth PKCE handler).
  *
- * Used by the admin "Sign In As" flow (and any future magic-link
- * sign-ins where we need to overwrite an existing session). The
- * default Supabase behaviour is to land on the redirect URL with the
- * auth tokens in the URL hash and rely on the browser-side Supabase
- * client to pick them up — but the home page doesn't pull them in
- * fast enough to cleanly swap an existing session, so the admin who
- * impersonated would silently stay signed in as themselves.
+ * The default Supabase magic-link flow lands the user on the redirect
+ * URL with auth tokens in the URL hash and relies on the browser-side
+ * Supabase client to pick them up. When the admin impersonates a
+ * member, the home/destination page doesn't pull those tokens fast
+ * enough to override the admin's existing session — so the admin
+ * silently stays signed in as themselves.
  *
  * This page explicitly:
  *   1. Reads access_token + refresh_token from the URL hash
- *   2. Calls supabase.auth.setSession() (this OVERWRITES any existing
- *      session belonging to the previous user)
+ *   2. Calls supabase.auth.setSession() (this OVERWRITES the existing
+ *      admin session with the target member's tokens)
  *   3. Redirects to the `next` query param (defaults to /portal)
  */
 
-export default function AuthCallbackPage() {
+export default function SignInAsPage() {
   return (
     <Suspense fallback={<CallbackShell message="Signing you in…" />}>
-      <CallbackInner />
+      <SignInAsInner />
     </Suspense>
   );
 }
 
-function CallbackInner() {
+function SignInAsInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get("next") || "/portal";
@@ -40,10 +41,8 @@ function CallbackInner() {
   useEffect(() => {
     const supabase = createClient();
 
-    // Hash from a Supabase magic-link redirect: #access_token=...&refresh_token=...&type=magiclink&...
     const hash = typeof window !== "undefined" ? window.location.hash.slice(1) : "";
     if (!hash) {
-      // Nothing to swap — just bounce to the destination.
       window.location.replace(next);
       return;
     }
@@ -66,8 +65,6 @@ function CallbackInner() {
           setTimeout(() => router.push("/login"), 1500);
           return;
         }
-        // Strip the hash before navigating so it doesn't linger on the
-        // destination URL.
         window.location.replace(next);
       })
       .catch((err) => {

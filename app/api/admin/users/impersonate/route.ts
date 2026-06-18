@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
     type: "magiclink",
     email,
     options: {
-      redirectTo: `${origin}/auth/callback?next=/portal`,
+      redirectTo: `${origin}/auth/sign-in-as?next=/portal`,
     },
   });
 
