@@ -14,19 +14,19 @@ import {
   Globe,
   Megaphone,
   ArrowUpCircle,
-  Mail,
-  Inbox,
   LogOut,
 } from "lucide-react";
 
+// Note: /admin/leads and /admin/enquiries routes exist but are
+// redundant — the same data already appears as tables on the
+// dashboard (/admin) with filter + export controls. Sidebar links
+// to them were removed (Jun 2026) to avoid confusion.
 const navItems = [
   { label: "Dashboard",         href: "/admin",                  icon: LayoutDashboard },
   { label: "Listing",           href: "/admin/listings",         icon: ListChecks },
   { label: "All Agencies",      href: "/admin/agencies",         icon: Building2 },
   { label: "Developers",        href: "/admin/developers",       icon: Building },
   { label: "Members",           href: "/admin/members",          icon: Users },
-  { label: "Leads",             href: "/admin/leads",            icon: Inbox },
-  { label: "Enquiries",         href: "/admin/enquiries",        icon: Mail },
   { label: "Reports",           href: "/admin/reports",          icon: BarChart2 },
   { label: "Upgrade Requests",  href: "/admin/upgrade-requests", icon: ArrowUpCircle },
   { label: "Pricing",           href: "/admin/pricing",          icon: Tag },
