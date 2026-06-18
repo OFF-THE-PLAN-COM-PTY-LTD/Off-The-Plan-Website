@@ -150,7 +150,10 @@ export default async function AdminMembersPage({ searchParams }: Props) {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2 flex-wrap">
                         <MemberActions id={p.id} status={p.member_status} />
-                        <MemberRowActions email={emailById.get(p.id) ?? null} />
+                        <MemberRowActions
+                          email={emailById.get(p.id) ?? null}
+                          name={p.full_name}
+                        />
                       </div>
                     </td>
                   </tr>
