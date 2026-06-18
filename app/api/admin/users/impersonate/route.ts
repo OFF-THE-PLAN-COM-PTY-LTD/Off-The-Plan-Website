@@ -54,11 +54,18 @@ export async function POST(req: NextRequest) {
     process.env.NEXT_PUBLIC_APP_URL ??
     "https://offtheplan.com.au";
 
+  // Route the magic link through our own /auth/callback page rather than
+  // straight to /portal. The callback explicitly calls setSession() with
+  // the access + refresh tokens from the URL hash, which is what cleanly
+  // overwrites the admin's existing session with the impersonated user's.
+  // Without this step, the default Supabase flow leaves the admin still
+  // signed in as themselves (cookies sticky) and the impersonation does
+  // nothing visible.
   const { data, error } = await supabaseAdmin.auth.admin.generateLink({
     type: "magiclink",
     email,
     options: {
-      redirectTo: `${origin}/portal`,
+      redirectTo: `${origin}/auth/callback?next=/portal`,
     },
   });
 
