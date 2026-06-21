@@ -195,33 +195,31 @@ export function EnquiryModal({
           ) : (
             <form onSubmit={handleSubmit} className="flex flex-col gap-5 px-6 py-5">
 
-              {/* Agent mini-cards */}
+              {/* Agent mini-card — single card, no truncation. The
+                  hardcoded "18 **********" placeholder phone was removed
+                  (Jun 2026 client feedback: never connected to real
+                  data, was the same string on every listing). The
+                  duplicate card render was also removed — was showing
+                  two identical cards via [0,1].map. */}
               {developerName && (
-                <div className="flex gap-4">
-                  {[0, 1].map((i) => (
-                    <div key={i} className="flex items-center gap-2 flex-1 min-w-0">
-                      {developerLogoUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={developerLogoUrl}
-                          alt={developerName}
-                          className="w-10 h-10 object-contain border border-[#e0e0e0] p-1 flex-shrink-0"
-                        />
-                      ) : (
-                        <div className="w-10 h-10 bg-navy/8 border border-[#e0e0e0] flex items-center justify-center flex-shrink-0">
-                          <span className="font-mono text-[7px] uppercase text-ink/40">
-                            {developerName.slice(0, 2)}
-                          </span>
-                        </div>
-                      )}
-                      <div className="min-w-0">
-                        <p className="font-sans font-semibold text-[12px] text-ink leading-tight truncate">
-                          {developerName} Sales Team
-                        </p>
-                        <p className="font-sans text-[11px] text-orange">18 **********</p>
-                      </div>
+                <div className="flex items-center gap-3">
+                  {developerLogoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={developerLogoUrl}
+                      alt={developerName}
+                      className="w-10 h-10 object-contain border border-[#e0e0e0] p-1 flex-shrink-0"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 bg-navy/8 border border-[#e0e0e0] flex items-center justify-center flex-shrink-0">
+                      <span className="font-mono text-[7px] uppercase text-ink/40">
+                        {developerName.slice(0, 2)}
+                      </span>
                     </div>
-                  ))}
+                  )}
+                  <p className="font-sans font-semibold text-[13px] text-ink leading-snug">
+                    {developerName} Sales Team
+                  </p>
                 </div>
               )}
 
