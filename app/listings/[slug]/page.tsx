@@ -288,61 +288,70 @@ export default async function DossierPage({ params }: Props) {
 
               {/* ── Agent card ── */}
               <div className="border border-t-0 border-line bg-white px-4 py-4">
-                <div className="flex items-start gap-3 mb-3">
-                  {dev.developer?.logo_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={dev.developer.logo_url}
-                      alt={dev.developer.name ?? "Developer"}
-                      className="w-12 h-12 object-contain border border-line p-1 flex-shrink-0"
-                    />
-                  ) : (
-                    <div className="w-12 h-12 bg-navy/5 border border-line flex items-center justify-center flex-shrink-0">
-                      <span className="font-mono text-[8px] uppercase text-ink/40">
-                        {dev.developer?.name?.slice(0, 2) ?? ""}
-                      </span>
+                {(() => {
+                  // Pick the primary selling agent. Source order:
+                  //   1. listing_agents rows (sorted by sort_order) — new structure used by the admin form
+                  //   2. fall back to the flat agent_name/phone/email columns on the development row
+                  //      (for legacy listings; mig 035 also backfills these into listing_agents)
+                  // Logo source order:
+                  //   1. The primary agent's own photo (listing_agents.photo_url) — uploaded via admin
+                  //   2. The developer company's logo (developers.logo_url)
+                  //   3. A 2-letter monogram fallback
+                  const agentRecords = (dev as { listing_agents?: { name: string | null; email: string | null; mobile: string | null; photo_url: string | null; sort_order: number | null }[] }).listing_agents ?? [];
+                  const primary = [...agentRecords].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))[0];
+                  const name = primary?.name ?? dev.agent_name ?? null;
+                  const phone = primary?.mobile ?? dev.agent_phone ?? null;
+                  const email = primary?.email ?? dev.agent_email ?? null;
+                  const agentPhoto = primary?.photo_url ?? null;
+                  const developerLogo = dev.developer?.logo_url ?? null;
+                  const monogram = name?.slice(0, 2) ?? dev.developer?.name?.slice(0, 2) ?? "";
+
+                  return (
+                    <div className="flex items-start gap-3 mb-3">
+                      {agentPhoto ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={agentPhoto}
+                          alt={name ?? "Selling agent"}
+                          className="w-12 h-12 object-cover border border-line flex-shrink-0"
+                        />
+                      ) : developerLogo ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={developerLogo}
+                          alt={dev.developer?.name ?? "Developer"}
+                          className="w-12 h-12 object-contain border border-line p-1 flex-shrink-0"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 bg-navy/5 border border-line flex items-center justify-center flex-shrink-0">
+                          <span className="font-mono text-[8px] uppercase text-ink/40">{monogram}</span>
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <p className="font-sans font-semibold text-[14px] text-ink leading-tight mb-1">
+                          {name ?? (dev.developer?.name ? `${dev.developer.name} Sales Team` : "Sales Team")}
+                        </p>
+                        {phone ? (
+                          <PhoneReveal phone={phone} developmentId={dev.id} />
+                        ) : email ? (
+                          <a
+                            href={`mailto:${email}`}
+                            className="font-sans text-[13px] text-orange hover:text-orange/70 transition-colors truncate block"
+                          >
+                            {email}
+                          </a>
+                        ) : (
+                          <a
+                            href="#enquire"
+                            className="font-sans text-[13px] text-orange hover:text-orange/70 transition-colors"
+                          >
+                            Enquire for details
+                          </a>
+                        )}
+                      </div>
                     </div>
-                  )}
-                  <div className="min-w-0">
-                    {(() => {
-                      // Prefer the listing_agents row (new structure used by the
-                      // admin form) so any edits made there flow through to the
-                      // public page. Fall back to the flat agent_name / phone /
-                      // email columns on the development row for older listings
-                      // that haven't been migrated yet — though migration 035
-                      // backfills them, this fallback is a safety net.
-                      const agentRecords = (dev as { listing_agents?: { name: string | null; email: string | null; mobile: string | null; sort_order: number | null }[] }).listing_agents ?? [];
-                      const primary = [...agentRecords].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))[0];
-                      const name = primary?.name ?? dev.agent_name ?? null;
-                      const phone = primary?.mobile ?? dev.agent_phone ?? null;
-                      const email = primary?.email ?? dev.agent_email ?? null;
-                      return (
-                        <>
-                          <p className="font-sans font-semibold text-[14px] text-ink leading-tight mb-1">
-                            {name ?? (dev.developer?.name ? `${dev.developer.name} Sales Team` : "Sales Team")}
-                          </p>
-                          {phone ? (
-                            <PhoneReveal phone={phone} developmentId={dev.id} />
-                          ) : email ? (
-                            <a
-                              href={`mailto:${email}`}
-                              className="font-sans text-[13px] text-orange hover:text-orange/70 transition-colors truncate block"
-                            >
-                              {email}
-                            </a>
-                          ) : (
-                            <a
-                              href="#enquire"
-                              className="font-sans text-[13px] text-orange hover:text-orange/70 transition-colors"
-                            >
-                              Enquire for details
-                            </a>
-                          )}
-                        </>
-                      );
-                    })()}
-                  </div>
-                </div>
+                  );
+                })()}
 
                 <EnquiryButton
                   developmentId={dev.id}
