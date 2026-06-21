@@ -1,8 +1,100 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+
+/**
+ * Logo upload control — file picker + preview. Posts to the existing
+ * /api/admin/upload endpoint (same one the listing form uses for hero
+ * images, agent photos, etc.) and stores the returned URL in logo_url.
+ *
+ * Replaces the bare URL text input that was here before — Tim asked
+ * (Jun 2026 feedback) for a real upload control matching the rest of
+ * the admin UI, not a paste-a-URL field.
+ */
+function LogoUpload({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (url: string) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleFile(file: File) {
+    setUploading(true);
+    setError(null);
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("bucket", "development-images");
+    try {
+      const res = await fetch("/api/admin/upload", { method: "POST", body: formData });
+      const json = await res.json();
+      if (res.ok && json.url) onChange(json.url);
+      else setError(json.error ?? "Upload failed");
+    } catch {
+      setError("Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <div className="border border-line bg-cream-alt px-5 py-5 flex flex-col items-center gap-3">
+      <p className="font-mono text-[10px] uppercase tracking-widest text-navy font-bold">Developer Logo</p>
+      <div className="w-44 h-28 border border-line bg-white flex items-center justify-center overflow-hidden">
+        {value ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={value} alt="Developer logo" className="w-full h-full object-contain p-2" />
+        ) : (
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-ink/15" aria-hidden="true">
+            <rect x="3" y="3" width="18" height="18" rx="2" />
+            <circle cx="8.5" cy="8.5" r="1.5" />
+            <polyline points="21 15 16 10 5 21" />
+          </svg>
+        )}
+      </div>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/gif"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) handleFile(f);
+          e.target.value = "";
+        }}
+      />
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          disabled={uploading}
+          className="font-mono text-[10px] uppercase tracking-widest px-5 py-2 border border-orange text-orange hover:bg-orange hover:text-white transition-colors disabled:opacity-50"
+        >
+          {uploading ? "Uploading…" : value ? "Replace Logo" : "Upload Logo"}
+        </button>
+        {value && (
+          <button
+            type="button"
+            onClick={() => onChange("")}
+            className="font-mono text-[10px] uppercase tracking-widest px-3 py-2 border border-line text-ink/50 hover:border-red-400 hover:text-red-500 transition-colors"
+          >
+            Remove
+          </button>
+        )}
+      </div>
+      {error && <p className="font-sans text-xs text-red-500">{error}</p>}
+      <p className="font-sans text-[10px] text-ink/40 text-center leading-snug">
+        (Supported formats: JPEG, JPG, PNG, GIF)<br />
+        (File size up to 5MB, Dimensions 500×500)
+      </p>
+    </div>
+  );
+}
 
 export interface DeveloperFormValues {
   id?: string;
@@ -125,21 +217,8 @@ export default function DeveloperForm({
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mb-4">
-        <div>
-          <label className={lbl}>Logo URL</label>
-          <input
-            type="url"
-            value={form.logo_url}
-            onChange={(e) => set("logo_url", e.target.value)}
-            placeholder="https://…"
-            className={inp}
-          />
-          {form.logo_url && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={form.logo_url} alt="Logo preview" className="mt-2 h-10 w-auto max-w-[140px] object-contain" />
-          )}
-        </div>
+      <div className="grid grid-cols-2 gap-4 mb-4 items-start">
+        <LogoUpload value={form.logo_url} onChange={(url) => set("logo_url", url)} />
         <div>
           <label className={lbl}>Website</label>
           <input
