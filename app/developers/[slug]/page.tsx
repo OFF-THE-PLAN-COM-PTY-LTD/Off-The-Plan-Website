@@ -40,13 +40,22 @@ export default async function DeveloperProfilePage({ params }: Props) {
   return (
     <div className="min-h-screen bg-cream pt-16">
       <section className="bg-navy py-16">
-        <div className="container-padded flex items-end gap-8">
-          <div className="h-20 w-20 bg-white/10 flex items-center justify-center flex-shrink-0 flex-shrink-0">
+        <div className="container-padded flex items-center gap-8 flex-wrap">
+          {/* Logo card — fixed 160×80 white card with logo capped at 80% so
+              all developer hero blocks look the same regardless of whether
+              the source logo is wide, tall, or square. Falls back to a navy
+              monogram so missing-logo pages don't look out-of-place. */}
+          <div className="h-20 w-40 bg-white flex items-center justify-center flex-shrink-0">
             {dev.logo_url ? (
-              <img src={dev.logo_url} alt={dev.name} className="h-14 object-contain" />
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={dev.logo_url}
+                alt={dev.name}
+                className="max-h-[80%] max-w-[80%] object-contain"
+              />
             ) : (
-              <span className="font-display text-[28px] font-light text-ink-light/70 leading-none select-none">
-                {dev.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()}
+              <span className="font-mono text-[18px] font-bold uppercase tracking-widest text-navy select-none">
+                {dev.name.split(/\s+/).map((w) => w[0]).filter(Boolean).join("").slice(0, 2).toUpperCase()}
               </span>
             )}
           </div>

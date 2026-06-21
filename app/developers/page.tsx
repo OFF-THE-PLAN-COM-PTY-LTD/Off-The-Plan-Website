@@ -31,22 +31,45 @@ export default async function DevelopersPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {developers.map((dev) => {
             const devCount = allDevelopments.filter((d) => d.developer_id === dev.id).length;
+            const initials = dev.name
+              .split(/\s+/)
+              .map((w) => w[0])
+              .filter(Boolean)
+              .join("")
+              .slice(0, 2)
+              .toUpperCase();
             return (
               <Link
                 key={dev.id}
                 href={`/developers/${dev.slug}`}
-                className="group p-6 border border-line bg-cream-alt hover:border-orange transition-colors"
+                className="group p-6 border border-line bg-cream-alt hover:border-orange transition-colors flex flex-col h-full"
               >
-                <div className="h-16 flex items-center mb-4">
+                {/* Logo slot — fixed container, logo capped at 80% width / 80% height
+                    so wide banners and tall squares both look proportional next to
+                    each other in the grid. Falls back to a small navy monogram
+                    rather than a giant name, so tiles with and without logos share
+                    the same visual rhythm. */}
+                <div className="h-16 flex items-center justify-center mb-4 bg-white border border-line">
                   {dev.logo_url ? (
-                    <img src={dev.logo_url} alt={dev.name} className="h-full object-contain" />
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={dev.logo_url}
+                      alt={dev.name}
+                      className="max-h-[80%] max-w-[80%] object-contain"
+                    />
                   ) : (
-                    <span className="font-display text-card-xl font-light text-navy group-hover:text-orange transition-colors">{dev.name}</span>
+                    <span className="font-mono text-[14px] font-bold uppercase tracking-widest text-navy group-hover:text-orange transition-colors">
+                      {initials || "—"}
+                    </span>
                   )}
                 </div>
-                <p className="font-sans text-body-md text-ink/60 line-clamp-2 mb-3">{dev.description}</p>
-                <p className="font-mono text-label-sm uppercase tracking-widest text-ink/30">
-                  {devCount} active listing{devCount !== 1 ? "s" : ""} · {dev.state}
+                <p className="font-sans text-sm font-semibold text-navy mb-1">{dev.name}</p>
+                <p className="font-sans text-body-md text-ink/60 line-clamp-2 mb-3 min-h-[3em]">
+                  {dev.description ?? <span className="text-ink/20 italic">No description yet.</span>}
+                </p>
+                <p className="font-mono text-label-sm uppercase tracking-widest text-ink/30 mt-auto">
+                  {devCount} active listing{devCount !== 1 ? "s" : ""}
+                  {dev.state && <> · {dev.state}</>}
                 </p>
               </Link>
             );
