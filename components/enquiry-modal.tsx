@@ -139,19 +139,18 @@ export function EnquiryModal({
             <img src="/logo.png" alt="Off The Plan" className="w-full object-contain" />
           </div>
 
-          {/* Middle: brand statement */}
+          {/* Middle: brand statement. Tagline removed per Jun 2026
+              client feedback; bumped the headline + portal label sizes
+              up to make better use of the freed-up vertical space. */}
           <div className="flex-1 flex flex-col justify-center">
             <div className="w-8 h-px bg-orange mb-5" aria-hidden="true" />
-            <p className="font-mono text-[9px] uppercase tracking-[0.22em] text-white/55 leading-[2.2] mb-6">
+            <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-white/55 leading-[2] mb-6">
               Australia&apos;s<br />New Home<br />Portal
             </p>
-            <p className="font-display font-light text-white text-[1.15rem] leading-snug mb-3">
+            <p className="font-display font-light text-white text-[1.5rem] leading-tight">
               Australia&apos;s finest{" "}
               <em className="not-italic italic text-orange">off&#8209;the&#8209;plan</em>{" "}
               properties.
-            </p>
-            <p className="font-sans font-light text-white/55 text-[12px] leading-relaxed">
-              Your future address, carefully chosen for buyers who won&apos;t settle for ordinary.
             </p>
           </div>
 
