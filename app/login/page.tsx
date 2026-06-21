@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import ForgotPassword from "./forgot-password";
 
 export const metadata: Metadata = { title: "Sign in" };
 
@@ -30,6 +31,8 @@ export default function LoginPage({ searchParams }: { searchParams: { redirect?:
           </div>
           <button type="submit" className="btn-primary w-full mt-2">Sign in</button>
         </form>
+
+        <ForgotPassword />
 
         <p className="font-sans text-body-md text-ink/50 mt-6 text-center">
           New to Off The Plan?{" "}

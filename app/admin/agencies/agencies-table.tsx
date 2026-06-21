@@ -51,6 +51,10 @@ export default function AgenciesTable({ agencies }: { agencies: Agency[] }) {
   // Sign-in-as-user (magic link) state
   const [signingInId, setSigningInId] = useState<string | null>(null);
 
+  // Email "set your own password" link state
+  const [emailingId, setEmailingId] = useState<string | null>(null);
+  const [bulkSending, setBulkSending] = useState(false);
+
   // Set-password modal state
   const [pwModal, setPwModal] = useState<{ agency: Agency } | null>(null);
   const [pwValue, setPwValue] = useState("");
@@ -78,6 +82,55 @@ export default function AgenciesTable({ agencies }: { agencies: Agency[] }) {
       window.open(json.url, "_blank", "noopener,noreferrer");
     } finally {
       setSigningInId(null);
+    }
+  }
+
+  async function handleEmailLink(agency: Agency) {
+    if (!agency.email) {
+      alert("This agency has no email on file — cannot send a link.");
+      return;
+    }
+    setEmailingId(agency.id);
+    try {
+      const res = await fetch("/api/admin/users/send-set-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: agency.email }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        alert(json.error ?? "Could not send the email.");
+        return;
+      }
+      alert(`Set-password link emailed to ${agency.email}.`);
+    } finally {
+      setEmailingId(null);
+    }
+  }
+
+  async function handleBulkEmail() {
+    const ok = window.confirm(
+      "Email a 'set your own password' link to every agency with an email on file?\n\nEach person clicks it once to choose their own password.",
+    );
+    if (!ok) return;
+    setBulkSending(true);
+    try {
+      const res = await fetch("/api/admin/users/send-set-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ scope: "all-members" }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        alert(json.error ?? "Bulk send failed.");
+        return;
+      }
+      alert(
+        `Done. Sent ${json.sent} of ${json.total} link${json.total === 1 ? "" : "s"}.` +
+          (json.failed ? ` ${json.failed} failed — check server logs.` : ""),
+      );
+    } finally {
+      setBulkSending(false);
     }
   }
 
@@ -205,7 +258,15 @@ export default function AgenciesTable({ agencies }: { agencies: Agency[] }) {
             Reset
           </button>
         )}
-        <span className="ml-auto text-sm font-sans text-ink/40">{filtered.length} agencies</span>
+        <button
+          onClick={handleBulkEmail}
+          disabled={bulkSending}
+          title="Email every agency with an email on file a link to set their own password"
+          className="ml-auto font-mono text-[10px] uppercase tracking-widest px-3 py-2 bg-black text-white font-semibold hover:bg-ink/80 transition-colors disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+        >
+          {bulkSending ? "Sending…" : "Email Set-Password Link to All"}
+        </button>
+        <span className="text-sm font-sans text-ink/40">{filtered.length} agencies</span>
       </div>
 
       {/* Table */}
@@ -307,6 +368,14 @@ export default function AgenciesTable({ agencies }: { agencies: Agency[] }) {
                         Set Password
                       </button>
                     </div>
+                    <button
+                      onClick={() => handleEmailLink(a)}
+                      disabled={emailingId === a.id || !a.email}
+                      title={a.email ? "Email this member a link to set their own password" : "No email on file"}
+                      className="w-full font-mono text-[10px] uppercase tracking-widest px-2 py-1.5 border border-line text-ink hover:border-navy hover:text-navy transition-colors disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+                    >
+                      {emailingId === a.id ? "Sending…" : "Email Set-Password Link"}
+                    </button>
                     <button
                       onClick={() => openModal(a)}
                       className={`w-full font-mono text-[10px] uppercase tracking-widest px-2 py-1.5 border transition-colors ${

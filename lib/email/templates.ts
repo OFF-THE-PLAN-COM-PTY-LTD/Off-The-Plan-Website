@@ -200,3 +200,53 @@ export function signupWelcomeTemplate() {
   ].join("\n");
   return { subject, html, text };
 }
+
+// ──────────────────────────────────────────────────────────────────────
+// 5. Set / reset password — emailed to a user with a one-time Supabase
+//    recovery link that lands on /auth/set-password. Used both for the
+//    new-site launch ("set your own password first login", mode: "set")
+//    and for the self-service "Forgot password?" flow (mode: "reset").
+// ──────────────────────────────────────────────────────────────────────
+
+export interface SetPasswordEmailArgs {
+  /** The Supabase recovery action_link the user clicks. */
+  actionLink: string;
+  /** "set" for first-login launch invites, "reset" for forgot-password. */
+  mode?: "set" | "reset";
+}
+
+export function setPasswordEmailTemplate(args: SetPasswordEmailArgs) {
+  const reset = args.mode === "reset";
+  const href = escapeHtml(args.actionLink); // escapes & in query string for the href attr
+  const subject = reset ? `Reset your Off The Plan password` : `Set your Off The Plan password`;
+  const heading = reset ? "Reset your password" : "Set your password";
+  const intro = reset
+    ? "We received a request to reset the password for your Off The Plan account."
+    : "Your Off The Plan account is ready. For your security, please set your own password to finish signing in.";
+  const cta = reset ? "Reset password" : "Set my password";
+
+  const html = shell(`
+    <h2 style="margin:0 0 16px;font-size:18px;font-weight:600;color:${PRIMARY};">${heading}</h2>
+    <p style="margin:0 0 14px;">${intro}</p>
+    <p style="margin:0 0 22px;">Click the button below to choose a new password. This link can only be used once and expires after a short time.</p>
+    <p style="margin:0 0 22px;">
+      <a href="${href}" style="display:inline-block;background:${ACCENT};color:#ffffff;text-decoration:none;font-weight:600;font-size:14px;padding:12px 24px;border-radius:2px;">${cta}</a>
+    </p>
+    <p style="margin:0 0 6px;font-size:12px;color:#7a7a7a;">If the button doesn't work, copy and paste this link into your browser:</p>
+    <p style="margin:0 0 18px;font-size:12px;word-break:break-all;"><a href="${href}" style="color:${ACCENT};">${href}</a></p>
+    <p style="margin:0;font-size:12px;color:#7a7a7a;">If you didn't request this, you can safely ignore this email — your password won't change.</p>
+  `);
+  const text = [
+    heading,
+    ``,
+    intro,
+    ``,
+    `Set a new password here (single use, expires soon):`,
+    args.actionLink,
+    ``,
+    `If you didn't request this, you can safely ignore this email.`,
+    ``,
+    `The team @OFFTHEPLAN`,
+  ].join("\n");
+  return { subject, html, text };
+}
