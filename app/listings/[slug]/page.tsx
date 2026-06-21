@@ -45,7 +45,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function DossierPage({ params }: Props) {
   const { data: rawDev } = await supabase
     .from("developments")
-    .select("*, developer:developers(*), images:development_images(*), floor_plans:development_floor_plans(*)")
+    .select("*, developer:developers(*), images:development_images(*), floor_plans:development_floor_plans(*), listing_agents:listing_agents(name, email, mobile, photo_url, sort_order)")
     .eq("slug", params.slug)
     .eq("is_published", true)
     .single();
@@ -304,26 +304,43 @@ export default async function DossierPage({ params }: Props) {
                     </div>
                   )}
                   <div className="min-w-0">
-                    <p className="font-sans font-semibold text-[14px] text-ink leading-tight mb-1">
-                      {dev.agent_name ?? (dev.developer?.name ? `${dev.developer.name} Sales Team` : "Sales Team")}
-                    </p>
-                    {dev.agent_phone ? (
-                      <PhoneReveal phone={dev.agent_phone} developmentId={dev.id} />
-                    ) : dev.agent_email ? (
-                      <a
-                        href={`mailto:${dev.agent_email}`}
-                        className="font-sans text-[13px] text-orange hover:text-orange/70 transition-colors truncate block"
-                      >
-                        {dev.agent_email}
-                      </a>
-                    ) : (
-                      <a
-                        href="#enquire"
-                        className="font-sans text-[13px] text-orange hover:text-orange/70 transition-colors"
-                      >
-                        Enquire for details
-                      </a>
-                    )}
+                    {(() => {
+                      // Prefer the listing_agents row (new structure used by the
+                      // admin form) so any edits made there flow through to the
+                      // public page. Fall back to the flat agent_name / phone /
+                      // email columns on the development row for older listings
+                      // that haven't been migrated yet — though migration 035
+                      // backfills them, this fallback is a safety net.
+                      const agentRecords = (dev as { listing_agents?: { name: string | null; email: string | null; mobile: string | null; sort_order: number | null }[] }).listing_agents ?? [];
+                      const primary = [...agentRecords].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))[0];
+                      const name = primary?.name ?? dev.agent_name ?? null;
+                      const phone = primary?.mobile ?? dev.agent_phone ?? null;
+                      const email = primary?.email ?? dev.agent_email ?? null;
+                      return (
+                        <>
+                          <p className="font-sans font-semibold text-[14px] text-ink leading-tight mb-1">
+                            {name ?? (dev.developer?.name ? `${dev.developer.name} Sales Team` : "Sales Team")}
+                          </p>
+                          {phone ? (
+                            <PhoneReveal phone={phone} developmentId={dev.id} />
+                          ) : email ? (
+                            <a
+                              href={`mailto:${email}`}
+                              className="font-sans text-[13px] text-orange hover:text-orange/70 transition-colors truncate block"
+                            >
+                              {email}
+                            </a>
+                          ) : (
+                            <a
+                              href="#enquire"
+                              className="font-sans text-[13px] text-orange hover:text-orange/70 transition-colors"
+                            >
+                              Enquire for details
+                            </a>
+                          )}
+                        </>
+                      );
+                    })()}
                   </div>
                 </div>
 
