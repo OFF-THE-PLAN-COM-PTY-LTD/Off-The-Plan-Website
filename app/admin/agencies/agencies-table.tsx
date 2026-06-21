@@ -54,6 +54,8 @@ export default function AgenciesTable({ agencies }: { agencies: Agency[] }) {
   // Email "set your own password" link state
   const [emailingId, setEmailingId] = useState<string | null>(null);
   const [bulkSending, setBulkSending] = useState(false);
+  const [bulkModalOpen, setBulkModalOpen] = useState(false);
+  const [bulkConfirmText, setBulkConfirmText] = useState("");
 
   // Set-password modal state
   const [pwModal, setPwModal] = useState<{ agency: Agency } | null>(null);
@@ -108,11 +110,10 @@ export default function AgenciesTable({ agencies }: { agencies: Agency[] }) {
     }
   }
 
+  const BULK_CONFIRM_PHRASE = "SEND TO ALL";
+
   async function handleBulkEmail() {
-    const ok = window.confirm(
-      "Email a 'set your own password' link to every agency with an email on file?\n\nEach person clicks it once to choose their own password.",
-    );
-    if (!ok) return;
+    if (bulkConfirmText !== BULK_CONFIRM_PHRASE) return;
     setBulkSending(true);
     try {
       const res = await fetch("/api/admin/users/send-set-password", {
@@ -125,6 +126,8 @@ export default function AgenciesTable({ agencies }: { agencies: Agency[] }) {
         alert(json.error ?? "Bulk send failed.");
         return;
       }
+      setBulkModalOpen(false);
+      setBulkConfirmText("");
       alert(
         `Done. Sent ${json.sent} of ${json.total} link${json.total === 1 ? "" : "s"}.` +
           (json.failed ? ` ${json.failed} failed — check server logs.` : ""),
@@ -259,7 +262,7 @@ export default function AgenciesTable({ agencies }: { agencies: Agency[] }) {
           </button>
         )}
         <button
-          onClick={handleBulkEmail}
+          onClick={() => { setBulkConfirmText(""); setBulkModalOpen(true); }}
           disabled={bulkSending}
           title="Email every agency with an email on file a link to set their own password"
           className="ml-auto font-mono text-[10px] uppercase tracking-widest px-3 py-2 bg-black text-white font-semibold hover:bg-ink/80 transition-colors disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
@@ -512,6 +515,45 @@ export default function AgenciesTable({ agencies }: { agencies: Agency[] }) {
                 </div>
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Bulk "email set-password link to all" — type-to-confirm guard */}
+      {bulkModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={bulkSending ? undefined : () => setBulkModalOpen(false)}>
+          <div className="bg-white border border-line w-full max-w-md p-6 shadow-lg" onClick={(e) => e.stopPropagation()}>
+            <h2 className="font-display font-semibold text-navy text-lg mb-1">Email set-password link to all</h2>
+            <p className="font-sans text-sm text-ink/60 mb-4">
+              This emails a &ldquo;set your own password&rdquo; link to <span className="font-semibold text-ink">every agency with an email on file</span> ({agencies.length} total). Each person clicks it once to choose their password. Only do this at launch or when you intend to reset everyone.
+            </p>
+            <p className="font-sans text-sm text-ink mb-2">
+              Type <span className="font-mono font-bold">{BULK_CONFIRM_PHRASE}</span> to confirm:
+            </p>
+            <input
+              autoFocus
+              type="text"
+              value={bulkConfirmText}
+              onChange={(e) => setBulkConfirmText(e.target.value)}
+              placeholder={BULK_CONFIRM_PHRASE}
+              className="w-full border border-line px-3 py-2 text-sm font-mono mb-4 focus:outline-none focus:border-navy"
+            />
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setBulkModalOpen(false)}
+                disabled={bulkSending}
+                className="font-sans text-sm px-4 py-2 border border-line text-ink/60 hover:bg-cream-alt transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleBulkEmail}
+                disabled={bulkConfirmText !== BULK_CONFIRM_PHRASE || bulkSending}
+                className="font-sans text-sm px-4 py-2 bg-black text-white font-semibold disabled:opacity-40 hover:bg-ink/80 transition-colors"
+              >
+                {bulkSending ? "Sending…" : "Send to all"}
+              </button>
+            </div>
           </div>
         </div>
       )}
