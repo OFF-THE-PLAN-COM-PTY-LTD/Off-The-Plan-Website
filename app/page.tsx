@@ -1,12 +1,12 @@
 import Link from "next/link";
 import Image from "next/image";
 import { PropertyCard } from "@/components/property-card";
-import { JournalCard } from "@/components/journal-card";
 import { AnimateIn } from "@/components/animate-in";
 import { ImageAutoSlider } from "@/components/ui/image-auto-slider";
 import type { SliderItem } from "@/components/ui/image-auto-slider";
 import { ChevronRightIcon } from "@/components/icons";
 import { AdSlot } from "@/components/ad-slot";
+import { formatDate } from "@/lib/utils";
 import { supabase } from "@/lib/supabase/public";
 import type { Development } from "@/types/development";
 import type { JournalArticle } from "@/types/journal";
@@ -118,7 +118,7 @@ export default async function HomePage() {
       .select("*")
       .eq("is_published", true)
       .order("published_at", { ascending: false })
-      .limit(3),
+      .limit(4),
     supabase
       .from("developments")
       .select("hero_image_url, images:development_images(url)")
@@ -497,26 +497,118 @@ export default async function HomePage() {
       </section>
 
       {/* ─── Section 5: News & Events ───────────────────────────────────────── */}
+      {/* Layout matches the legacy site (offtheplan.com.au): a large featured
+          article (image left, content right) above a 3-up row of supporting
+          articles. The featured card carries date + title + excerpt + READ
+          MORE; the smaller cards keep date + title + READ MORE only. */}
       {articles.length > 0 && (
         <section className="bg-cream-alt py-16 md:py-20">
           <div className="container-padded">
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center justify-between mb-10">
               <p className="font-mono text-[11px] uppercase tracking-widest text-ink/40">
                 News &amp; Events
               </p>
               <Link
-                href="/journal"
+                href="/news"
                 className="font-mono text-[11px] uppercase tracking-widest text-ink/40 hover:text-orange transition-colors flex items-center gap-1.5"
               >
                 View all
                 <ChevronRightIcon size={14} />
               </Link>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {articles.map((article) => (
-                <JournalCard key={article.id} article={article} variant="feature" />
-              ))}
-            </div>
+
+            {/* Featured article — image left, content right */}
+            {(() => {
+              const featured = articles[0];
+              const supporting = articles.slice(1, 4);
+              // subtitle / meta_content live on journal_articles but aren't on
+              // the (older) JournalArticle TS type — cast for the excerpt.
+              const featuredExtras = featured as unknown as { subtitle?: string | null; meta_content?: string | null };
+              const excerpt = featuredExtras.subtitle ?? featuredExtras.meta_content ?? "";
+              return (
+                <>
+                  <AnimateIn>
+                    <Link
+                      href={`/journal/${featured.slug}`}
+                      className="group block bg-white border border-line mb-10 md:mb-12 overflow-hidden"
+                    >
+                      <div className="grid grid-cols-1 md:grid-cols-2">
+                        <div className="relative aspect-[4/3] md:aspect-auto md:min-h-[360px] bg-navy/10 overflow-hidden">
+                          {featured.hero_image_url ? (
+                            <Image
+                              src={featured.hero_image_url}
+                              alt={featured.title}
+                              fill
+                              className="object-cover transition-transform duration-700 group-hover:scale-105"
+                              sizes="(max-width: 768px) 100vw, 50vw"
+                              priority={false}
+                            />
+                          ) : (
+                            <div className="absolute inset-0 bg-gradient-to-br from-navy to-navy-mid" />
+                          )}
+                        </div>
+                        <div className="px-6 md:px-10 py-8 md:py-10 flex flex-col justify-center">
+                          {featured.published_at && (
+                            <p className="font-mono text-[11px] uppercase tracking-widest text-ink/40 mb-3">
+                              {formatDate(featured.published_at)}
+                            </p>
+                          )}
+                          <h3 className="font-display font-light text-navy text-card-xl md:text-section-md leading-snug mb-4 group-hover:text-orange transition-colors">
+                            {featured.title}
+                          </h3>
+                          {excerpt && (
+                            <p className="font-sans text-body-md text-ink/60 mb-6 line-clamp-3">
+                              {excerpt}
+                            </p>
+                          )}
+                          <span className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-orange group-hover:text-navy transition-colors">
+                            Read More
+                            <ChevronRightIcon size={13} />
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  </AnimateIn>
+
+                  {/* Supporting articles — 3-up row */}
+                  {supporting.length > 0 && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
+                      {supporting.map((article, i) => (
+                        <AnimateIn key={article.id} delay={i * 80}>
+                          <Link href={`/journal/${article.slug}`} className="group block">
+                            <div className="relative aspect-[4/3] mb-4 bg-navy/10 overflow-hidden">
+                              {article.hero_image_url ? (
+                                <Image
+                                  src={article.hero_image_url}
+                                  alt={article.title}
+                                  fill
+                                  className="object-cover transition-transform duration-700 group-hover:scale-105"
+                                  sizes="(max-width: 768px) 100vw, 33vw"
+                                />
+                              ) : (
+                                <div className="absolute inset-0 bg-gradient-to-br from-navy to-navy-mid" />
+                              )}
+                            </div>
+                            {article.published_at && (
+                              <p className="font-mono text-[10px] uppercase tracking-widest text-ink/40 mb-2">
+                                {formatDate(article.published_at)}
+                              </p>
+                            )}
+                            <h4 className="font-display font-light text-navy text-card-lg leading-snug mb-3 group-hover:text-orange transition-colors line-clamp-3">
+                              {article.title}
+                            </h4>
+                            <span className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-orange group-hover:text-navy transition-colors">
+                              Read More
+                              <ChevronRightIcon size={13} />
+                            </span>
+                          </Link>
+                        </AnimateIn>
+                      ))}
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div>
         </section>
       )}
