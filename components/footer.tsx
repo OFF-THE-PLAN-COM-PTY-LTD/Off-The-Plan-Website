@@ -114,8 +114,10 @@ function NewsletterForm() {
 export function Footer() {
   return (
     <footer className="bg-navy text-ink-light">
-      {/* Top: logo + tagline + description */}
-      <div className="max-w-screen-xl mx-auto px-6 md:px-10 pt-10 pb-6">
+      {/* Top: logo + tagline + description.
+          Top padding is generous so the footer never slams into the previous
+          page section — Tim flagged this as the missing "footer buffer". */}
+      <div className="max-w-screen-xl mx-auto px-6 md:px-10 pt-16 md:pt-24 pb-10">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <Link href="/" className="inline-block">
             <Image
