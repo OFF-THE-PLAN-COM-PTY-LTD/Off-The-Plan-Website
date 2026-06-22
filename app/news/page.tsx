@@ -97,6 +97,11 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
       </section>
 
       <div className="container-padded py-12">
+        {/* Two-column layout on desktop: news grid (left) + skyscraper rail
+            (right, 300px). On tablet/mobile the rail collapses below — keeps
+            the content column comfortable rather than squeezed. */}
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] gap-8 lg:gap-10">
+          <div className="min-w-0">
 
         {articles.length === 0 ? (
           <p className="font-sans text-body-md text-ink/40 text-center py-16">
@@ -151,9 +156,10 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
               </div>
             )}
 
-            {/* ── Remaining / all articles — 3-col grid ── */}
+            {/* ── Remaining / all articles — 2-col on lg (content column is
+                narrower with the right rail), 3-col on xl+ ── */}
             {rest.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 mb-10">
                 {rest.map((article) => (
                   <Link
                     key={article.id}
@@ -240,6 +246,15 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
             )}
           </>
         )}
+          </div>
+
+          {/* ── Right-rail skyscraper (lg+ only, sticky as you scroll) ── */}
+          <aside className="hidden lg:block">
+            <div className="sticky top-24 flex flex-col items-center">
+              <AdSlot page="news" position="right" />
+            </div>
+          </aside>
+        </div>
       </div>
 
       {/* ── Bottom ad slot ── */}
