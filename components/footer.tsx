@@ -70,21 +70,25 @@ function NewsletterForm() {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-      <div className="flex gap-2">
+      {/* First/Last name stack on narrow viewports (the footer column is
+          half the viewport at the sm breakpoint, so two side-by-side
+          inputs end up cut off). xl+ is where the columns are wide enough
+          for the side-by-side layout to fit cleanly. */}
+      <div className="flex flex-col xl:flex-row gap-2">
         <input
           type="text"
           placeholder="First Name*"
           value={firstName}
           onChange={(e) => setFirstName(e.target.value)}
           required
-          className="flex-1 bg-transparent border border-ink-light/20 text-ink-light placeholder-ink-light/40 font-sans text-sm px-3 py-2 focus:outline-none focus:border-ink-light/60"
+          className="w-full xl:flex-1 bg-transparent border border-ink-light/20 text-ink-light placeholder-ink-light/40 font-sans text-sm px-3 py-2 focus:outline-none focus:border-ink-light/60"
         />
         <input
           type="text"
           placeholder="Last Name"
           value={lastName}
           onChange={(e) => setLastName(e.target.value)}
-          className="flex-1 bg-transparent border border-ink-light/20 text-ink-light placeholder-ink-light/40 font-sans text-sm px-3 py-2 focus:outline-none focus:border-ink-light/60"
+          className="w-full xl:flex-1 bg-transparent border border-ink-light/20 text-ink-light placeholder-ink-light/40 font-sans text-sm px-3 py-2 focus:outline-none focus:border-ink-light/60"
         />
       </div>
       <input

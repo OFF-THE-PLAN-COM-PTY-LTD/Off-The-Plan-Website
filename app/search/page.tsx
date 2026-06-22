@@ -151,19 +151,19 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
         {/* Filter form */}
         <div className="container-padded py-2.5">
-          <form method="GET" action="/search" className="flex items-stretch gap-0">
+          <form method="GET" action="/search" className="flex flex-col md:flex-row md:items-stretch gap-0">
 
             {/* Suburb */}
             <input
               name="suburb"
               defaultValue={searchParams.suburb}
               placeholder="Suburb, postcode, or project name"
-              className="font-sans text-sm text-[#1a2340] placeholder:text-[#1a2340]/40 px-4 py-2 bg-white outline-none flex-[2] min-w-[220px] border-r border-[#dde1e9]"
+              className="font-sans text-sm text-[#1a2340] placeholder:text-[#1a2340]/40 px-4 py-2 bg-white outline-none w-full md:flex-[2] md:min-w-[220px] border-b md:border-b-0 md:border-r border-[#dde1e9]"
               aria-label="Suburb, postcode, or project name"
             />
 
             {/* State */}
-            <div className="relative flex-1 bg-white border-r border-[#dde1e9] flex items-center">
+            <div className="relative w-full md:flex-1 bg-white border-b md:border-b-0 md:border-r border-[#dde1e9] flex items-center">
               <select name="state" defaultValue={selSt} className={sel} aria-label="State">
                 <option value="">State</option>
                 {AU_STATES.map((st) => (
@@ -174,7 +174,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             </div>
 
             {/* Category */}
-            <div className="relative flex-1 bg-white border-r border-[#dde1e9] flex items-center">
+            <div className="relative w-full md:flex-1 bg-white border-b md:border-b-0 md:border-r border-[#dde1e9] flex items-center">
               <select name="type" defaultValue={selCat} className={sel} aria-label="Category">
                 <option value="">Category</option>
                 {CATEGORIES.map((c) => (
@@ -185,7 +185,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             </div>
 
             {/* Price Range */}
-            <div className="relative flex-1 bg-white border-r border-[#dde1e9] flex items-center">
+            <div className="relative w-full md:flex-1 bg-white border-b md:border-b-0 md:border-r border-[#dde1e9] flex items-center">
               <select name="price_range" defaultValue={selPr} className={sel} aria-label="Price Range">
                 <option value="">Price Range</option>
                 {PRICE_RANGES.map((r) => (
@@ -199,7 +199,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             <button
               type="submit"
               style={{ background: "#e85d26" }}
-              className="font-mono text-[11px] uppercase tracking-widest px-6 py-2 text-white hover:opacity-90 transition-opacity flex items-center gap-2 flex-shrink-0"
+              className="font-mono text-[11px] uppercase tracking-widest px-6 py-3 md:py-2 text-white hover:opacity-90 transition-opacity flex items-center justify-center gap-2 flex-shrink-0 w-full md:w-auto"
             >
               Search
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">

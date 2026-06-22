@@ -322,8 +322,9 @@ export default async function HomePage() {
           <div className="h-16 bg-gradient-to-t from-[#0d1529]/90 to-transparent" />
           <div style={{ background: "rgba(13,21,41,0.92)" }}>
             <div className="container-padded py-3">
-              {/* Heading + state tabs row */}
-              <div className="flex items-center justify-between mb-2">
+              {/* Heading + state tabs row — stacks on mobile so 8 state pills
+                  don't push the page wider than the viewport. */}
+              <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between mb-2">
                 <div>
                   <p className="font-sans text-[9px] uppercase tracking-[0.2em] text-white/40 mb-0.5">
                     The New Home for Off-The-Plan Property
@@ -332,7 +333,7 @@ export default async function HomePage() {
                     New Property Search
                   </h2>
                 </div>
-                <div className="flex items-center gap-4">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
                   {["ACT","NSW","NT","QLD","SA","TAS","VIC","WA"].map((abbr) => (
                     <a
                       key={abbr}
@@ -344,15 +345,17 @@ export default async function HomePage() {
                   ))}
                 </div>
               </div>
-              {/* Input row */}
-              <form action="/search" method="GET" className="flex items-stretch gap-0">
+              {/* Input row — stacks vertically on mobile so the form's
+                  ~580px minimum row width doesn't force the page to side-
+                  scroll. md+ keeps the original single-row layout. */}
+              <form action="/search" method="GET" className="flex flex-col md:flex-row md:items-stretch gap-0">
                 <input
                   name="suburb"
                   placeholder="Suburb, postcode, or project name"
-                  className="font-sans text-sm text-[#1a2340] placeholder:text-[#1a2340]/40 px-4 py-2 bg-white outline-none flex-[2] min-w-[220px] border-r border-[#dde1e9]"
+                  className="font-sans text-sm text-[#1a2340] placeholder:text-[#1a2340]/40 px-4 py-2 bg-white outline-none w-full md:flex-[2] md:min-w-[220px] border-b md:border-b-0 md:border-r border-[#dde1e9]"
                   aria-label="Suburb, postcode, or project name"
                 />
-                <div className="relative flex-1 bg-white border-r border-[#dde1e9] flex items-center">
+                <div className="relative w-full md:flex-1 bg-white border-b md:border-b-0 md:border-r border-[#dde1e9] flex items-center">
                   <select name="state" className="appearance-none bg-transparent font-sans text-sm text-[#1a2340] px-4 py-2 pr-8 outline-none cursor-pointer w-full">
                     <option value="">State</option>
                     {[["ACT","Australian Capital Territory"],["NSW","New South Wales"],["NT","Northern Territory"],["QLD","Queensland"],["SA","South Australia"],["TAS","Tasmania"],["VIC","Victoria"],["WA","Western Australia"]].map(([a,f])=>(
@@ -361,7 +364,7 @@ export default async function HomePage() {
                   </select>
                   <svg className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#1a2340" strokeWidth="2.5"><polyline points="6 9 12 15 18 9"/></svg>
                 </div>
-                <div className="relative flex-1 bg-white border-r border-[#dde1e9] flex items-center">
+                <div className="relative w-full md:flex-1 bg-white border-b md:border-b-0 md:border-r border-[#dde1e9] flex items-center">
                   <select name="type" className="appearance-none bg-transparent font-sans text-sm text-[#1a2340] px-4 py-2 pr-8 outline-none cursor-pointer w-full">
                     <option value="">Category</option>
                     {[
@@ -377,7 +380,7 @@ export default async function HomePage() {
                   </select>
                   <svg className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#1a2340" strokeWidth="2.5"><polyline points="6 9 12 15 18 9"/></svg>
                 </div>
-                <div className="relative flex-1 bg-white border-r border-[#dde1e9] flex items-center">
+                <div className="relative w-full md:flex-1 bg-white border-b md:border-b-0 md:border-r border-[#dde1e9] flex items-center">
                   <select name="price_range" className="appearance-none bg-transparent font-sans text-sm text-[#1a2340] px-4 py-2 pr-8 outline-none cursor-pointer w-full">
                     <option value="">Price Range</option>
                     {[["0-600000","$0 – $600,000"],["600000-1000000","$600,000 – $1 Mil"],["1000000-1500000","$1 Mil – $1.5 Mil"],["1500000-2500000","$1.5 Mil – $2.5 Mil"],["2500000+","More than $2.5 Mil"]].map(([v,l])=>(
@@ -389,7 +392,7 @@ export default async function HomePage() {
                 <button
                   type="submit"
                   style={{ background: "#e85d26" }}
-                  className="font-mono text-[11px] uppercase tracking-widest px-6 py-2 text-white hover:opacity-90 transition-opacity flex items-center gap-2 flex-shrink-0"
+                  className="font-mono text-[11px] uppercase tracking-widest px-6 py-3 md:py-2 text-white hover:opacity-90 transition-opacity flex items-center justify-center gap-2 flex-shrink-0 w-full md:w-auto"
                 >
                   Search
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>

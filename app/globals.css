@@ -17,6 +17,11 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     scroll-behavior: smooth;
+    /* Apply the horizontal-overflow clamp on html as well as body — iOS
+       Safari pans the document at the html level and can ignore a
+       body-only clamp. With both in place, no child can side-scroll
+       the page. */
+    overflow-x: clip;
   }
 
   body {
