@@ -118,7 +118,9 @@ export default async function HomePage() {
       .select("*")
       .eq("is_published", true)
       .order("published_at", { ascending: false })
-      .limit(4),
+      // Fetch a few extras so the dedupe-by-title pass (below) can still
+      // surface a full 1 featured + 3 supporting if duplicates exist.
+      .limit(8),
     supabase
       .from("developments")
       .select("hero_image_url, images:development_images(url)")
@@ -182,7 +184,19 @@ export default async function HomePage() {
       ? []
       : MOCK_TIER2;
 
-  const articles = (articlesData ?? []) as unknown as JournalArticle[];
+  // De-duplicate the home news list by normalised title — the editor can
+  // accidentally publish two articles with the same title (e.g. an early
+  // draft + a final revision), and we'd rather quietly show the next
+  // distinct article than let two visually identical cards sit on the
+  // home page. The first occurrence wins (already sorted by published_at).
+  const seenTitles = new Set<string>();
+  const articles = ((articlesData ?? []) as unknown as JournalArticle[]).filter((a) => {
+    const key = (a.title || "").trim().toLowerCase();
+    if (!key) return true;
+    if (seenTitles.has(key)) return false;
+    seenTitles.add(key);
+    return true;
+  });
 
   // Derive hero media + overlay text from the first homepage banner (admin-controlled).
   // Falls back to the static /hero-video.mp4 with the default branded overlay
