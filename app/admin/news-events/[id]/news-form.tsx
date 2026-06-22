@@ -67,8 +67,18 @@ export function NewsForm({ id, existing }: Props) {
     if (!slugManual) setSlug(slugify(title));
   }, [title, slugManual]);
 
+  // Card thumbnails on /news, /journal, /guides and the home page use
+  // list_page_image_url. If the editor publishes without one the cards fall
+  // back to the hero image — which has the article title baked in, making
+  // it look broken. Block publishing in that case (drafts are still fine).
+  const missingListImageOnPublish = isPublished && !listPageImage;
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (missingListImageOnPublish) {
+      setError("Please upload a List Page Image before publishing — it's used as the card thumbnail on /news, the home page, etc. Save as Draft if you don't have one yet.");
+      return;
+    }
     setSaving(true);
     setError(null);
     setSuccess(false);
@@ -246,16 +256,48 @@ export function NewsForm({ id, existing }: Props) {
           {/* Right column — images */}
           <div className="space-y-5">
             <div className="bg-white border border-line p-5">
-              <p className="font-sans text-xs font-semibold uppercase tracking-wider text-orange mb-3">
+              <p className="font-sans text-xs font-semibold uppercase tracking-wider text-orange mb-1">
                 Main Article Image <span className="text-ink/40 normal-case font-normal">(1600×500)</span>
+              </p>
+              <p className="font-sans text-[11px] text-ink/50 mb-3 leading-snug">
+                Wide banner at the top of the article page itself. Title text is often typeset onto this image — that&apos;s fine here.
               </p>
               <ImageUpload label="" value={heroImageUrl} onChange={setHeroImageUrl} bucket="journal-images" />
             </div>
-            <div className="bg-white border border-line p-5">
-              <p className="font-sans text-xs font-semibold uppercase tracking-wider text-orange mb-3">
+
+            <div className={`bg-white border p-5 ${missingListImageOnPublish ? "border-red-400" : "border-line"}`}>
+              <p className="font-sans text-xs font-semibold uppercase tracking-wider text-orange mb-1">
                 List Page Image <span className="text-ink/40 normal-case font-normal">(600×500)</span>
+                {isPublished && <span className="ml-2 text-red-500 normal-case">· Required to publish</span>}
+              </p>
+              <p className="font-sans text-[11px] text-ink/50 mb-3 leading-snug">
+                Card thumbnail shown on <span className="font-mono">/news</span>, the home page and other listings. Use a clean photo <span className="font-semibold">without the article title overlaid</span> — the title is added by the page.
               </p>
               <ImageUpload label="" value={listPageImage} onChange={setListPageImage} bucket="journal-images" />
+              {missingListImageOnPublish && (
+                <p className="font-sans text-[12px] text-red-600 mt-2">
+                  Upload a list page image, or set Publish to No to save as a draft.
+                </p>
+              )}
+
+              {/* Mini preview so the editor sees what the card will actually look like */}
+              {listPageImage && (
+                <div className="mt-4 pt-4 border-t border-line">
+                  <p className="font-mono text-[10px] uppercase tracking-widest text-ink/40 mb-2">Card preview</p>
+                  <div className="max-w-[220px]">
+                    <div className="relative aspect-[6/5] bg-navy/10 overflow-hidden">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={listPageImage} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                    </div>
+                    <p className="font-mono text-[10px] uppercase tracking-widest text-ink/40 mt-2">
+                      {publishedAt || "DD MMM YYYY"}
+                    </p>
+                    <p className="font-display font-light text-navy text-sm leading-snug mt-1 line-clamp-3">
+                      {title || "Article title appears here"}
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
             <div className="bg-white border border-line p-5">
               <p className="font-sans text-xs font-semibold uppercase tracking-wider text-orange mb-3">
@@ -276,7 +318,12 @@ export function NewsForm({ id, existing }: Props) {
         {success && <p className="font-sans text-sm text-green-600 mt-4">Saved successfully.</p>}
 
         <div className="flex gap-3 mt-6">
-          <button type="submit" disabled={saving} className="btn-primary disabled:opacity-50">
+          <button
+            type="submit"
+            disabled={saving || missingListImageOnPublish}
+            title={missingListImageOnPublish ? "Upload a List Page Image before publishing." : undefined}
+            className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+          >
             {saving ? "Saving…" : "Save"}
           </button>
           <Link href="/admin/news-events" className="font-sans text-sm px-4 py-2 border border-line text-ink/60 hover:bg-cream-alt transition-colors">
