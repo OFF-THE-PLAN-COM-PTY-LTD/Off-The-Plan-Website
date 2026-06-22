@@ -266,17 +266,38 @@ export default async function HomePage() {
           </div>
         </div>
 
-        {/* Featured-project overlay tag — anchored above the search bar.
-            Auto-populated from the linked development (Tim's spec:
-            'PROJECT NAME – Suburb, State | By Developer'). */}
+        {/* Featured-project CTA — anchored above the search bar. A visible,
+            clickable "FEATURE PROJECT" tag that links through to the listing
+            (Tim's spec, 15 Jun: 'FEATURE PROJECT: {project}{suburb}{state}'
+            hyperlinked to the actual listing — kept deliberately simple).
+            Auto-populated from the admin-linked development in Homepage Setup. */}
         {heroOverlay?.project && (
           <div className="relative z-20 px-6 md:px-10 pb-3 pointer-events-none">
             <div className="container-padded">
-              <p className="font-mono text-[10px] md:text-[11px] uppercase tracking-[0.18em] text-white/70">
-                <span className="text-white font-semibold">{heroOverlay.project}</span>
-                {heroOverlay.location && <span className="text-white/50"> &nbsp;–&nbsp; {heroOverlay.location}</span>}
-                {heroOverlay.developer && <span className="text-white/50"> &nbsp;|&nbsp; By {heroOverlay.developer}</span>}
-              </p>
+              {heroHref ? (
+                <Link
+                  href={heroHref}
+                  aria-label={`Feature project: view ${heroOverlay.project}`}
+                  className="pointer-events-auto group inline-flex items-stretch max-w-full shadow-sm"
+                >
+                  <span className="font-mono text-[9px] md:text-[10px] font-semibold uppercase tracking-[0.2em] bg-orange text-white px-2.5 flex items-center flex-shrink-0">
+                    Feature Project
+                  </span>
+                  <span className="flex items-center gap-2 min-w-0 bg-black/40 group-hover:bg-black/55 transition-colors px-3 py-1.5">
+                    <span className="font-mono text-[10px] md:text-[11px] uppercase tracking-[0.16em] text-white/85 truncate">
+                      <span className="font-semibold text-white">{heroOverlay.project}</span>
+                      {heroOverlay.location && <span className="text-white/60"> — {heroOverlay.location}</span>}
+                    </span>
+                    <ChevronRightIcon size={13} className="text-orange flex-shrink-0 transition-transform group-hover:translate-x-0.5" />
+                  </span>
+                </Link>
+              ) : (
+                <p className="font-mono text-[10px] md:text-[11px] uppercase tracking-[0.18em] text-white/70">
+                  <span className="font-mono text-[9px] md:text-[10px] font-semibold bg-orange text-white px-2 py-1 mr-2">Feature Project</span>
+                  <span className="text-white font-semibold">{heroOverlay.project}</span>
+                  {heroOverlay.location && <span className="text-white/50"> — {heroOverlay.location}</span>}
+                </p>
+              )}
             </div>
           </div>
         )}
