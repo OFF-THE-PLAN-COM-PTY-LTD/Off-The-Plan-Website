@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import { ChevronLeftIcon, ChevronRightIcon } from "@/components/icons";
+import { useSwipeNav } from "@/lib/hooks/use-swipe-nav";
 
 export interface LightboxImage {
   url: string;
@@ -50,9 +51,19 @@ export function Lightbox({ images, startIndex, onClose }: LightboxProps) {
 
   const img = images[idx];
 
+  // Touch + trackpad swipe navigation (Tim PDF p.4). Disabled when zoomed in
+  // so pan/zoom interactions aren't hijacked.
+  const swipeRef = useRef<HTMLDivElement>(null);
+  useSwipeNav(swipeRef, {
+    onPrev: prev,
+    onNext: next,
+    enabled: total > 1 && zoom === 1,
+  });
+
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
+      ref={swipeRef}
+      className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center touch-pan-y"
       onClick={() => { if (zoom > 1) setZoom(1); else onClose(); }}
     >
       {/* Close */}

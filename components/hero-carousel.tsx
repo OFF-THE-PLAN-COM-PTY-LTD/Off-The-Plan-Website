@@ -5,6 +5,7 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { ChevronLeftIcon, ChevronRightIcon, CameraIcon } from "@/components/icons";
 import { Lightbox } from "@/components/lightbox";
+import { useSwipeNav } from "@/lib/hooks/use-swipe-nav";
 
 const MOCK_IMAGES = [
   "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1600&h=900&fit=crop&auto=format&q=80",
@@ -51,9 +52,14 @@ export function HeroCarousel({ images, name }: HeroCarouselProps) {
   const prev = () => { setCurrent((c) => (c - 1 + total) % total); resetTimer(); };
   const next = () => { setCurrent((c) => (c + 1) % total); resetTimer(); };
 
+  // Touch + trackpad swipe (Tim PDF p.4): finger swipe on touchscreens, two-
+  // finger horizontal swipe on trackpads. Only enable when more than one image.
+  const swipeRef = useRef<HTMLDivElement>(null);
+  useSwipeNav(swipeRef, { onPrev: prev, onNext: next, enabled: total > 1 });
+
   return (
     <>
-      <div className="relative w-full h-[65vh] bg-navy overflow-hidden cursor-zoom-in">
+      <div ref={swipeRef} className="relative w-full h-[65vh] bg-navy overflow-hidden cursor-zoom-in touch-pan-y">
         {displayImages.map((img, i) => (
           <div
             key={i}
