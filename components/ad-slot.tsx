@@ -86,9 +86,6 @@ export async function AdSlot({ page, position, className = "" }: Props) {
           />
         </div>
       </a>
-      <p className="text-center font-mono text-[9px] uppercase tracking-widest text-ink/30 mt-1">
-        Advertisement
-      </p>
     </div>
   );
 }
