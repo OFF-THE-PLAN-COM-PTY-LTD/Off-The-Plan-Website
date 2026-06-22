@@ -99,7 +99,7 @@ function NewsletterForm() {
         <button
           type="submit"
           disabled={status === "loading"}
-          className="font-mono text-label-sm uppercase tracking-widest border border-orange text-orange px-5 py-2 hover:bg-orange hover:text-white transition-colors disabled:opacity-50"
+          className="font-brand text-label-sm font-semibold uppercase tracking-[0.18em] border border-orange text-orange px-5 py-2 hover:bg-orange hover:text-white transition-colors disabled:opacity-50"
         >
           {status === "loading" ? "Sending…" : "Send"}
         </button>
@@ -153,7 +153,7 @@ export function Footer() {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8">
           {/* More Info */}
           <div>
-            <p className="font-mono text-label-sm uppercase tracking-widest text-ink-light/60 mb-4">
+            <p className="font-brand text-label-sm font-semibold uppercase tracking-[0.18em] text-ink-light/70 mb-4">
               More Info
             </p>
             <ul className="flex flex-col gap-2.5">
@@ -169,7 +169,7 @@ export function Footer() {
 
           {/* Properties */}
           <div>
-            <p className="font-mono text-label-sm uppercase tracking-widest text-ink-light/60 mb-4">
+            <p className="font-brand text-label-sm font-semibold uppercase tracking-[0.18em] text-ink-light/70 mb-4">
               Properties
             </p>
             <ul className="flex flex-col gap-2.5">
@@ -185,7 +185,7 @@ export function Footer() {
 
           {/* Search by State */}
           <div>
-            <p className="font-mono text-label-sm uppercase tracking-widest text-ink-light/60 mb-4">
+            <p className="font-brand text-label-sm font-semibold uppercase tracking-[0.18em] text-ink-light/70 mb-4">
               Search by State
             </p>
             <ul className="flex flex-col gap-2.5">
@@ -201,7 +201,7 @@ export function Footer() {
 
           {/* Talk to Us */}
           <div>
-            <p className="font-mono text-label-sm uppercase tracking-widest text-ink-light/60 mb-4">
+            <p className="font-brand text-label-sm font-semibold uppercase tracking-[0.18em] text-ink-light/70 mb-4">
               Talk to Us
             </p>
             <div className="flex flex-col gap-3">
@@ -222,7 +222,7 @@ export function Footer() {
 
           {/* Follow */}
           <div>
-            <p className="font-mono text-label-sm uppercase tracking-widest text-ink-light/60 mb-4">
+            <p className="font-brand text-label-sm font-semibold uppercase tracking-[0.18em] text-ink-light/70 mb-4">
               Follow
             </p>
             <ul className="flex flex-col gap-3">
@@ -248,7 +248,7 @@ export function Footer() {
 
           {/* Newsletter */}
           <div>
-            <p className="font-mono text-label-sm uppercase tracking-widest text-ink-light/60 mb-4">
+            <p className="font-brand text-label-sm font-semibold uppercase tracking-[0.18em] text-ink-light/70 mb-4">
               Newsletter
             </p>
             <NewsletterForm />
@@ -266,7 +266,7 @@ export function Footer() {
             <span>|</span>
             <Link href="/terms" className="hover:text-ink-light/60 transition-colors uppercase tracking-widest">Terms & Conditions</Link>
           </div>
-          <p className="font-sans text-xs text-ink-light/50 uppercase tracking-widest">
+          <p className="font-brand text-xs font-medium text-ink-light/50 uppercase tracking-[0.18em]">
             Copyright {new Date().getFullYear()}
           </p>
         </div>
