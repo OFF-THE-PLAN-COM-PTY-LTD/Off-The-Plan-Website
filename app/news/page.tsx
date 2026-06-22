@@ -96,12 +96,15 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
         </div>
       </section>
 
-      <div className="container-padded py-12">
-        {/* Two-column layout on desktop: news grid (left) + skyscraper rail
-            (right, 300px). On tablet/mobile the rail collapses below.
-            Wider gap (gap-12 → gap-16) so the rail sits clearly to the right
-            and the article cards have room to breathe. */}
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] gap-10 lg:gap-12 xl:gap-16">
+      {/* Wider container at xl+ (max-w-screen-2xl = 1536px vs default 1280px)
+          so the right-rail banner sits closer to the viewport edge on large
+          screens — and the content column gets enough room to comfortably
+          fit a 3-up card grid alongside it. */}
+      <div className="mx-auto max-w-screen-xl xl:max-w-screen-2xl px-6 md:px-10 py-12">
+        {/* News grid (left) + skyscraper rail (right, 300px). On tablet/
+            mobile the rail collapses below. Wide gap keeps the rail clearly
+            separated from the cards on big screens. */}
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] gap-10 lg:gap-12 xl:gap-20">
           <div className="min-w-0">
 
         {articles.length === 0 ? (
@@ -157,10 +160,11 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
               </div>
             )}
 
-            {/* ── Remaining / all articles — 2-col when the right rail is
-                present (lg+); cards stay roomy rather than squeezed into 3-up. ── */}
+            {/* ── Remaining articles — 2-up at sm/lg, 3-up at xl+ where the
+                container widens (max-w-screen-2xl) so each card still has
+                room next to the right-rail banner. ── */}
             {rest.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-10">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 mb-10">
                 {rest.map((article) => (
                   <Link
                     key={article.id}
