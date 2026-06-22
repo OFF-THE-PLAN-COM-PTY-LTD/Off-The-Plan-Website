@@ -16,9 +16,9 @@ export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 export const revalidate = 0;
 
-// Page 1 = 3 featured + 12 in 3-col grid = 15 cards (4 clean rows of 3)
-// Subsequent pages = 12 cards in 3-col grid (4 clean rows of 3)
-const PAGE_ONE_SIZE = 15;
+// Page 1 = 2 large featured + 9 in 3-col grid = 11 cards (mirrors /news).
+// Subsequent pages = 12 cards in 3-col grid.
+const PAGE_ONE_SIZE = 11;
 const PAGE_SIZE = 12;
 
 /** Strip HTML and remove the social-share boilerplate at the top of every scraped article. */
@@ -76,24 +76,31 @@ export default async function GuidesPage({ searchParams }: GuidesPageProps) {
     ? 0
     : 1 + Math.ceil(Math.max(0, totalCount - PAGE_ONE_SIZE) / PAGE_SIZE);
 
-  // Page 1: top 2 featured large + ad slot, then rest in 3-col grid
-  // Other pages: all in 3-col grid
-  const featured = page === 1 ? articles.slice(0, 3) : [];
-  const rest = page === 1 ? articles.slice(3) : articles;
+  // Page 1: top 2 featured large + rest in 3-col grid (matches /news).
+  // Other pages: all in 3-col grid.
+  const featured = page === 1 ? articles.slice(0, 2) : [];
+  const rest = page === 1 ? articles.slice(2) : articles;
 
   return (
     <div className="min-h-screen bg-[#f5f4f1] pt-16">
 
-      {/* ── Page header ── */}
+      {/* ── Page header (eyebrow + heading match the legacy site) ── */}
       <section className="bg-[#eeecea] border-b border-line py-10">
         <div className="container-padded">
+          <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-ink/50 mb-2">
+            Latest Property Guides
+          </p>
           <h1 className="font-mono text-[2rem] uppercase tracking-[0.18em] text-navy font-medium">
             Guides
           </h1>
         </div>
       </section>
 
-      <div className="container-padded py-12">
+      {/* Wider container at xl+ so the right-rail banner sits closer to the
+          viewport edge, matching /news. */}
+      <div className="mx-auto max-w-screen-xl xl:max-w-screen-2xl px-6 md:px-10 py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] gap-10 lg:gap-12 xl:gap-20">
+          <div className="min-w-0">
 
         {articles.length === 0 ? (
           <p className="font-sans text-body-md text-ink/40 text-center py-16">
@@ -101,9 +108,9 @@ export default async function GuidesPage({ searchParams }: GuidesPageProps) {
           </p>
         ) : (
           <>
-            {/* ── Featured top 2 + portrait ad slot (page 1 only) ── */}
+            {/* ── Featured top 2 — large cards (page 1 only) ── */}
             {featured.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 {featured.map((article) => (
                   <Link
                     key={article.id}
@@ -117,23 +124,23 @@ export default async function GuidesPage({ searchParams }: GuidesPageProps) {
                           alt={article.title}
                           fill
                           className="object-cover object-right transition-transform duration-500 group-hover:scale-105"
-                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                          sizes="(max-width: 768px) 100vw, 50vw"
                         />
                       ) : (
                         <ImagePlaceholder />
                       )}
                     </div>
-                    <div className="flex flex-col flex-1 p-5">
+                    <div className="flex flex-col flex-1 p-6">
                       {article.published_at && (
-                        <p className="font-mono text-[9px] uppercase tracking-widest text-ink/30 mb-2">
+                        <p className="font-mono text-[10px] uppercase tracking-widest text-ink/40 mb-3">
                           {formatDate(article.published_at)}
                         </p>
                       )}
-                      <h3 className="font-sans font-semibold text-navy text-[0.95rem] leading-snug mb-2 group-hover:text-orange transition-colors">
+                      <h2 className="font-sans font-semibold text-navy text-[1.05rem] leading-snug mb-3 group-hover:text-orange transition-colors">
                         {article.title}
-                      </h3>
+                      </h2>
                       {article.body_html && (
-                        <p className="font-sans text-[13px] text-ink/60 leading-relaxed mb-4 line-clamp-3">
+                        <p className="font-sans text-[13px] text-ink/60 leading-relaxed mb-5 line-clamp-3">
                           {extractExcerpt(article.body_html)}
                         </p>
                       )}
@@ -145,13 +152,13 @@ export default async function GuidesPage({ searchParams }: GuidesPageProps) {
                     </div>
                   </Link>
                 ))}
-
               </div>
             )}
 
-            {/* ── Rest / all articles — 3-col grid ── */}
+            {/* ── Rest / all articles — 2-up at sm/lg, 3-up at xl+ where the
+                container widens, so each card still has room next to the rail. ── */}
             {rest.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 mb-10">
                 {rest.map((article) => (
                   <Link
                     key={article.id}
@@ -238,6 +245,16 @@ export default async function GuidesPage({ searchParams }: GuidesPageProps) {
             )}
           </>
         )}
+          </div>
+
+          {/* ── Right-rail skyscraper (lg+ only). Sits at the top of the rail
+              and scrolls with the page — not sticky. Mirrors /news. ── */}
+          <aside className="hidden lg:block">
+            <div className="flex flex-col items-end">
+              <AdSlot page="guides" position="right" />
+            </div>
+          </aside>
+        </div>
       </div>
 
       {/* ── Bottom ad slot ── */}
