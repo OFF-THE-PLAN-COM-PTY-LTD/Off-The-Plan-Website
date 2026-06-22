@@ -98,9 +98,10 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
 
       <div className="container-padded py-12">
         {/* Two-column layout on desktop: news grid (left) + skyscraper rail
-            (right, 300px). On tablet/mobile the rail collapses below — keeps
-            the content column comfortable rather than squeezed. */}
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] gap-8 lg:gap-10">
+            (right, 300px). On tablet/mobile the rail collapses below.
+            Wider gap (gap-12 → gap-16) so the rail sits clearly to the right
+            and the article cards have room to breathe. */}
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] gap-10 lg:gap-12 xl:gap-16">
           <div className="min-w-0">
 
         {articles.length === 0 ? (
@@ -156,10 +157,10 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
               </div>
             )}
 
-            {/* ── Remaining / all articles — 2-col on lg (content column is
-                narrower with the right rail), 3-col on xl+ ── */}
+            {/* ── Remaining / all articles — 2-col when the right rail is
+                present (lg+); cards stay roomy rather than squeezed into 3-up. ── */}
             {rest.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 mb-10">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-10">
                 {rest.map((article) => (
                   <Link
                     key={article.id}
@@ -248,9 +249,10 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
         )}
           </div>
 
-          {/* ── Right-rail skyscraper (lg+ only, sticky as you scroll) ── */}
+          {/* ── Right-rail skyscraper (lg+ only). Sits at the top of the rail
+              and scrolls with the page — not sticky. ── */}
           <aside className="hidden lg:block">
-            <div className="sticky top-24 flex flex-col items-center">
+            <div className="flex flex-col items-end">
               <AdSlot page="news" position="right" />
             </div>
           </aside>
