@@ -21,6 +21,14 @@
 
   body {
     @apply bg-cream text-ink font-sans;
+    /* Stop the whole page from being side-scrollable on mobile if any
+       element accidentally overflows the viewport — Tim noticed a hard
+       horizontal swipe revealed white space on the right that didn't snap
+       back. `clip` is preferred over `hidden` because it doesn't break
+       `position: sticky` inside the page. Modern browsers (Chrome 90+,
+       Safari 16+, Firefox 81+) all support it.
+       overflow-y stays visible so vertical scrolling is unaffected. */
+    overflow-x: clip;
   }
 
   /* Scroll-reveal utility */
