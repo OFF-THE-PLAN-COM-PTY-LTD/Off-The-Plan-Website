@@ -521,10 +521,18 @@ export default async function HomePage() {
             {(() => {
               const featured = articles[0];
               const supporting = articles.slice(1, 4);
-              // subtitle / meta_content live on journal_articles but aren't on
-              // the (older) JournalArticle TS type — cast for the excerpt.
-              const featuredExtras = featured as unknown as { subtitle?: string | null; meta_content?: string | null };
-              const excerpt = featuredExtras.subtitle ?? featuredExtras.meta_content ?? "";
+              // subtitle/meta_content/list_page_image_url live on journal_articles
+              // but aren't on the (older) JournalArticle TS type — cast.
+              // Listing thumbnails should use list_page_image_url (a clean
+              // standalone thumbnail) rather than hero_image_url (which has
+              // the article title baked in for the article-page hero).
+              const fx = featured as unknown as {
+                subtitle?: string | null;
+                meta_content?: string | null;
+                list_page_image_url?: string | null;
+              };
+              const excerpt = fx.subtitle ?? fx.meta_content ?? "";
+              const featuredImage = fx.list_page_image_url || featured.hero_image_url;
               return (
                 <>
                   <AnimateIn>
@@ -534,9 +542,9 @@ export default async function HomePage() {
                     >
                       <div className="grid grid-cols-1 md:grid-cols-2">
                         <div className="relative aspect-[4/3] md:aspect-auto md:min-h-[360px] bg-navy/10 overflow-hidden">
-                          {featured.hero_image_url ? (
+                          {featuredImage ? (
                             <Image
-                              src={featured.hero_image_url}
+                              src={featuredImage}
                               alt={featured.title}
                               fill
                               className="object-cover transition-transform duration-700 group-hover:scale-105"
@@ -573,13 +581,16 @@ export default async function HomePage() {
                   {/* Supporting articles — 3-up row */}
                   {supporting.length > 0 && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
-                      {supporting.map((article, i) => (
+                      {supporting.map((article, i) => {
+                        const ax = article as unknown as { list_page_image_url?: string | null };
+                        const img = ax.list_page_image_url || article.hero_image_url;
+                        return (
                         <AnimateIn key={article.id} delay={i * 80}>
                           <Link href={`/journal/${article.slug}`} className="group block">
                             <div className="relative aspect-[4/3] mb-4 bg-navy/10 overflow-hidden">
-                              {article.hero_image_url ? (
+                              {img ? (
                                 <Image
-                                  src={article.hero_image_url}
+                                  src={img}
                                   alt={article.title}
                                   fill
                                   className="object-cover transition-transform duration-700 group-hover:scale-105"
@@ -603,7 +614,8 @@ export default async function HomePage() {
                             </span>
                           </Link>
                         </AnimateIn>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </>

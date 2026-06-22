@@ -27,9 +27,9 @@ export function JournalCard({ article, variant = "compact", className }: Journal
       >
         {/* Image */}
         <div className="relative aspect-[4/3] mb-4 bg-navy/10 overflow-hidden">
-          {article.hero_image_url ? (
+          {(((article as unknown as { list_page_image_url?: string | null }).list_page_image_url) || article.hero_image_url) ? (
             <Image
-              src={article.hero_image_url}
+              src={((article as unknown as { list_page_image_url?: string | null }).list_page_image_url) || (article.hero_image_url as string)}
               alt={article.title}
               fill
               className="object-cover object-right transition-transform duration-700 group-hover:scale-105"
