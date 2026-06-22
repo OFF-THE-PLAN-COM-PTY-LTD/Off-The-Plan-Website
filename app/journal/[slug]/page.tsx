@@ -141,9 +141,42 @@ export default async function ArticlePage({ params }: Props) {
     list_page_image_url: string | null;
     category: string;
   };
-  const prev = (prevRes.data ?? null) as NeighbourArticle | null;
-  const next = (nextRes.data ?? null) as NeighbourArticle | null;
+  let prev = (prevRes.data ?? null) as NeighbourArticle | null;
+  let next = (nextRes.data ?? null) as NeighbourArticle | null;
   const related = ((relatedRes.data ?? []) as unknown) as JournalArticle[];
+
+  // Wrap around so prev + next are always both populated (mirrors the
+  // legacy site, where Next still shows even on the newest article). If
+  // there's no newer article, Next becomes the oldest published in the
+  // same category — and vice versa for Previous on the oldest article.
+  if (!prev || !next) {
+    const ends = await Promise.all([
+      !prev
+        ? supabase
+            .from("journal_articles")
+            .select("id, slug, title, published_at, hero_image_url, list_page_image_url, category")
+            .eq("is_published", true)
+            .eq("category", article.category)
+            .neq("id", article.id)
+            .order("published_at", { ascending: false })
+            .limit(1)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
+      !next
+        ? supabase
+            .from("journal_articles")
+            .select("id, slug, title, published_at, hero_image_url, list_page_image_url, category")
+            .eq("is_published", true)
+            .eq("category", article.category)
+            .neq("id", article.id)
+            .order("published_at", { ascending: true })
+            .limit(1)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
+    ]);
+    if (!prev) prev = (ends[0].data ?? null) as NeighbourArticle | null;
+    if (!next) next = (ends[1].data ?? null) as NeighbourArticle | null;
+  }
 
   // News & Guides article URLs both live at /journal/{slug}; the back-to-index
   // link should reflect which index the reader came from.
@@ -163,8 +196,10 @@ export default async function ArticlePage({ params }: Props) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
       <article className="min-h-screen bg-cream pt-16">
-        {/* ── Hero ─────────────────────────────────────────────────────── */}
-        <div className="relative h-[50vh] min-h-[360px] bg-navy">
+        {/* ── Hero image (clean, no title overlay — many migrated hero
+              images already have the title baked in, so layering our own
+              over the top reads as messy. Title goes below.) ── */}
+        <div className="relative h-[40vh] min-h-[280px] md:h-[50vh] md:min-h-[360px] bg-navy">
           {article.hero_image_url ? (
             <Image
               src={article.hero_image_url}
@@ -177,31 +212,30 @@ export default async function ArticlePage({ params }: Props) {
           ) : (
             <div className="absolute inset-0 bg-gradient-to-br from-navy-deep to-navy-mid" />
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-navy/90 via-navy/40 to-transparent" />
-          <div className="absolute inset-x-0 bottom-0">
-            <div className="container-padded max-w-screen-xl pb-10 md:pb-14">
-              <Link
-                href={indexHref}
-                className="inline-flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-widest text-white/70 hover:text-orange transition-colors mb-4"
-              >
-                <ChevronLeftIcon size={14} />
-                {indexHref === "/guides" ? "All Guides" : "All News"}
-              </Link>
-              <p className="font-mono text-[10px] uppercase tracking-widest text-orange mb-2">
-                {article.category}
-                {article.published_at && (
-                  <span className="text-white/60 ml-3">{formatDate(article.published_at)}</span>
-                )}
-              </p>
-              <h1 className="font-display font-light text-white leading-tight text-[clamp(28px,4.5vw,52px)] max-w-4xl">
-                {article.title}
-              </h1>
-            </div>
-          </div>
+        </div>
+
+        {/* ── Article header (below the hero, like the legacy site) ── */}
+        <div className="container-padded max-w-screen-xl pt-8 md:pt-10">
+          <Link
+            href={indexHref}
+            className="inline-flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-widest text-ink/50 hover:text-orange transition-colors mb-4"
+          >
+            <ChevronLeftIcon size={14} />
+            {indexHref === "/guides" ? "All Guides" : "All News"}
+          </Link>
+          <p className="font-mono text-[10px] uppercase tracking-widest text-orange mb-3">
+            {article.category}
+            {article.published_at && (
+              <span className="text-ink/40 ml-3">{formatDate(article.published_at)}</span>
+            )}
+          </p>
+          <h1 className="font-display font-light text-navy leading-tight text-[clamp(28px,4.5vw,52px)] max-w-4xl">
+            {article.title}
+          </h1>
         </div>
 
         {/* ── Body + sidebar (share rail + article images 2 & 3) ─────────── */}
-        <div className="container-padded max-w-screen-xl py-12 md:py-16">
+        <div className="container-padded max-w-screen-xl pt-8 md:pt-10 pb-12 md:pb-16">
           <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] gap-10 lg:gap-14">
             {/* Body */}
             <div className="min-w-0">
