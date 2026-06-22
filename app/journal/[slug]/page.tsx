@@ -12,6 +12,36 @@ import type { JournalArticle } from "@/types/journal";
 interface Props { params: { slug: string } }
 
 /**
+ * Convert article body to clean paragraph HTML.
+ *
+ * Migrated content arrives as plain text with double-newline paragraph
+ * breaks (no <p> tags) — without wrapping it ends up rendering as one
+ * giant unbroken block. If the source already contains real HTML tags we
+ * leave it alone so RichTextEditor output keeps its formatting.
+ *
+ * Escapes < > & in plain-text branches so user content can't inject HTML.
+ */
+function escape(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function bodyToHtml(raw: string | null | undefined): string {
+  if (!raw) return "";
+  const looksLikeHtml = /<(p|div|h[1-6]|ul|ol|li|br|blockquote|img|a)\b/i.test(raw);
+  if (looksLikeHtml) return raw;
+  // Plain text — split on blank lines, then linebreaks inside each block
+  // become <br> so deliberate line breaks survive without inventing
+  // paragraphs.
+  return raw
+    .replace(/\r\n/g, "\n")
+    .split(/\n{2,}/)
+    .map((p) => p.trim())
+    .filter(Boolean)
+    .map((p) => `<p>${escape(p).replace(/\n/g, "<br/>")}</p>`)
+    .join("\n");
+}
+
+/**
  * Legacy CMS stored article_image_one/two as a serialised JSON object
  * (`{id, path, filename}`). Older entries hold a plain URL string. Accept
  * both shapes and return the image URL or null.
@@ -183,7 +213,7 @@ export default async function ArticlePage({ params }: Props) {
 
               <div
                 className="article-body font-sans text-body-md text-ink/85 leading-relaxed [&_p]:mb-5 [&_h2]:font-display [&_h2]:font-light [&_h2]:text-navy [&_h2]:text-2xl [&_h2]:mt-10 [&_h2]:mb-4 [&_h3]:font-display [&_h3]:font-light [&_h3]:text-navy [&_h3]:text-xl [&_h3]:mt-8 [&_h3]:mb-3 [&_a]:text-orange [&_a]:underline hover:[&_a]:text-navy [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:mb-5 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:mb-5 [&_blockquote]:border-l-2 [&_blockquote]:border-orange [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-ink/70"
-                dangerouslySetInnerHTML={{ __html: article.body_html ?? "" }}
+                dangerouslySetInnerHTML={{ __html: bodyToHtml(article.body_html) }}
               />
 
               {/* On mobile/tablet, drop the article images here under the body
