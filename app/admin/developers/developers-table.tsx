@@ -157,18 +157,37 @@ export default function DevelopersTable({ developers }: { developers: Developer[
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    <button
-                      type="button"
-                      onClick={() => togglePublished(dev)}
-                      disabled={busy || isPending}
-                      className={`font-mono text-[10px] uppercase tracking-widest px-3 py-1.5 border transition-colors ${
-                        dev.is_published
-                          ? "border-green-400 text-green-600 hover:bg-green-50"
-                          : "border-ink/30 text-ink/50 hover:bg-cream/40"
-                      }`}
-                    >
-                      {dev.is_published ? "Published" : "Hidden"}
-                    </button>
+                    {/* Segmented Publish/Hide — the active state is highlighted,
+                        the other side is a clear action label, so there's no
+                        guessing what a click will do. */}
+                    <div className="inline-flex border border-line">
+                      <button
+                        type="button"
+                        onClick={() => { if (!dev.is_published) togglePublished(dev); }}
+                        disabled={busy || isPending || dev.is_published}
+                        aria-pressed={dev.is_published}
+                        className={`font-mono text-[10px] uppercase tracking-widest px-3 py-1.5 transition-colors ${
+                          dev.is_published
+                            ? "bg-green-500 text-white cursor-default"
+                            : "bg-white text-ink/60 hover:bg-green-50 hover:text-green-700"
+                        }`}
+                      >
+                        Publish
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { if (dev.is_published) togglePublished(dev); }}
+                        disabled={busy || isPending || !dev.is_published}
+                        aria-pressed={!dev.is_published}
+                        className={`font-mono text-[10px] uppercase tracking-widest px-3 py-1.5 border-l border-line transition-colors ${
+                          !dev.is_published
+                            ? "bg-ink/70 text-white cursor-default"
+                            : "bg-white text-ink/60 hover:bg-cream/60 hover:text-ink"
+                        }`}
+                      >
+                        Hide
+                      </button>
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="inline-flex items-center gap-2">
