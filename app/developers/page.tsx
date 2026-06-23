@@ -10,8 +10,16 @@ export const metadata: Metadata = {
 
 export default async function DevelopersPage() {
 
+  // Tim's PDF feedback I15: directory should only show entries tied to a
+  // registered Developer-member profile (not migrated development-derived rows).
+  // profile_id is the link to a profiles row; rows without it are filtered out.
   const [{ data: devsData }, { data: devsDevsData }] = await Promise.all([
-    supabase.from("developers").select("*").eq("is_published", true).order("name"),
+    supabase
+      .from("developers")
+      .select("*")
+      .eq("is_published", true)
+      .not("profile_id", "is", null)
+      .order("name"),
     supabase.from("developments").select("id, developer_id").eq("is_published", true),
   ]);
 
