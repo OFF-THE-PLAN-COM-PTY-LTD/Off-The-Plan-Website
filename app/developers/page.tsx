@@ -82,7 +82,7 @@ export default async function DevelopersPage() {
             Reach qualified buyers before your listing reaches the general market.
           </p>
           <Link href="/list-a-listing" className="btn-primary inline-block">
-            Get in touch
+            List Now
           </Link>
         </div>
       </div>
