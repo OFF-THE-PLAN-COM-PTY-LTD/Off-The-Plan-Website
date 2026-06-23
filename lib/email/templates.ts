@@ -250,3 +250,48 @@ export function setPasswordEmailTemplate(args: SetPasswordEmailArgs) {
   ].join("\n");
   return { subject, html, text };
 }
+
+// ──────────────────────────────────────────────────────────────────────
+// Developer contact form — sent from /developers/[slug] to the developer
+// (or fallback admin), CC'ing the sender + sales@.
+// ──────────────────────────────────────────────────────────────────────
+
+export interface DeveloperContactArgs {
+  developer_name: string;
+  developer_url?: string | null;
+  full_name: string;
+  email: string;
+  mobile?: string | null;
+  message: string;
+}
+
+export function developerContactTemplate(args: DeveloperContactArgs) {
+  const subject = `New contact via Off The Plan — ${args.developer_name}`;
+  const html = shell(`
+    <h2 style="margin:0 0 16px;font-size:18px;font-weight:600;color:${PRIMARY};">
+      Someone wants to get in touch
+    </h2>
+    <p style="margin:0 0 8px;">A visitor sent a message via your developer page on Off The Plan.</p>
+    <table cellpadding="0" cellspacing="0" border="0" style="margin-top:16px;font-size:13px;border-collapse:collapse;">
+      <tr><td style="padding:6px 12px 6px 0;color:#7a7a7a;">Developer</td><td style="padding:6px 0;font-weight:600;">${escapeHtml(args.developer_name)}</td></tr>
+      <tr><td style="padding:6px 12px 6px 0;color:#7a7a7a;">From</td><td style="padding:6px 0;">${escapeHtml(args.full_name)}</td></tr>
+      <tr><td style="padding:6px 12px 6px 0;color:#7a7a7a;">Email</td><td style="padding:6px 0;"><a href="mailto:${escapeHtml(args.email)}" style="color:${ACCENT};">${escapeHtml(args.email)}</a></td></tr>
+      ${args.mobile ? `<tr><td style="padding:6px 12px 6px 0;color:#7a7a7a;">Mobile</td><td style="padding:6px 0;">${escapeHtml(args.mobile)}</td></tr>` : ""}
+    </table>
+    <div style="margin-top:20px;padding:14px 16px;background:#f5f4f1;border-left:3px solid ${ACCENT};font-size:13px;line-height:1.55;">${escapeHtml(args.message).replace(/\n/g, "<br>")}</div>
+    ${args.developer_url ? `<p style="margin:24px 0 0;font-size:12px;"><a href="${args.developer_url}" style="color:${ACCENT};">View your developer page →</a></p>` : ""}
+    <p style="margin:16px 0 0;font-size:12px;color:#7a7a7a;">You can reply directly to this email — it will reach the sender.</p>
+  `);
+  const text = [
+    `New contact via Off The Plan — ${args.developer_name}`,
+    ``,
+    `From: ${args.full_name}`,
+    `Email: ${args.email}`,
+    args.mobile ? `Mobile: ${args.mobile}` : null,
+    ``,
+    `Message:`,
+    args.message,
+    args.developer_url ? `\nDeveloper page: ${args.developer_url}` : null,
+  ].filter(Boolean).join("\n");
+  return { subject, html, text };
+}

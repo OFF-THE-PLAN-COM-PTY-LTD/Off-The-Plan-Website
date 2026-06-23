@@ -11,6 +11,23 @@ export interface Developer {
   state: AustralianState | null;
   phone?: string | null;
   is_published: boolean;
+  profile_id?: string | null;
   created_at: string;
   development_count?: number;
+}
+
+/** Subset of `profiles` columns surfaced on the public /developers/[slug] page. */
+export interface DeveloperProfile {
+  business_name: string | null;
+  about: string | null;
+  company_email: string | null;
+  company_phone: string | null;
+  company_city: string | null;
+  company_state: string | null;
+  website: string | null;
+  facebook: string | null;
+  instagram: string | null;
+  linkedin: string | null;
+  pinterest: string | null;
+  youtube: string | null;
 }
