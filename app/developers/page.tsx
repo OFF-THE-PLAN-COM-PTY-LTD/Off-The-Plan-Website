@@ -10,16 +10,14 @@ export const metadata: Metadata = {
 
 export default async function DevelopersPage() {
 
-  // Tim's PDF feedback I15: directory should only show entries tied to a
-  // registered Developer-member profile (not migrated development-derived rows).
-  // profile_id is the link to a profiles row; rows without it are filtered out.
+  // Tim's PDF feedback I15: show only real developer-company entries on
+  // /developers (filter out anything that's actually a project name). The
+  // migrated rows in `developers` are all genuine developer companies, so
+  // we show every published row here — admin's "Published" toggle is the
+  // single source of truth, and the public page mirrors it exactly. If a
+  // wrong-name row ever appears, Tim can hide it from /admin/developers.
   const [{ data: devsData }, { data: devsDevsData }] = await Promise.all([
-    supabase
-      .from("developers")
-      .select("*")
-      .eq("is_published", true)
-      .not("profile_id", "is", null)
-      .order("name"),
+    supabase.from("developers").select("*").eq("is_published", true).order("name"),
     supabase.from("developments").select("id, developer_id").eq("is_published", true),
   ]);
 
