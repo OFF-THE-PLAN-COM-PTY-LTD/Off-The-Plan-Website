@@ -181,71 +181,88 @@ export default async function DeveloperProfilePage({ params }: Props) {
         </div>
       </section>
 
-      {/* ── Body. Adaptive layout: ──
-          - If we have About content (bio + phone/email), use 2 columns.
-          - If we don't, show only the contact form, centred — no awkward
-            "No bio yet" gap on the left. */}
+      {/* ── Body. Adaptive layout, both modes use 2 columns so the page
+          stays balanced even when data is thin: ──
+            - Rich mode: About+contact details (left) | Contact form (right).
+                         Listings render in a full-width section below.
+            - Sparse mode: Listings grid (left) | Contact form (right).
+                           Skips the standalone listings section. */}
       <div className="container-padded py-12">
-        {hasAboutContent ? (
-          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-10 lg:gap-14">
-            <div className="min-w-0">
-              {displayBio && (
-                <>
-                  <p className="font-mono text-[11px] uppercase tracking-widest text-ink/40 mb-3">About</p>
-                  <div className="font-sans text-body-lg text-ink/75 leading-relaxed whitespace-pre-line max-w-2xl">
-                    {displayBio}
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-10 lg:gap-14">
+          <div className="min-w-0">
+            {hasAboutContent ? (
+              <>
+                {displayBio && (
+                  <>
+                    <p className="font-mono text-[11px] uppercase tracking-widest text-ink/40 mb-3">About</p>
+                    <div className="font-sans text-body-lg text-ink/75 leading-relaxed whitespace-pre-line max-w-2xl">
+                      {displayBio}
+                    </div>
+                  </>
+                )}
+
+                {(displayPhone || displayEmail) && (
+                  <div className={`${displayBio ? "mt-8" : ""} flex flex-wrap gap-x-8 gap-y-2 text-sm`}>
+                    {displayPhone && (
+                      <p className="font-sans text-ink/70">
+                        <span className="font-mono text-[10px] uppercase tracking-widest text-ink/40 mr-2">Phone</span>
+                        <a href={`tel:${displayPhone}`} className="hover:text-orange">{displayPhone}</a>
+                      </p>
+                    )}
+                    {displayEmail && (
+                      <p className="font-sans text-ink/70">
+                        <span className="font-mono text-[10px] uppercase tracking-widest text-ink/40 mr-2">Email</span>
+                        <a href={`mailto:${displayEmail}`} className="hover:text-orange">{displayEmail}</a>
+                      </p>
+                    )}
                   </div>
-                </>
-              )}
+                )}
+              </>
+            ) : (
+              // Sparse mode: listings sit in the left column so the page
+              // doesn't look empty next to the contact form.
+              <>
+                <p className="font-mono text-[11px] uppercase tracking-widest text-ink/40 mb-3">
+                  Current listings
+                </p>
+                {devDevelopments.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {devDevelopments.map((d) => <PropertyCard key={d.id} development={d} layout="tall" />)}
+                  </div>
+                ) : (
+                  <p className="font-sans text-body-md text-ink/40">
+                    No published listings at this time.
+                  </p>
+                )}
+              </>
+            )}
+          </div>
 
-              {(displayPhone || displayEmail) && (
-                <div className={`${displayBio ? "mt-8" : ""} flex flex-wrap gap-x-8 gap-y-2 text-sm`}>
-                  {displayPhone && (
-                    <p className="font-sans text-ink/70">
-                      <span className="font-mono text-[10px] uppercase tracking-widest text-ink/40 mr-2">Phone</span>
-                      <a href={`tel:${displayPhone}`} className="hover:text-orange">{displayPhone}</a>
-                    </p>
-                  )}
-                  {displayEmail && (
-                    <p className="font-sans text-ink/70">
-                      <span className="font-mono text-[10px] uppercase tracking-widest text-ink/40 mr-2">Email</span>
-                      <a href={`mailto:${displayEmail}`} className="hover:text-orange">{displayEmail}</a>
-                    </p>
-                  )}
-                </div>
-              )}
+          <aside>
+            <div className="lg:sticky lg:top-24">
+              <DeveloperContactForm developerSlug={dev.slug} developerName={displayName} />
             </div>
-
-            <aside>
-              <div className="lg:sticky lg:top-24">
-                <DeveloperContactForm developerSlug={dev.slug} developerName={displayName} />
-              </div>
-            </aside>
-          </div>
-        ) : (
-          // Sparse-row path: centre the contact form in a single column so
-          // there's no empty left-hand gap.
-          <div className="max-w-md mx-auto">
-            <DeveloperContactForm developerSlug={dev.slug} developerName={displayName} />
-          </div>
-        )}
+          </aside>
+        </div>
       </div>
 
-      {/* ── Current listings ── */}
-      <section className="container-padded pb-16">
-        <h2 className="font-display font-light text-navy text-section-lg mb-6">
-          Current listings
-        </h2>
-        {devDevelopments.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {devDevelopments.map((d) => <PropertyCard key={d.id} development={d} layout="tall" />)}
-          </div>
-        ) : (
-          <p className="font-sans text-body-md text-ink/40">
-            No published listings at this time.
-          </p>
-        )}
-      </section>
+      {/* ── Current listings (rich mode only — sparse mode shows them above) ── */}
+      {hasAboutContent && (
+        <section className="container-padded pb-16">
+          <h2 className="font-display font-light text-navy text-section-lg mb-6">
+            Current listings
+          </h2>
+          {devDevelopments.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {devDevelopments.map((d) => <PropertyCard key={d.id} development={d} layout="tall" />)}
+            </div>
+          ) : (
+            <p className="font-sans text-body-md text-ink/40">
+              No published listings at this time.
+            </p>
+          )}
+        </section>
+      )}
     </div>
   );
 }
