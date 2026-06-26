@@ -71,7 +71,7 @@ export default async function AboutPage() {
       </section>
 
       {/* ── Who We Are ──────────────────────────────────────────────────────── */}
-      <section className="container-padded py-20 grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-start">
+      <section className="container-padded py-14 grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-12 items-start">
         <div>
           <p className="font-mono uppercase tracking-widest text-navy mb-5" style={{ fontSize: "20px" }}>Who We Are</p>
           <p className="font-sans text-body-md text-ink/80 leading-relaxed mb-4">
@@ -101,7 +101,7 @@ export default async function AboutPage() {
       <div className="border-t border-line" />
 
       {/* ── Our Story ───────────────────────────────────────────────────────── */}
-      <section className="container-padded py-20 grid grid-cols-1 md:grid-cols-[200px_1fr] gap-10 md:gap-16 items-start">
+      <section className="container-padded py-14 grid grid-cols-1 md:grid-cols-[200px_1fr] gap-8 md:gap-12 items-start">
         <p className="font-mono uppercase tracking-widest text-navy pt-1" style={{ fontSize: "20px" }}>Our Story</p>
         <div className="flex flex-col gap-4">
           <p className="font-sans text-body-md text-ink/80 leading-relaxed">
@@ -120,7 +120,7 @@ export default async function AboutPage() {
       <div className="border-t border-line" />
 
       {/* ── Our Mission ─────────────────────────────────────────────────────── */}
-      <section className="bg-cream py-24">
+      <section className="bg-cream py-16">
         <div className="container-padded text-center max-w-3xl mx-auto">
           <p className="font-mono uppercase tracking-widest text-navy mb-8" style={{ fontSize: "20px" }}>Our Mission</p>
           <p className="font-sans text-body-md text-ink/70 mb-4">We are Off-The-Plan® – Australia's home for new homes.</p>
@@ -133,11 +133,11 @@ export default async function AboutPage() {
 
       <div className="border-t border-line" />
 
-      {/* ── Our Values ──────────────────────────────────────────────────────── */}
-      <section className="py-24 bg-cream">
+      {/* ── Our Values ── Tim PDF I20: tighten this section's vertical rhythm. */}
+      <section className="py-12 bg-cream">
         <div className="container-padded">
-          <p className="font-mono uppercase tracking-widest text-navy text-center mb-4" style={{ fontSize: "20px" }}>Our Values</p>
-          <p className="font-sans text-body-md text-ink/70 text-center mb-14 max-w-3xl mx-auto">
+          <p className="font-mono uppercase tracking-widest text-navy text-center mb-3" style={{ fontSize: "20px" }}>Our Values</p>
+          <p className="font-sans text-body-md text-ink/70 text-center mb-8 max-w-3xl mx-auto">
             Our values guide every decision we make and every relationship we build. At offtheplan.com.au™ we are committed to:
           </p>
           <AboutValues />
@@ -147,7 +147,7 @@ export default async function AboutPage() {
       <div className="border-t border-line" />
 
       {/* ── A Message From Our Founder ──────────────────────────────────────── */}
-      <section className="container-padded py-20 grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-start">
+      <section className="container-padded py-14 grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-12 items-start">
         <div>
           <p className="font-mono uppercase tracking-widest text-navy mb-5" style={{ fontSize: "20px" }}>
             A Message From Our Founder
@@ -193,7 +193,7 @@ export default async function AboutPage() {
       <div className="border-t border-line" />
 
       {/* ── What We Do ──────────────────────────────────────────────────────── */}
-      <section className="container-padded py-20 grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-start">
+      <section className="container-padded py-14 grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-12 items-start">
         <div className="relative aspect-[4/3] overflow-hidden">
           <Image
             src={aboutImages[2].url}

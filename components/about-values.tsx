@@ -108,7 +108,7 @@ export function AboutValues() {
       </div>
 
       {/* Description area */}
-      <div className="mt-10 h-8 text-center">
+      <div className="mt-6 h-8 text-center">
         {hovered !== null && (
           <p className="font-sans text-body-md text-orange transition-opacity duration-200">
             {VALUES[hovered].description}
