@@ -36,8 +36,8 @@ export function MediaKitModal({ buttonClassName, label = "Request Media Kit" }: 
       full_name: String(fd.get("full_name") ?? "").trim(),
       email: String(fd.get("email") ?? "").trim(),
       company: String(fd.get("company") ?? "").trim() || null,
-      role: String(fd.get("role") ?? "").trim() || null,
-      notes: String(fd.get("notes") ?? "").trim() || null,
+      category: String(fd.get("category") ?? "").trim() || null,
+      state: String(fd.get("state") ?? "").trim() || null,
     };
     try {
       const res = await fetch("/api/media-kit-request", {
@@ -137,19 +137,35 @@ export function MediaKitModal({ buttonClassName, label = "Request Media Kit" }: 
                   <label className="block font-sans text-xs text-ink/60 mb-1">Email</label>
                   <input name="email" type="email" required maxLength={200} className={inp} />
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block font-sans text-xs text-ink/60 mb-1">Company (optional)</label>
-                    <input name="company" type="text" maxLength={120} className={inp} />
-                  </div>
-                  <div>
-                    <label className="block font-sans text-xs text-ink/60 mb-1">Role (optional)</label>
-                    <input name="role" type="text" maxLength={80} className={inp} />
-                  </div>
+                <div>
+                  <label className="block font-sans text-xs text-ink/60 mb-1">Company (optional)</label>
+                  <input name="company" type="text" maxLength={120} className={inp} />
                 </div>
                 <div>
-                  <label className="block font-sans text-xs text-ink/60 mb-1">Anything else? (optional)</label>
-                  <textarea name="notes" rows={3} maxLength={1500} className={`${inp} resize-y`} />
+                  <label className="block font-sans text-xs text-ink/60 mb-1">Which type of property are you marketing?</label>
+                  <select name="category" required className={`${inp} cursor-pointer`} defaultValue="">
+                    <option value="" disabled>Category</option>
+                    <option value="New Apartments">New Apartments</option>
+                    <option value="Townhouses">Townhouses</option>
+                    <option value="Land and Estates">Land and Estates</option>
+                    <option value="Commercial">Commercial</option>
+                    <option value="House & Land">House &amp; Land</option>
+                    <option value="Over 55's / Retirement">Over 55&apos;s / Retirement</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-sans text-xs text-ink/60 mb-1">Where is your property located?</label>
+                  <select name="state" required className={`${inp} cursor-pointer`} defaultValue="">
+                    <option value="" disabled>State</option>
+                    <option value="Australian Capital Territory">Australian Capital Territory</option>
+                    <option value="New South Wales">New South Wales</option>
+                    <option value="Northern Territory">Northern Territory</option>
+                    <option value="Queensland">Queensland</option>
+                    <option value="South Australia">South Australia</option>
+                    <option value="Tasmania">Tasmania</option>
+                    <option value="Victoria">Victoria</option>
+                    <option value="Western Australia">Western Australia</option>
+                  </select>
                 </div>
 
                 {errorMsg && <p className="font-sans text-sm text-red-600">{errorMsg}</p>}

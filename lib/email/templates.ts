@@ -306,8 +306,8 @@ export interface MediaKitRequestArgs {
   full_name: string;
   email: string;
   company?: string | null;
-  role?: string | null;
-  notes?: string | null;
+  category: string;
+  state: string;
 }
 
 export function mediaKitRequestTemplate(args: MediaKitRequestArgs) {
@@ -321,9 +321,9 @@ export function mediaKitRequestTemplate(args: MediaKitRequestArgs) {
       <tr><td style="padding:6px 12px 6px 0;color:#7a7a7a;">Name</td><td style="padding:6px 0;font-weight:600;">${escapeHtml(args.full_name)}</td></tr>
       <tr><td style="padding:6px 12px 6px 0;color:#7a7a7a;">Email</td><td style="padding:6px 0;"><a href="mailto:${escapeHtml(args.email)}" style="color:${ACCENT};">${escapeHtml(args.email)}</a></td></tr>
       ${args.company ? `<tr><td style="padding:6px 12px 6px 0;color:#7a7a7a;">Company</td><td style="padding:6px 0;">${escapeHtml(args.company)}</td></tr>` : ""}
-      ${args.role ? `<tr><td style="padding:6px 12px 6px 0;color:#7a7a7a;">Role</td><td style="padding:6px 0;">${escapeHtml(args.role)}</td></tr>` : ""}
+      <tr><td style="padding:6px 12px 6px 0;color:#7a7a7a;">Marketing</td><td style="padding:6px 0;">${escapeHtml(args.category)}</td></tr>
+      <tr><td style="padding:6px 12px 6px 0;color:#7a7a7a;">Located in</td><td style="padding:6px 0;">${escapeHtml(args.state)}</td></tr>
     </table>
-    ${args.notes ? `<div style="margin-top:20px;padding:14px 16px;background:#f5f4f1;border-left:3px solid ${ACCENT};font-size:13px;line-height:1.55;">${escapeHtml(args.notes).replace(/\n/g, "<br>")}</div>` : ""}
     <p style="margin:16px 0 0;font-size:12px;color:#7a7a7a;">You can reply directly to this email — it will reach the requester.</p>
   `);
   const text = [
@@ -332,8 +332,8 @@ export function mediaKitRequestTemplate(args: MediaKitRequestArgs) {
     `Name: ${args.full_name}`,
     `Email: ${args.email}`,
     args.company ? `Company: ${args.company}` : null,
-    args.role ? `Role: ${args.role}` : null,
-    args.notes ? `\nNotes:\n${args.notes}` : null,
+    `Marketing: ${args.category}`,
+    `Located in: ${args.state}`,
   ].filter(Boolean).join("\n");
   return { subject, html, text };
 }
