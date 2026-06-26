@@ -86,7 +86,7 @@ export default async function AboutPage() {
             with confidence.
           </p>
         </div>
-        <div className="relative aspect-[4/3] overflow-hidden">
+        <div className="relative aspect-[4/5] overflow-hidden">
           <Image
             src={aboutImages[0].url}
             alt={aboutImages[0].alt}
@@ -171,7 +171,7 @@ export default async function AboutPage() {
             Talk to us
           </Link>
         </div>
-        <div className="relative aspect-[4/3] overflow-hidden">
+        <div className="relative aspect-[4/5] overflow-hidden">
           <Image
             src={aboutImages[1].url}
             alt={aboutImages[1].alt}
@@ -194,7 +194,7 @@ export default async function AboutPage() {
 
       {/* ── What We Do ──────────────────────────────────────────────────────── */}
       <section className="container-padded py-14 grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-12 items-start">
-        <div className="relative aspect-[4/3] overflow-hidden">
+        <div className="relative aspect-[4/5] overflow-hidden">
           <Image
             src={aboutImages[2].url}
             alt={aboutImages[2].alt}
