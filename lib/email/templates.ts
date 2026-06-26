@@ -305,7 +305,7 @@ export function developerContactTemplate(args: DeveloperContactArgs) {
 export interface MediaKitRequestArgs {
   full_name: string;
   email: string;
-  phone?: string | null;
+  phone: string;
   company?: string | null;
   category: string;
   state: string;
@@ -321,7 +321,7 @@ export function mediaKitRequestTemplate(args: MediaKitRequestArgs) {
     <table cellpadding="0" cellspacing="0" border="0" style="margin-top:16px;font-size:13px;border-collapse:collapse;">
       <tr><td style="padding:6px 12px 6px 0;color:#7a7a7a;">Name</td><td style="padding:6px 0;font-weight:600;">${escapeHtml(args.full_name)}</td></tr>
       <tr><td style="padding:6px 12px 6px 0;color:#7a7a7a;">Email</td><td style="padding:6px 0;"><a href="mailto:${escapeHtml(args.email)}" style="color:${ACCENT};">${escapeHtml(args.email)}</a></td></tr>
-      ${args.phone ? `<tr><td style="padding:6px 12px 6px 0;color:#7a7a7a;">Phone</td><td style="padding:6px 0;">${escapeHtml(args.phone)}</td></tr>` : ""}
+      <tr><td style="padding:6px 12px 6px 0;color:#7a7a7a;">Phone</td><td style="padding:6px 0;">${escapeHtml(args.phone)}</td></tr>
       ${args.company ? `<tr><td style="padding:6px 12px 6px 0;color:#7a7a7a;">Company</td><td style="padding:6px 0;">${escapeHtml(args.company)}</td></tr>` : ""}
       <tr><td style="padding:6px 12px 6px 0;color:#7a7a7a;">Marketing</td><td style="padding:6px 0;">${escapeHtml(args.category)}</td></tr>
       <tr><td style="padding:6px 12px 6px 0;color:#7a7a7a;">Located in</td><td style="padding:6px 0;">${escapeHtml(args.state)}</td></tr>
@@ -333,7 +333,7 @@ export function mediaKitRequestTemplate(args: MediaKitRequestArgs) {
     ``,
     `Name: ${args.full_name}`,
     `Email: ${args.email}`,
-    args.phone ? `Phone: ${args.phone}` : null,
+    `Phone: ${args.phone}`,
     args.company ? `Company: ${args.company}` : null,
     `Marketing: ${args.category}`,
     `Located in: ${args.state}`,

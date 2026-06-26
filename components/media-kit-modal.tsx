@@ -139,8 +139,8 @@ export function MediaKitModal({ buttonClassName, label = "Request Media Kit" }: 
                   <input name="email" type="email" required maxLength={200} className={inp} />
                 </div>
                 <div>
-                  <label className="block font-sans text-xs text-ink/60 mb-1">Phone (optional)</label>
-                  <input name="phone" type="tel" maxLength={40} className={inp} />
+                  <label className="block font-sans text-xs text-ink/60 mb-1">Phone</label>
+                  <input name="phone" type="tel" required maxLength={40} className={inp} />
                 </div>
                 <div>
                   <label className="block font-sans text-xs text-ink/60 mb-1">Company (optional)</label>
