@@ -4,13 +4,16 @@ import type { Metadata } from "next";
 import { AboutValues } from "@/components/about-values";
 import { LogoSlider } from "@/components/logo-slider";
 import { ContactNextSteps } from "@/components/contact-next-steps";
+import { supabase } from "@/lib/supabase/public";
 
 export const metadata: Metadata = {
   title: "About | Off The Plan",
   description: "Australia's home of new property. Learn about who we are, our mission, and what we do.",
 };
 
-
+// Always fetch fresh — keeps the rotating listing images in sync with the
+// current published catalogue.
+export const dynamic = "force-dynamic";
 
 const WHAT_WE_DO = [
   "Comprehensive Listings – A wide selection of off-the-plan apartments, houses, townhouses, commercial properties, house & land and estates",
@@ -18,7 +21,40 @@ const WHAT_WE_DO = [
   "Developer and Agent Support – Effective exposure for projects through tailored listings, marketing solutions and analytics",
 ];
 
-export default function AboutPage() {
+// Static fallbacks — only used when the DB has fewer than 3 published hero
+// images. Self-hosted in /public so we never fall back to Unsplash again.
+const FALLBACK_IMAGES = [
+  "/categories/category-apartments.jpg",
+  "/categories/category-house-and-land.jpg",
+  "/categories/category-landestate.jpg",
+];
+
+export default async function AboutPage() {
+  // Pull 3 distinct hero images from published listings. Featured listings
+  // first, then a deterministic ordering by id so the same About visit
+  // shows the same three projects across the page.
+  const { data: heroData } = await supabase
+    .from("developments")
+    .select("hero_image_url, name")
+    .eq("is_published", true)
+    .not("hero_image_url", "is", null)
+    .order("is_featured", { ascending: false })
+    .order("id", { ascending: true })
+    .limit(6);
+
+  const heroImages = (heroData ?? [])
+    .map((d) => ({ url: d.hero_image_url as string | null, name: d.name as string | null }))
+    .filter((d): d is { url: string; name: string | null } => Boolean(d.url));
+
+  // Pick 3, padding from the static fallbacks if the DB has fewer.
+  const aboutImages: { url: string; alt: string }[] = [
+    heroImages[0] ?? null,
+    heroImages[1] ?? null,
+    heroImages[2] ?? null,
+  ].map((d, i) => d
+    ? { url: d.url, alt: d.name ? `Featured project — ${d.name}` : "Featured project" }
+    : { url: FALLBACK_IMAGES[i], alt: "Off The Plan listing" });
+
   return (
     <div className="min-h-screen bg-cream pt-16">
 
@@ -52,10 +88,12 @@ export default function AboutPage() {
         </div>
         <div className="relative aspect-[4/3] overflow-hidden">
           <Image
-            src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=900&h=675&fit=crop&auto=format&q=80"
-            alt="Modern Australian property"
+            src={aboutImages[0].url}
+            alt={aboutImages[0].alt}
             fill
+            sizes="(max-width: 768px) 100vw, 50vw"
             className="object-cover"
+            unoptimized={aboutImages[0].url.includes("s3.")}
           />
         </div>
       </section>
@@ -135,10 +173,12 @@ export default function AboutPage() {
         </div>
         <div className="relative aspect-[4/3] overflow-hidden">
           <Image
-            src="https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=900&h=675&fit=crop&auto=format&q=80"
-            alt="Founder message"
+            src={aboutImages[1].url}
+            alt={aboutImages[1].alt}
             fill
+            sizes="(max-width: 768px) 100vw, 50vw"
             className="object-cover"
+            unoptimized={aboutImages[1].url.includes("s3.")}
           />
         </div>
       </section>
@@ -156,10 +196,12 @@ export default function AboutPage() {
       <section className="container-padded py-20 grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-start">
         <div className="relative aspect-[4/3] overflow-hidden">
           <Image
-            src="https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=900&h=675&fit=crop&auto=format&q=80"
-            alt="What we do"
+            src={aboutImages[2].url}
+            alt={aboutImages[2].alt}
             fill
+            sizes="(max-width: 768px) 100vw, 50vw"
             className="object-cover"
+            unoptimized={aboutImages[2].url.includes("s3.")}
           />
         </div>
         <div>
