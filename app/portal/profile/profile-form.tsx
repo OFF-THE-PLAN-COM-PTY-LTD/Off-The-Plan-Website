@@ -343,16 +343,16 @@ function LogoPanel({ field, title, currentUrl, className = "" }: { field: "compa
  */
 function LogoGuidelines() {
   return (
-    <div className="bg-[#f5f6fa] border border-[#dde1e9] px-4 py-3 w-full max-w-[280px]">
-      <p className="font-mono text-[9px] uppercase tracking-widest text-navy font-bold mb-2">
+    <div className="bg-[#f5f6fa] border border-[#dde1e9] px-5 py-4 w-full">
+      <p className="font-mono text-[11px] uppercase tracking-widest text-navy font-bold mb-3">
         Logo Guidelines
       </p>
-      <ul className="font-sans text-[11px] text-ink/65 leading-relaxed space-y-1">
-        <li><span className="text-ink/40">•</span> Square (500×500) <span className="text-ink/40">or</span> rectangular (up to 1000×400) — both work</li>
-        <li><span className="text-ink/40">•</span> PNG with transparent background recommended</li>
-        <li><span className="text-ink/40">•</span> JPG / GIF / WEBP also accepted</li>
-        <li><span className="text-ink/40">•</span> Max file size 5MB</li>
-        <li><span className="text-ink/40">•</span> Avoid logos with thin lines or small text — they shrink in card views</li>
+      <ul className="font-sans text-[13px] text-ink/70 leading-relaxed space-y-1.5">
+        <li><span className="text-ink/40 mr-1">•</span> Square (500×500) <span className="text-ink/40">or</span> rectangular (up to 1000×400) — both work</li>
+        <li><span className="text-ink/40 mr-1">•</span> PNG with transparent background recommended</li>
+        <li><span className="text-ink/40 mr-1">•</span> JPG / GIF / WEBP also accepted</li>
+        <li><span className="text-ink/40 mr-1">•</span> Max file size 5MB</li>
+        <li><span className="text-ink/40 mr-1">•</span> Avoid logos with thin lines or small text — they shrink in card views</li>
       </ul>
     </div>
   );

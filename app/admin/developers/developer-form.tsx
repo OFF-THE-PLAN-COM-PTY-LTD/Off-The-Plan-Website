@@ -88,15 +88,15 @@ function LogoUpload({
         )}
       </div>
       {error && <p className="font-sans text-xs text-red-500">{error}</p>}
-      <div className="bg-white border border-line px-3 py-2 w-full max-w-[240px]">
-        <p className="font-mono text-[9px] uppercase tracking-widest text-navy font-bold mb-1.5">
+      <div className="bg-white border border-line px-5 py-4 w-full">
+        <p className="font-mono text-[11px] uppercase tracking-widest text-navy font-bold mb-3">
           Logo Guidelines
         </p>
-        <ul className="font-sans text-[10.5px] text-ink/65 leading-snug space-y-0.5">
-          <li><span className="text-ink/40">•</span> Square (500×500) <span className="text-ink/40">or</span> rectangle (up to 1000×400)</li>
-          <li><span className="text-ink/40">•</span> PNG with transparent bg recommended</li>
-          <li><span className="text-ink/40">•</span> JPG / GIF / WEBP also accepted</li>
-          <li><span className="text-ink/40">•</span> Max file size 5MB</li>
+        <ul className="font-sans text-[13px] text-ink/70 leading-relaxed space-y-1.5">
+          <li><span className="text-ink/40 mr-1">•</span> Square (500×500) <span className="text-ink/40">or</span> rectangle (up to 1000×400)</li>
+          <li><span className="text-ink/40 mr-1">•</span> PNG with transparent bg recommended</li>
+          <li><span className="text-ink/40 mr-1">•</span> JPG / GIF / WEBP also accepted</li>
+          <li><span className="text-ink/40 mr-1">•</span> Max file size 5MB</li>
         </ul>
       </div>
     </div>
