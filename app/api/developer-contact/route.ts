@@ -36,7 +36,7 @@ export async function POST(req: Request) {
     // Resolve the developer by slug (must be published).
     const { data: dev } = await supabaseAdmin
       .from("developers")
-      .select("id, name, slug, profile_id, is_published")
+      .select("id, name, slug, profile_id, is_published, company_email")
       .eq("slug", slug)
       .eq("is_published", true)
       .maybeSingle();
@@ -45,7 +45,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Developer not found" }, { status: 404 });
     }
 
-    // Where to deliver: linked profile's company_email > the auth user's email > admin.
+    // Where to deliver, in priority order:
+    //   1. Linked profile's company_email
+    //   2. Linked profile's auth user email
+    //   3. The developer row's own company_email (admin-edited)
+    //   4. Admin fallback (so leads still reach Tim).
     let primaryTo: string = EMAIL_ADMIN_TO;
     if (dev.profile_id) {
       const { data: profile } = await supabaseAdmin
@@ -56,11 +60,13 @@ export async function POST(req: Request) {
       if (profile?.company_email && profile.company_email.includes("@")) {
         primaryTo = profile.company_email as string;
       } else {
-        // Profile linked but no company_email — fall back to the auth user record.
         const { data: userRow } = await supabaseAdmin.auth.admin.getUserById(dev.profile_id);
         const userEmail = userRow.user?.email;
         if (userEmail && userEmail.includes("@")) primaryTo = userEmail;
       }
+    }
+    if (primaryTo === EMAIL_ADMIN_TO && dev.company_email && dev.company_email.includes("@")) {
+      primaryTo = dev.company_email as string;
     }
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://offtheplan.com.au";

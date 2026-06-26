@@ -105,6 +105,16 @@ export interface DeveloperFormValues {
   website: string;
   abn: string;
   state: string;
+  // New admin-editable fields (migration 041) — surfaced on /developers/[slug]
+  // when no linked profile takes precedence.
+  suburb: string;
+  company_email: string;
+  phone: string;
+  facebook: string;
+  instagram: string;
+  linkedin: string;
+  pinterest: string;
+  youtube: string;
   is_published: boolean;
   profile_id: string | null;
 }
@@ -160,6 +170,14 @@ export default function DeveloperForm({
           website: form.website || null,
           abn: form.abn || null,
           state: form.state || null,
+          suburb: form.suburb || null,
+          company_email: form.company_email || null,
+          phone: form.phone || null,
+          facebook: form.facebook || null,
+          instagram: form.instagram || null,
+          linkedin: form.linkedin || null,
+          pinterest: form.pinterest || null,
+          youtube: form.youtube || null,
           is_published: form.is_published,
           profile_id: form.profile_id || null,
         }),
@@ -233,6 +251,16 @@ export default function DeveloperForm({
 
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div>
+          <label className={lbl}>Suburb / City</label>
+          <input
+            type="text"
+            value={form.suburb}
+            onChange={(e) => set("suburb", e.target.value)}
+            placeholder="e.g. Sydney"
+            className={inp}
+          />
+        </div>
+        <div>
           <label className={lbl}>State</label>
           <select value={form.state} onChange={(e) => set("state", e.target.value)} className={inp + " cursor-pointer"}>
             <option value="">— Select —</option>
@@ -241,15 +269,55 @@ export default function DeveloperForm({
             ))}
           </select>
         </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4 mb-4">
         <div>
-          <label className={lbl}>ABN</label>
+          <label className={lbl}>Company Phone</label>
           <input
-            type="text"
-            value={form.abn}
-            onChange={(e) => set("abn", e.target.value)}
-            placeholder="11 222 333 444"
+            type="tel"
+            value={form.phone}
+            onChange={(e) => set("phone", e.target.value)}
+            placeholder="(02) 1234 5678"
             className={inp}
           />
+        </div>
+        <div>
+          <label className={lbl}>Company Email</label>
+          <input
+            type="email"
+            value={form.company_email}
+            onChange={(e) => set("company_email", e.target.value)}
+            placeholder="info@example.com"
+            className={inp}
+          />
+          <p className="font-sans text-xs text-ink/40 mt-1">
+            Contact-form submissions on this developer&apos;s public page will be sent here.
+          </p>
+        </div>
+      </div>
+
+      <div className="mb-4">
+        <label className={lbl}>ABN</label>
+        <input
+          type="text"
+          value={form.abn}
+          onChange={(e) => set("abn", e.target.value)}
+          placeholder="11 222 333 444"
+          className={inp + " max-w-xs"}
+        />
+      </div>
+
+      {/* ── Social links ── */}
+      <div className="mb-4">
+        <label className={lbl}>Social links</label>
+        <p className="font-sans text-xs text-ink/40 mb-2">Optional. Paste the full URL for each — only the ones you fill will show on the public page.</p>
+        <div className="grid grid-cols-2 gap-3">
+          <input type="url" value={form.facebook}  onChange={(e) => set("facebook",  e.target.value)} placeholder="Facebook URL"  className={inp} />
+          <input type="url" value={form.instagram} onChange={(e) => set("instagram", e.target.value)} placeholder="Instagram URL" className={inp} />
+          <input type="url" value={form.linkedin}  onChange={(e) => set("linkedin",  e.target.value)} placeholder="LinkedIn URL"  className={inp} />
+          <input type="url" value={form.pinterest} onChange={(e) => set("pinterest", e.target.value)} placeholder="Pinterest URL" className={inp} />
+          <input type="url" value={form.youtube}   onChange={(e) => set("youtube",   e.target.value)} placeholder="YouTube URL"   className={inp} />
         </div>
       </div>
 

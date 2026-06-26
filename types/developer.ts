@@ -10,6 +10,15 @@ export interface Developer {
   abn: string | null;
   state: AustralianState | null;
   phone?: string | null;
+  /** Admin-editable fields (migration 041). Public page renders these only
+   *  when no linked profile takes precedence. */
+  suburb?: string | null;
+  company_email?: string | null;
+  facebook?: string | null;
+  instagram?: string | null;
+  linkedin?: string | null;
+  pinterest?: string | null;
+  youtube?: string | null;
   is_published: boolean;
   profile_id?: string | null;
   created_at: string;

@@ -19,9 +19,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: `${dev.name} — Developer`, description: dev.description ?? undefined };
 }
 
-// Normalise a stored URL or handle into an https:// link so the icons always
-// open the right profile even when the user pasted just the username.
-function normaliseUrl(value: string | null, platform: "facebook" | "instagram" | "linkedin" | "pinterest" | "youtube" | "website"): string | null {
+// Normalise a stored URL or handle into an https:// link.
+function normaliseUrl(value: string | null | undefined, platform: "facebook" | "instagram" | "linkedin" | "pinterest" | "youtube" | "website"): string | null {
   if (!value) return null;
   const v = value.trim();
   if (!v) return null;
@@ -37,7 +36,6 @@ function normaliseUrl(value: string | null, platform: "facebook" | "instagram" |
 }
 
 function SocialIcon({ name }: { name: "facebook" | "instagram" | "linkedin" | "pinterest" | "youtube" | "website" }) {
-  // Inline SVGs keep the page server-rendered and avoid pulling an icon lib.
   switch (name) {
     case "facebook":
       return <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M22 12a10 10 0 1 0-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.5h-1.3c-1.2 0-1.6.8-1.6 1.6V12h2.8l-.5 2.9h-2.4v7A10 10 0 0 0 22 12z"/></svg>;
@@ -66,7 +64,10 @@ export default async function DeveloperProfilePage({ params }: Props) {
   if (!rawDev) notFound();
   const dev = rawDev as unknown as Developer;
 
-  // Surface socials/contact info from the linked profile (if any).
+  // Linked-profile data (if any) takes precedence over the developer row's own
+  // admin-edited fields. This lets a Developer-member's portal-profile changes
+  // flow through automatically, while still letting Tim edit migrated rows
+  // directly from /admin/developers without a linked profile.
   let profile: DeveloperProfile | null = null;
   if (dev.profile_id) {
     const { data } = await supabase
@@ -85,23 +86,30 @@ export default async function DeveloperProfilePage({ params }: Props) {
 
   const devDevelopments = (devsData ?? []) as unknown as Development[];
 
-  // Prefer the profile's business info where available, fall back to the
-  // developers row so migrated entries (no profile_id) still render properly.
-  const displayName = profile?.business_name || dev.name;
-  const displayBio = profile?.about || dev.description;
-  const displayCity = profile?.company_city || null;
-  const displayState = profile?.company_state || dev.state || null;
-  const websiteUrl = normaliseUrl(profile?.website ?? dev.website, "website");
+  // Coalesce: linked profile field → developer row field → null.
+  const v = (a: string | null | undefined, b: string | null | undefined) => (a && a.trim()) || (b && b.trim()) || null;
+
+  const displayName  = v(profile?.business_name, dev.name) ?? dev.name;
+  const displayBio   = v(profile?.about, dev.description);
+  const displayCity  = v(profile?.company_city, dev.suburb);
+  const displayState = v(profile?.company_state, dev.state);
+  const displayEmail = v(profile?.company_email, dev.company_email);
+  const displayPhone = v(profile?.company_phone, dev.phone);
+  const websiteUrl   = normaliseUrl(v(profile?.website, dev.website), "website");
 
   const socials = [
-    { name: "facebook" as const,  href: normaliseUrl(profile?.facebook ?? null, "facebook") },
-    { name: "instagram" as const, href: normaliseUrl(profile?.instagram ?? null, "instagram") },
-    { name: "linkedin" as const,  href: normaliseUrl(profile?.linkedin ?? null, "linkedin") },
-    { name: "pinterest" as const, href: normaliseUrl(profile?.pinterest ?? null, "pinterest") },
-    { name: "youtube" as const,   href: normaliseUrl(profile?.youtube ?? null, "youtube") },
+    { name: "facebook"  as const, href: normaliseUrl(v(profile?.facebook,  dev.facebook),  "facebook")  },
+    { name: "instagram" as const, href: normaliseUrl(v(profile?.instagram, dev.instagram), "instagram") },
+    { name: "linkedin"  as const, href: normaliseUrl(v(profile?.linkedin,  dev.linkedin),  "linkedin")  },
+    { name: "pinterest" as const, href: normaliseUrl(v(profile?.pinterest, dev.pinterest), "pinterest") },
+    { name: "youtube"   as const, href: normaliseUrl(v(profile?.youtube,   dev.youtube),   "youtube")   },
   ].filter((s) => s.href);
 
   const monogram = displayName.split(/\s+/).map((w) => w[0]).filter(Boolean).join("").slice(0, 2).toUpperCase();
+
+  // Decide whether the left "About" column has any real content. If not, the
+  // contact form gets centred so the layout doesn't look broken on sparse rows.
+  const hasAboutContent = Boolean(displayBio || displayPhone || displayEmail);
 
   return (
     <div className="min-h-screen bg-cream pt-16">
@@ -173,49 +181,54 @@ export default async function DeveloperProfilePage({ params }: Props) {
         </div>
       </section>
 
-      {/* ── Body: bio (left) + contact form (right). On mobile they stack. ── */}
+      {/* ── Body. Adaptive layout: ──
+          - If we have About content (bio + phone/email), use 2 columns.
+          - If we don't, show only the contact form, centred — no awkward
+            "No bio yet" gap on the left. */}
       <div className="container-padded py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-10 lg:gap-14">
-          <div className="min-w-0">
-            <p className="font-mono text-[11px] uppercase tracking-widest text-ink/40 mb-3">
-              About
-            </p>
-            {displayBio ? (
-              <div className="font-sans text-body-lg text-ink/75 leading-relaxed whitespace-pre-line max-w-2xl">
-                {displayBio}
-              </div>
-            ) : (
-              <p className="font-sans text-body-md text-ink/40 italic">
-                No bio yet.
-              </p>
-            )}
+        {hasAboutContent ? (
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-10 lg:gap-14">
+            <div className="min-w-0">
+              {displayBio && (
+                <>
+                  <p className="font-mono text-[11px] uppercase tracking-widest text-ink/40 mb-3">About</p>
+                  <div className="font-sans text-body-lg text-ink/75 leading-relaxed whitespace-pre-line max-w-2xl">
+                    {displayBio}
+                  </div>
+                </>
+              )}
 
-            {/* Contact details (phone/email) if available */}
-            {(profile?.company_phone || profile?.company_email) && (
-              <div className="mt-8 flex flex-wrap gap-x-8 gap-y-2 text-sm">
-                {profile?.company_phone && (
-                  <p className="font-sans text-ink/70">
-                    <span className="font-mono text-[10px] uppercase tracking-widest text-ink/40 mr-2">Phone</span>
-                    <a href={`tel:${profile.company_phone}`} className="hover:text-orange">{profile.company_phone}</a>
-                  </p>
-                )}
-                {profile?.company_email && (
-                  <p className="font-sans text-ink/70">
-                    <span className="font-mono text-[10px] uppercase tracking-widest text-ink/40 mr-2">Email</span>
-                    <a href={`mailto:${profile.company_email}`} className="hover:text-orange">{profile.company_email}</a>
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Contact form column */}
-          <aside>
-            <div className="lg:sticky lg:top-24">
-              <DeveloperContactForm developerSlug={dev.slug} developerName={displayName} />
+              {(displayPhone || displayEmail) && (
+                <div className={`${displayBio ? "mt-8" : ""} flex flex-wrap gap-x-8 gap-y-2 text-sm`}>
+                  {displayPhone && (
+                    <p className="font-sans text-ink/70">
+                      <span className="font-mono text-[10px] uppercase tracking-widest text-ink/40 mr-2">Phone</span>
+                      <a href={`tel:${displayPhone}`} className="hover:text-orange">{displayPhone}</a>
+                    </p>
+                  )}
+                  {displayEmail && (
+                    <p className="font-sans text-ink/70">
+                      <span className="font-mono text-[10px] uppercase tracking-widest text-ink/40 mr-2">Email</span>
+                      <a href={`mailto:${displayEmail}`} className="hover:text-orange">{displayEmail}</a>
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
-          </aside>
-        </div>
+
+            <aside>
+              <div className="lg:sticky lg:top-24">
+                <DeveloperContactForm developerSlug={dev.slug} developerName={displayName} />
+              </div>
+            </aside>
+          </div>
+        ) : (
+          // Sparse-row path: centre the contact form in a single column so
+          // there's no empty left-hand gap.
+          <div className="max-w-md mx-auto">
+            <DeveloperContactForm developerSlug={dev.slug} developerName={displayName} />
+          </div>
+        )}
       </div>
 
       {/* ── Current listings ── */}
