@@ -13,7 +13,7 @@ const moreInfoLinks = [
   { label: "Resources", href: "/resources/calculators" },
   { label: "News", href: "/news" },
   { label: "Guides", href: "/guides" },
-  { label: "Features & Pricing", href: "/features-and-pricing" },
+  { label: "Pricing", href: "/features-and-pricing" },
   { label: "List with us", href: "/list-a-listing" },
 ];
 

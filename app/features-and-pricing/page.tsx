@@ -2,13 +2,14 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { ImageAutoSlider } from "@/components/ui/image-auto-slider";
 import type { SliderItem } from "@/components/ui/image-auto-slider";
+import { MediaKitModal } from "@/components/media-kit-modal";
 import { supabase } from "@/lib/supabase/public";
 import { UPGRADE_TIERS } from "@/lib/upgrade-tiers";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Features and Pricing | Off The Plan",
+  title: "Pricing | Off The Plan",
   description:
     "Start listing with Off The Plan. Affordable plans for developers, agencies and builders showcasing off-the-plan properties across Australia.",
 };
@@ -141,7 +142,7 @@ export default async function FeaturesAndPricingPage() {
       <div className="bg-[#eeecea] border-b border-line py-14">
         <div className="container-padded">
           <h1 className="font-mono text-[2.2rem] uppercase tracking-[0.18em] text-navy font-medium">
-            Pricing and Plans
+            Pricing
           </h1>
         </div>
       </div>
@@ -169,12 +170,9 @@ export default async function FeaturesAndPricingPage() {
               ))}
             </ul>
             <div className="flex flex-wrap gap-3 mb-10">
-              <a
-                href="mailto:info@offtheplan.com.au?subject=Media%20Kit%20Request"
-                className="font-mono text-[10px] uppercase tracking-widest bg-orange text-white px-6 py-2.5 hover:bg-orange/90 transition-colors"
-              >
-                Request Media Kit
-              </a>
+              <MediaKitModal />
+              {/* MediaKitModal swaps in for the old mailto: link — opens an
+                  in-page form that POSTs to /api/media-kit-request. */}
               <Link
                 href="/contact"
                 className="font-mono text-[10px] uppercase tracking-widest border border-white/30 text-white px-6 py-2.5 hover:border-white transition-colors"

@@ -295,3 +295,45 @@ export function developerContactTemplate(args: DeveloperContactArgs) {
   ].filter(Boolean).join("\n");
   return { subject, html, text };
 }
+
+// ──────────────────────────────────────────────────────────────────────
+// Media Kit request — sent from the pricing page modal to admin + sales@.
+// Replaces the legacy mailto: link so requests arrive in a structured,
+// branded format instead of from whatever client the user happens to use.
+// ──────────────────────────────────────────────────────────────────────
+
+export interface MediaKitRequestArgs {
+  full_name: string;
+  email: string;
+  company?: string | null;
+  role?: string | null;
+  notes?: string | null;
+}
+
+export function mediaKitRequestTemplate(args: MediaKitRequestArgs) {
+  const subject = `Media Kit request — ${args.full_name}${args.company ? ` (${args.company})` : ""}`;
+  const html = shell(`
+    <h2 style="margin:0 0 16px;font-size:18px;font-weight:600;color:${PRIMARY};">
+      New Media Kit request
+    </h2>
+    <p style="margin:0 0 8px;">Someone just requested a media kit via the pricing page.</p>
+    <table cellpadding="0" cellspacing="0" border="0" style="margin-top:16px;font-size:13px;border-collapse:collapse;">
+      <tr><td style="padding:6px 12px 6px 0;color:#7a7a7a;">Name</td><td style="padding:6px 0;font-weight:600;">${escapeHtml(args.full_name)}</td></tr>
+      <tr><td style="padding:6px 12px 6px 0;color:#7a7a7a;">Email</td><td style="padding:6px 0;"><a href="mailto:${escapeHtml(args.email)}" style="color:${ACCENT};">${escapeHtml(args.email)}</a></td></tr>
+      ${args.company ? `<tr><td style="padding:6px 12px 6px 0;color:#7a7a7a;">Company</td><td style="padding:6px 0;">${escapeHtml(args.company)}</td></tr>` : ""}
+      ${args.role ? `<tr><td style="padding:6px 12px 6px 0;color:#7a7a7a;">Role</td><td style="padding:6px 0;">${escapeHtml(args.role)}</td></tr>` : ""}
+    </table>
+    ${args.notes ? `<div style="margin-top:20px;padding:14px 16px;background:#f5f4f1;border-left:3px solid ${ACCENT};font-size:13px;line-height:1.55;">${escapeHtml(args.notes).replace(/\n/g, "<br>")}</div>` : ""}
+    <p style="margin:16px 0 0;font-size:12px;color:#7a7a7a;">You can reply directly to this email — it will reach the requester.</p>
+  `);
+  const text = [
+    `New Media Kit request`,
+    ``,
+    `Name: ${args.full_name}`,
+    `Email: ${args.email}`,
+    args.company ? `Company: ${args.company}` : null,
+    args.role ? `Role: ${args.role}` : null,
+    args.notes ? `\nNotes:\n${args.notes}` : null,
+  ].filter(Boolean).join("\n");
+  return { subject, html, text };
+}
