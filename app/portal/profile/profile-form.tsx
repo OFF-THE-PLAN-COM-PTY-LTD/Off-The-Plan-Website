@@ -280,22 +280,36 @@ function LogoPanel({ field, title, currentUrl, className = "" }: { field: "compa
   const inputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(currentUrl);
   const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    setError(null);
+    // 5MB client-side cap before we even send to the server — saves a round-trip
+    // and gives a clearer error than a generic upload failure.
+    if (file.size > 5 * 1024 * 1024) {
+      setError("File is over 5MB. Please choose a smaller image.");
+      e.target.value = "";
+      return;
+    }
     setUploading(true);
     const form = new FormData();
     form.append("file", file);
     form.append("field", field);
     const res = await fetch("/api/portal/upload", { method: "POST", body: form });
-    const json = await res.json();
-    if (res.ok) setPreview(json.url);
+    const json = await res.json().catch(() => ({}));
+    if (res.ok) {
+      setPreview(json.url);
+    } else {
+      setError(json.error ?? "Upload failed.");
+    }
     setUploading(false);
+    e.target.value = "";
   }
 
   return (
-    <div className={`bg-white px-5 py-6 flex flex-col items-center gap-4 ${className}`}>
+    <div className={`bg-white px-5 py-6 flex flex-col items-center gap-3 ${className}`}>
       <p className="font-mono text-[10px] uppercase tracking-widest text-navy font-bold">{title}</p>
       <div className="w-40 h-28 border border-[#dde1e9] bg-[#f5f6fa] flex items-center justify-center overflow-hidden">
         {preview ? (
@@ -314,8 +328,32 @@ function LogoPanel({ field, title, currentUrl, className = "" }: { field: "compa
       >
         {uploading ? "Uploading…" : "Upload Logo"}
       </button>
-      <p className="font-sans text-[10px] text-ink/30 text-center">( Supported formats: JPEG, JPG, PNG, GIF )<br />( File size up to 5MB, Dimensions 500×500 )</p>
+      {error && <p className="font-sans text-[11px] text-red-600 text-center">{error}</p>}
+      <LogoGuidelines />
       <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" onChange={handleFile} />
+    </div>
+  );
+}
+
+/**
+ * Shared guideline panel for logo uploads — used in /portal/profile and
+ * /admin/developers. Addresses Tim's PDF I17: real-estate logos come in
+ * many shapes; tells the uploader exactly what works best so the layout
+ * stays consistent across the site.
+ */
+function LogoGuidelines() {
+  return (
+    <div className="bg-[#f5f6fa] border border-[#dde1e9] px-4 py-3 w-full max-w-[280px]">
+      <p className="font-mono text-[9px] uppercase tracking-widest text-navy font-bold mb-2">
+        Logo Guidelines
+      </p>
+      <ul className="font-sans text-[11px] text-ink/65 leading-relaxed space-y-1">
+        <li><span className="text-ink/40">•</span> Square (500×500) <span className="text-ink/40">or</span> rectangular (up to 1000×400) — both work</li>
+        <li><span className="text-ink/40">•</span> PNG with transparent background recommended</li>
+        <li><span className="text-ink/40">•</span> JPG / GIF / WEBP also accepted</li>
+        <li><span className="text-ink/40">•</span> Max file size 5MB</li>
+        <li><span className="text-ink/40">•</span> Avoid logos with thin lines or small text — they shrink in card views</li>
+      </ul>
     </div>
   );
 }

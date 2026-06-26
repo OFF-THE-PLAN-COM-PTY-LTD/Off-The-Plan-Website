@@ -88,10 +88,17 @@ function LogoUpload({
         )}
       </div>
       {error && <p className="font-sans text-xs text-red-500">{error}</p>}
-      <p className="font-sans text-[10px] text-ink/40 text-center leading-snug">
-        (Supported formats: JPEG, JPG, PNG, GIF)<br />
-        (File size up to 5MB, Dimensions 500×500)
-      </p>
+      <div className="bg-white border border-line px-3 py-2 w-full max-w-[240px]">
+        <p className="font-mono text-[9px] uppercase tracking-widest text-navy font-bold mb-1.5">
+          Logo Guidelines
+        </p>
+        <ul className="font-sans text-[10.5px] text-ink/65 leading-snug space-y-0.5">
+          <li><span className="text-ink/40">•</span> Square (500×500) <span className="text-ink/40">or</span> rectangle (up to 1000×400)</li>
+          <li><span className="text-ink/40">•</span> PNG with transparent bg recommended</li>
+          <li><span className="text-ink/40">•</span> JPG / GIF / WEBP also accepted</li>
+          <li><span className="text-ink/40">•</span> Max file size 5MB</li>
+        </ul>
+      </div>
     </div>
   );
 }
