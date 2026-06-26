@@ -81,9 +81,11 @@ export async function POST(req: Request) {
       message,
     });
 
-    // CC list: the sender + sales@, de-duped against primaryTo so nobody
-    // receives the same email twice.
-    const cc = Array.from(new Set([email, EMAIL_SALES_CC])).filter((addr) => addr !== primaryTo);
+    // CC list per Tim's PDF spec for I16: "cc me/sales@" — so admin (Tim)
+    // AND sales@ are CC'd on every developer-contact email, plus the sender
+    // gets a copy for their own records. De-duped against primaryTo so
+    // nobody receives the same email twice.
+    const cc = Array.from(new Set([email, EMAIL_ADMIN_TO, EMAIL_SALES_CC])).filter((addr) => addr !== primaryTo);
 
     await sendEmail({
       to: primaryTo,
