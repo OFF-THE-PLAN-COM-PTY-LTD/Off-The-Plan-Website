@@ -13,6 +13,7 @@ import { mediaKitRequestTemplate } from "@/lib/email/templates";
 const schema = z.object({
   full_name: z.string().min(1).max(120),
   email: z.string().email(),
+  phone: z.string().max(40).optional().nullable(),
   company: z.string().max(120).optional().nullable(),
   category: z.string().min(1).max(80),
   state: z.string().min(1).max(80),
@@ -24,11 +25,12 @@ export async function POST(req: Request) {
     if (!parsed.success) {
       return NextResponse.json({ error: "Invalid data" }, { status: 400 });
     }
-    const { full_name, email, company, category, state } = parsed.data;
+    const { full_name, email, phone, company, category, state } = parsed.data;
 
     const tmpl = mediaKitRequestTemplate({
       full_name,
       email,
+      phone: phone ?? null,
       company: company ?? null,
       category,
       state,

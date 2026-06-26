@@ -35,6 +35,7 @@ export function MediaKitModal({ buttonClassName, label = "Request Media Kit" }: 
     const payload = {
       full_name: String(fd.get("full_name") ?? "").trim(),
       email: String(fd.get("email") ?? "").trim(),
+      phone: String(fd.get("phone") ?? "").trim() || null,
       company: String(fd.get("company") ?? "").trim() || null,
       category: String(fd.get("category") ?? "").trim() || null,
       state: String(fd.get("state") ?? "").trim() || null,
@@ -136,6 +137,10 @@ export function MediaKitModal({ buttonClassName, label = "Request Media Kit" }: 
                 <div>
                   <label className="block font-sans text-xs text-ink/60 mb-1">Email</label>
                   <input name="email" type="email" required maxLength={200} className={inp} />
+                </div>
+                <div>
+                  <label className="block font-sans text-xs text-ink/60 mb-1">Phone (optional)</label>
+                  <input name="phone" type="tel" maxLength={40} className={inp} />
                 </div>
                 <div>
                   <label className="block font-sans text-xs text-ink/60 mb-1">Company (optional)</label>
