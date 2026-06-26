@@ -107,9 +107,14 @@ export default async function DeveloperProfilePage({ params }: Props) {
 
   const monogram = displayName.split(/\s+/).map((w) => w[0]).filter(Boolean).join("").slice(0, 2).toUpperCase();
 
-  // Decide whether the left "About" column has any real content. If not, the
-  // contact form gets centred so the layout doesn't look broken on sparse rows.
-  const hasAboutContent = Boolean(displayBio || displayPhone || displayEmail);
+  // Width-cap the listings grid based on count so single/double listings
+  // don't sit lonely on the left of a 3-column track.
+  const listingCount = devDevelopments.length;
+  const listingsGridClass =
+    listingCount === 0 ? ""
+      : listingCount === 1 ? "max-w-sm mx-auto"
+        : listingCount === 2 ? "grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-3xl mx-auto"
+          : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4";
 
   return (
     <div className="min-h-screen bg-cream pt-16">
@@ -181,88 +186,77 @@ export default async function DeveloperProfilePage({ params }: Props) {
         </div>
       </section>
 
-      {/* ── Body. Adaptive layout, both modes use 2 columns so the page
-          stays balanced even when data is thin: ──
-            - Rich mode: About+contact details (left) | Contact form (right).
-                         Listings render in a full-width section below.
-            - Sparse mode: Listings grid (left) | Contact form (right).
-                           Skips the standalone listings section. */}
-      <div className="container-padded py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-10 lg:gap-14">
-          <div className="min-w-0">
-            {hasAboutContent ? (
-              <>
-                {displayBio && (
-                  <>
-                    <p className="font-mono text-[11px] uppercase tracking-widest text-ink/40 mb-3">About</p>
-                    <div className="font-sans text-body-lg text-ink/75 leading-relaxed whitespace-pre-line max-w-2xl">
-                      {displayBio}
-                    </div>
-                  </>
-                )}
-
-                {(displayPhone || displayEmail) && (
-                  <div className={`${displayBio ? "mt-8" : ""} flex flex-wrap gap-x-8 gap-y-2 text-sm`}>
-                    {displayPhone && (
-                      <p className="font-sans text-ink/70">
-                        <span className="font-mono text-[10px] uppercase tracking-widest text-ink/40 mr-2">Phone</span>
-                        <a href={`tel:${displayPhone}`} className="hover:text-orange">{displayPhone}</a>
-                      </p>
-                    )}
-                    {displayEmail && (
-                      <p className="font-sans text-ink/70">
-                        <span className="font-mono text-[10px] uppercase tracking-widest text-ink/40 mr-2">Email</span>
-                        <a href={`mailto:${displayEmail}`} className="hover:text-orange">{displayEmail}</a>
-                      </p>
-                    )}
-                  </div>
-                )}
-              </>
-            ) : (
-              // Sparse mode: listings sit in the left column so the page
-              // doesn't look empty next to the contact form.
-              <>
-                <p className="font-mono text-[11px] uppercase tracking-widest text-ink/40 mb-3">
-                  Current listings
-                </p>
-                {devDevelopments.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {devDevelopments.map((d) => <PropertyCard key={d.id} development={d} layout="tall" />)}
-                  </div>
-                ) : (
-                  <p className="font-sans text-body-md text-ink/40">
-                    No published listings at this time.
-                  </p>
-                )}
-              </>
-            )}
-          </div>
-
-          <aside>
-            <div className="lg:sticky lg:top-24">
-              <DeveloperContactForm developerSlug={dev.slug} developerName={displayName} />
-            </div>
-          </aside>
-        </div>
-      </div>
-
-      {/* ── Current listings (rich mode only — sparse mode shows them above) ── */}
-      {hasAboutContent && (
-        <section className="container-padded pb-16">
-          <h2 className="font-display font-light text-navy text-section-lg mb-6">
-            Current listings
-          </h2>
-          {devDevelopments.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {devDevelopments.map((d) => <PropertyCard key={d.id} development={d} layout="tall" />)}
-            </div>
-          ) : (
-            <p className="font-sans text-body-md text-ink/40">
-              No published listings at this time.
+      {/* ── About (only when there's a bio). Centred so the column never
+          looks empty regardless of how long the bio is. ── */}
+      {displayBio && (
+        <section className="container-padded py-12">
+          <div className="max-w-3xl mx-auto">
+            <p className="font-mono text-[11px] uppercase tracking-widest text-ink/40 mb-3 text-center">
+              About
             </p>
-          )}
+            <div className="font-sans text-body-lg text-ink/75 leading-relaxed whitespace-pre-line text-center">
+              {displayBio}
+            </div>
+          </div>
         </section>
       )}
+
+      {/* ── Current listings — grid width scales with count so 1 or 2
+          cards don't sit lonely on the left. ── */}
+      <section className="container-padded py-12">
+        <h2 className="font-display font-light text-navy text-section-lg mb-6 text-center">
+          Current listings
+        </h2>
+        {listingCount > 0 ? (
+          <div className={listingsGridClass}>
+            {devDevelopments.map((d) => <PropertyCard key={d.id} development={d} layout="tall" />)}
+          </div>
+        ) : (
+          <p className="font-sans text-body-md text-ink/40 text-center">
+            No published listings at this time.
+          </p>
+        )}
+      </section>
+
+      {/* ── Contact band — a full-width cream-alt band that gives the
+          form its own visual home. Two columns inside: heading + any
+          phone/email on the left, form on the right. Never empty. ── */}
+      <section className="bg-cream-alt border-y border-line">
+        <div className="container-padded py-14">
+          <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-14 items-start">
+            <div>
+              <p className="font-mono text-[11px] uppercase tracking-widest text-orange mb-3">
+                Get in touch
+              </p>
+              <h2 className="font-display font-light text-navy text-section-lg leading-tight mb-4">
+                Contact {displayName}
+              </h2>
+              <p className="font-sans text-body-md text-ink/65 max-w-md mb-6">
+                Have a question about a project or want more information? Send a message and {displayName} will get back to you.
+              </p>
+              {(displayPhone || displayEmail) && (
+                <div className="space-y-2">
+                  {displayPhone && (
+                    <p className="font-sans text-sm text-ink/70">
+                      <span className="font-mono text-[10px] uppercase tracking-widest text-ink/40 mr-2">Phone</span>
+                      <a href={`tel:${displayPhone}`} className="hover:text-orange">{displayPhone}</a>
+                    </p>
+                  )}
+                  {displayEmail && (
+                    <p className="font-sans text-sm text-ink/70">
+                      <span className="font-mono text-[10px] uppercase tracking-widest text-ink/40 mr-2">Email</span>
+                      <a href={`mailto:${displayEmail}`} className="hover:text-orange">{displayEmail}</a>
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+            <div>
+              <DeveloperContactForm developerSlug={dev.slug} developerName={displayName} />
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

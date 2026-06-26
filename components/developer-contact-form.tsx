@@ -61,13 +61,6 @@ export function DeveloperContactForm({ developerSlug, developerName }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="bg-white border border-line p-5 space-y-4">
-      <p className="font-mono text-[11px] uppercase tracking-widest text-orange mb-1">
-        Get in touch
-      </p>
-      <p className="font-display font-light text-navy text-xl leading-tight">
-        Contact {developerName}
-      </p>
-
       <div>
         <label className="block font-sans text-xs text-ink/60 mb-1">Your name</label>
         <input name="full_name" type="text" required maxLength={120} className={inputClass} />
