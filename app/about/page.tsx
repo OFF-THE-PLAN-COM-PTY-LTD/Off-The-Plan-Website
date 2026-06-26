@@ -74,13 +74,13 @@ export default async function AboutPage() {
       <section className="container-padded py-14 grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-12 items-start">
         <div>
           <p className="font-mono uppercase tracking-widest text-navy mb-5" style={{ fontSize: "20px" }}>Who We Are</p>
-          <p className="font-sans text-body-md text-ink/80 leading-relaxed mb-4">
+          <p className="font-sans text-body-lg text-ink/80 mb-5">
             Off The Plan™ is an Australian property platform for new apartments, new homes, listings
             and house &amp; land packages available off-the-plan®. We connect buyers with current and
             upcoming property opportunities across Australia, providing direct access to new projects,
             developers and project marketing teams.
           </p>
-          <p className="font-sans text-body-md text-ink/80 leading-relaxed">
+          <p className="font-sans text-body-lg text-ink/80">
             By focusing solely on new developments and facilitating relationships between buyers and
             established properties, we provide access and empower our members to review investments
             with confidence.
@@ -152,21 +152,21 @@ export default async function AboutPage() {
           <p className="font-mono uppercase tracking-widest text-navy mb-5" style={{ fontSize: "20px" }}>
             A Message From Our Founder
           </p>
-          <p className="font-sans text-body-md text-ink/80 leading-relaxed mb-4">
+          <p className="font-sans text-body-lg text-ink/80 mb-5">
             After more than twenty years in real estate, I recognised a significant gap in the market — the need
             for an affordable, easy-to-use platform that brings together all forms of off-the-plan property
             within a single, trusted domain.
           </p>
-          <p className="font-sans text-body-md text-ink/80 leading-relaxed mb-4">
+          <p className="font-sans text-body-lg text-ink/80 mb-5">
             offtheplan.com.au™ was created to fulfil that purpose: to simplify how buyers discover new
             developments and to provide developers with an effective, results-oriented platform to showcase
             their projects.
           </p>
-          <p className="font-sans text-body-md text-ink/80 leading-relaxed mb-6">
+          <p className="font-sans text-body-lg text-ink/80 mb-6">
             Today, our mission remains focused on accessibility, innovation and connection. Helping Australians
             and the world to explore and secure opportunities across Australia.
           </p>
-          <p className="font-display font-light text-navy text-body-md mb-8">— Tim W.</p>
+          <p className="font-display font-light text-navy text-body-lg mb-8">— Tim W.</p>
           <Link href="/contact" className="btn-primary inline-block">
             Talk to us
           </Link>
