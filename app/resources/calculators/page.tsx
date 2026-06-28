@@ -100,7 +100,7 @@ function CalculatorGrid() {
         <Link
           key={calc.label}
           href={calc.href}
-          className="group flex flex-col items-center text-center border-r border-b border-line px-8 py-20 hover:bg-orange/5 transition-all duration-200"
+          className="group flex flex-col items-center justify-center text-center border-r border-b border-line px-8 py-12 min-h-[300px] hover:bg-orange/5 transition-all duration-200"
         >
           <span className="text-navy/70 group-hover:text-orange transition-colors duration-200 mb-8">
             {calc.icon}
