@@ -88,7 +88,7 @@ export function ContactNextSteps() {
           onClick={() => setModalOpen(false)}
         >
           <div
-            className="bg-white w-full max-w-md border-2 border-orange p-8 relative"
+            className="bg-white w-full max-w-md border border-line p-8 relative"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
