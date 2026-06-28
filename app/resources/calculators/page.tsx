@@ -1,6 +1,6 @@
 import Link from "next/link";
-import Image from "next/image";
 import type { Metadata } from "next";
+import { AdSlot } from "@/components/ad-slot";
 
 export const metadata: Metadata = {
   title: "Resources | Calculators",
@@ -113,46 +113,52 @@ export default function CalculatorsPage() {
         </div>
       </div>
 
-      {/* ── Calculator grid — full width ── */}
+      {/* ── Calculator grid + right-rail banner ── */}
       <div className="bg-white py-16">
-        <div className="container-padded">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-0 border-l border-t border-line">
-            {CALCULATORS.map((calc) => (
-              <Link
-                key={calc.label}
-                href={calc.href}
-                className="group flex flex-col items-center text-center border-r border-b border-line px-8 py-12 hover:bg-orange/3 transition-all duration-200"
-              >
-                {/* Icon */}
-                <span className="text-ink/30 group-hover:text-orange transition-colors duration-200 mb-7">
-                  {calc.icon}
-                </span>
-                {/* Label */}
-                <p className="font-mono text-[12px] uppercase tracking-[0.2em] text-navy font-semibold mb-8 leading-relaxed">
-                  {calc.label}
-                </p>
-                {/* Learn More button */}
-                <span className="font-mono text-[10px] uppercase tracking-widest border border-navy/40 text-navy/70 px-6 py-2 group-hover:border-orange group-hover:text-orange group-hover:bg-white transition-all duration-200">
-                  Learn More
-                </span>
-              </Link>
-            ))}
+        <div className="mx-auto max-w-screen-xl xl:max-w-screen-2xl px-6 md:px-10">
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] gap-10 lg:gap-12 xl:gap-16">
+            <div className="min-w-0">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-0 border-l border-t border-line">
+                {CALCULATORS.map((calc) => (
+                  <Link
+                    key={calc.label}
+                    href={calc.href}
+                    className="group flex flex-col items-center text-center border-r border-b border-line px-8 py-12 hover:bg-orange/3 transition-all duration-200"
+                  >
+                    {/* Icon */}
+                    <span className="text-ink/30 group-hover:text-orange transition-colors duration-200 mb-7">
+                      {calc.icon}
+                    </span>
+                    {/* Label */}
+                    <p className="font-mono text-[12px] uppercase tracking-[0.2em] text-navy font-semibold mb-8 leading-relaxed">
+                      {calc.label}
+                    </p>
+                    {/* Learn More button */}
+                    <span className="font-mono text-[10px] uppercase tracking-widest border border-navy/40 text-navy/70 px-6 py-2 group-hover:border-orange group-hover:text-orange group-hover:bg-white transition-all duration-200">
+                      Learn More
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            {/* Right-rail skyscraper — admin-controlled via Ads Management
+                (page: resources, position: right). Renders nothing when no
+                active ad is configured. */}
+            <aside className="hidden lg:block">
+              <div className="flex flex-col items-end">
+                <AdSlot page="resources" position="right" />
+              </div>
+            </aside>
           </div>
         </div>
       </div>
 
-      {/* ── Featured Partner — landscape banner ── */}
+      {/* ── Bottom banner — admin-controlled, properly sized (970x250 centred)
+          via AdSlot rather than a stretched full-width hero. ── */}
       <div className="bg-[#f5f4f1] py-14 border-t border-line">
         <div className="container-padded">
-          <div className="relative w-full overflow-hidden">
-            <Image
-              src="/off-the-plan-banner-landscape.png"
-              alt="Off The Plan Partner Network"
-              width={1200}
-              height={200}
-              className="w-full h-auto object-contain"
-            />
-          </div>
+          <AdSlot page="resources" position="bottom" />
         </div>
       </div>
 
