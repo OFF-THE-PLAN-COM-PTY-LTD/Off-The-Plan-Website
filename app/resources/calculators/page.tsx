@@ -109,7 +109,7 @@ function CalculatorGrid() {
             {calc.label}
           </p>
           <span className="font-mono text-[10px] uppercase tracking-widest border border-navy text-navy px-6 py-2 group-hover:border-orange group-hover:text-orange group-hover:bg-white transition-all duration-200">
-            Learn More
+            Open Here
           </span>
         </Link>
       ))}
