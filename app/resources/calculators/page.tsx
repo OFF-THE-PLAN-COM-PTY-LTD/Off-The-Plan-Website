@@ -175,31 +175,31 @@ export default async function CalculatorsPage() {
         </div>
       </div>
 
-      {/* ── Bottom banner — admin-controlled, properly sized (970x250 centred)
-          via AdSlot rather than a stretched full-width hero. ── */}
-      <div className="bg-[#f5f4f1] py-14 border-t border-line">
-        <div className="container-padded">
-          <AdSlot page="resources" position="bottom" />
-        </div>
-      </div>
-
-      {/* ── Helpful Links ── */}
+      {/* ── Helpful Links ── (now above the bottom banner per client) */}
       <div className="bg-white border-t border-line py-16">
         <div className="container-padded text-center">
-          <p className="font-mono text-[13px] uppercase tracking-[0.28em] text-ink/70 mb-8 font-medium">
+          <p className="font-mono text-[17px] uppercase tracking-[0.28em] text-navy mb-10 font-semibold">
             Helpful Links
           </p>
-          <div className="flex flex-wrap justify-center gap-4">
+          <div className="flex flex-wrap justify-center gap-6 md:gap-8">
             {HELPFUL_LINKS.map((link) => (
               <Link
                 key={link.label}
                 href={link.href}
-                className="font-mono text-[12px] uppercase tracking-widest border border-navy/30 text-navy/70 px-10 py-3 hover:border-orange hover:text-orange transition-colors"
+                className="font-mono text-[13px] uppercase tracking-widest border border-navy text-navy px-12 py-3.5 hover:border-orange hover:text-orange transition-colors"
               >
                 {link.label}
               </Link>
             ))}
           </div>
+        </div>
+      </div>
+
+      {/* ── Bottom banner — now the last section before the footer per client.
+          Admin-controlled, properly sized (970x250 centred) via AdSlot. ── */}
+      <div className="bg-[#f5f4f1] py-14 border-t border-line">
+        <div className="container-padded">
+          <AdSlot page="resources" position="bottom" />
         </div>
       </div>
 
