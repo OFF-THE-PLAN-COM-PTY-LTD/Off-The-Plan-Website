@@ -100,15 +100,15 @@ function CalculatorGrid() {
         <Link
           key={calc.label}
           href={calc.href}
-          className="group flex flex-col items-center text-center border-r border-b border-line px-8 py-12 hover:bg-orange/3 transition-all duration-200"
+          className="group flex flex-col items-center text-center border-r border-b border-line px-8 py-20 hover:bg-orange/5 transition-all duration-200"
         >
-          <span className="text-ink/30 group-hover:text-orange transition-colors duration-200 mb-7">
+          <span className="text-navy/70 group-hover:text-orange transition-colors duration-200 mb-8">
             {calc.icon}
           </span>
-          <p className="font-mono text-[12px] uppercase tracking-[0.2em] text-navy font-semibold mb-8 leading-relaxed">
+          <p className="font-mono text-[12px] uppercase tracking-[0.2em] text-navy font-semibold mb-10 leading-relaxed">
             {calc.label}
           </p>
-          <span className="font-mono text-[10px] uppercase tracking-widest border border-navy/40 text-navy/70 px-6 py-2 group-hover:border-orange group-hover:text-orange group-hover:bg-white transition-all duration-200">
+          <span className="font-mono text-[10px] uppercase tracking-widest border border-navy text-navy px-6 py-2 group-hover:border-orange group-hover:text-orange group-hover:bg-white transition-all duration-200">
             Learn More
           </span>
         </Link>
