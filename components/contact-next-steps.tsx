@@ -16,7 +16,7 @@ const CARDS = [
   {
     label: "Developers",
     desc: "For developers looking to showcase a new development, register your project with us.",
-    cta: "Learn More",
+    cta: "List Today",
     href: "/list-a-listing",
     modal: false,
     image: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=600&h=400&fit=crop&auto=format&q=80",
@@ -49,8 +49,10 @@ export function ContactNextSteps() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {CARDS.map((card) => (
           <div key={card.label} className="flex flex-col border border-line bg-white">
-            {/* Text area */}
-            <div className="flex flex-col items-center text-center px-8 pt-10 pb-8">
+            {/* Text area — flex-1 so it expands to match the tallest card in
+                the row, which keeps the images aligned at the same Y position
+                across all 3 cards (Tim PDF I21: developers tile alignment). */}
+            <div className="flex-1 flex flex-col items-center text-center px-8 pt-10 pb-8">
               <p className="font-mono text-label-sm uppercase tracking-widest text-navy font-semibold mb-5">
                 {card.label}
               </p>
