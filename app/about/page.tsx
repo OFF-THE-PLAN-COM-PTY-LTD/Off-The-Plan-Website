@@ -74,7 +74,7 @@ export default async function AboutPage() {
       <section className="container-padded py-14 grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-12 items-start">
         <div>
           <p className="font-mono uppercase tracking-widest text-navy mb-5" style={{ fontSize: "20px" }}>Who We Are</p>
-          <p className="font-sans text-body-lg text-ink/80 mb-5">
+          <p className="font-sans text-[19px] leading-[1.9] text-ink/80 mb-6">
             Off The Plan™ is an Australian property platform for new apartments, new homes, listings
             and house &amp; land packages available off-the-plan®. We connect buyers with current and
             upcoming property opportunities across Australia, providing direct access to new projects,
@@ -152,21 +152,21 @@ export default async function AboutPage() {
           <p className="font-mono uppercase tracking-widest text-navy mb-5" style={{ fontSize: "20px" }}>
             A Message From Our Founder
           </p>
-          <p className="font-sans text-body-lg text-ink/80 mb-5">
+          <p className="font-sans text-[19px] leading-[1.9] text-ink/80 mb-6">
             After more than twenty years in real estate, I recognised a significant gap in the market — the need
             for an affordable, easy-to-use platform that brings together all forms of off-the-plan property
             within a single, trusted domain.
           </p>
-          <p className="font-sans text-body-lg text-ink/80 mb-5">
+          <p className="font-sans text-[19px] leading-[1.9] text-ink/80 mb-6">
             offtheplan.com.au™ was created to fulfil that purpose: to simplify how buyers discover new
             developments and to provide developers with an effective, results-oriented platform to showcase
             their projects.
           </p>
-          <p className="font-sans text-body-lg text-ink/80 mb-6">
+          <p className="font-sans text-[19px] leading-[1.9] text-ink/80 mb-7">
             Today, our mission remains focused on accessibility, innovation and connection. Helping Australians
             and the world to explore and secure opportunities across Australia.
           </p>
-          <p className="font-display font-light text-navy text-body-lg mb-8">— Tim W.</p>
+          <p className="font-display font-light text-navy text-[19px] mb-8">— Tim W.</p>
           <Link href="/contact" className="btn-primary inline-block">
             Talk to us
           </Link>
@@ -205,19 +205,19 @@ export default async function AboutPage() {
           />
         </div>
         <div>
-          <p className="font-mono uppercase tracking-widest text-navy mb-4" style={{ fontSize: "15px" }}>What We Do</p>
-          <p className="font-sans text-body-md text-ink/80 leading-relaxed mb-5">
-            offtheplan.com.au™ provides a streamlined way to explore Australia's newest property developments. We offer:
+          <p className="font-mono uppercase tracking-widest text-navy mb-4" style={{ fontSize: "20px" }}>What We Do</p>
+          <p className="font-sans text-[19px] leading-[1.9] text-ink/80 mb-6">
+            offtheplan.com.au™ provides a streamlined way to explore Australia&apos;s newest property developments. We offer:
           </p>
-          <ul className="flex flex-col gap-5 mb-6">
+          <ul className="flex flex-col gap-6 mb-7">
             {WHAT_WE_DO.map((item, i) => (
               <li key={i} className="flex gap-3">
-                <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-orange flex-shrink-0" />
-                <p className="font-sans text-body-md text-ink/80 leading-relaxed">{item}</p>
+                <span className="mt-3 w-1.5 h-1.5 rounded-full bg-orange flex-shrink-0" />
+                <p className="font-sans text-[19px] leading-[1.9] text-ink/80">{item}</p>
               </li>
             ))}
           </ul>
-          <p className="font-sans text-body-md text-ink/80 leading-relaxed">
+          <p className="font-sans text-[19px] leading-[1.9] text-ink/80">
             Our platform is designed with clarity and simplicity in mind, helping users navigate the off-the-plan market with confidence. Whether you are purchasing your first home, expanding your investment portfolio or launching a new project, we are here to connect you with the right opportunities.
           </p>
         </div>
