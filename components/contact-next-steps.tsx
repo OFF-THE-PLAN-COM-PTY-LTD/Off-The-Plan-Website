@@ -48,7 +48,7 @@ export function ContactNextSteps() {
     <>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {CARDS.map((card) => (
-          <div key={card.label} className="flex flex-col border border-line bg-white">
+          <div key={card.label} className="h-full flex flex-col border border-line bg-white">
             {/* Text area — flex-1 so it expands to match the tallest card in
                 the row, which keeps the images aligned at the same Y position
                 across all 3 cards (Tim PDF I21: developers tile alignment). */}
