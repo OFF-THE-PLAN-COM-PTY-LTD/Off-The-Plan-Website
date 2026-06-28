@@ -78,9 +78,12 @@ export default async function CalculatorPage({ params }: PageProps) {
         <div className="border-b border-white/20 mt-6" />
       </div>
 
-      {/* ── Calculator content ── */}
+      {/* ── Calculator content (centred for I24: Tim asked for all 6
+          calculators to sit in the middle of the page, not hug the left). ── */}
       <div className="bg-white px-6 md:px-16 py-10">
-        <Calculator />
+        <div className="max-w-4xl mx-auto">
+          <Calculator />
+        </div>
       </div>
 
       {/* ── Disclaimer ── */}
