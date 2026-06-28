@@ -60,14 +60,14 @@ export function ContactNextSteps() {
               {card.modal ? (
                 <button
                   onClick={() => setModalOpen(true)}
-                  className="font-mono text-label-sm uppercase tracking-widest px-6 py-2 border border-ink/30 text-ink hover:border-navy hover:text-navy transition-colors"
+                  className="mt-auto font-mono text-label-sm uppercase tracking-widest px-6 py-2 border border-ink/30 text-ink hover:border-navy hover:text-navy transition-colors"
                 >
                   {card.cta}
                 </button>
               ) : (
                 <Link
                   href={card.href!}
-                  className="font-mono text-label-sm uppercase tracking-widest px-6 py-2 border border-ink/30 text-ink hover:border-navy hover:text-navy transition-colors"
+                  className="mt-auto font-mono text-label-sm uppercase tracking-widest px-6 py-2 border border-ink/30 text-ink hover:border-navy hover:text-navy transition-colors"
                 >
                   {card.cta}
                 </Link>
