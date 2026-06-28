@@ -1,6 +1,9 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { AdSlot } from "@/components/ad-slot";
+import { supabase } from "@/lib/supabase/public";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Resources | Calculators",
@@ -87,7 +90,46 @@ const HELPFUL_LINKS = [
   { label: "Listings", href: "/search" },
 ];
 
-export default function CalculatorsPage() {
+/** Calculator tile grid — extracted so the parent page can decide whether
+ *  to wrap it in a 2-col layout (when there's a right-rail ad) or render
+ *  it full-width on its own (when there isn't). */
+function CalculatorGrid() {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-0 border-l border-t border-line">
+      {CALCULATORS.map((calc) => (
+        <Link
+          key={calc.label}
+          href={calc.href}
+          className="group flex flex-col items-center text-center border-r border-b border-line px-8 py-12 hover:bg-orange/3 transition-all duration-200"
+        >
+          <span className="text-ink/30 group-hover:text-orange transition-colors duration-200 mb-7">
+            {calc.icon}
+          </span>
+          <p className="font-mono text-[12px] uppercase tracking-[0.2em] text-navy font-semibold mb-8 leading-relaxed">
+            {calc.label}
+          </p>
+          <span className="font-mono text-[10px] uppercase tracking-widest border border-navy/40 text-navy/70 px-6 py-2 group-hover:border-orange group-hover:text-orange group-hover:bg-white transition-all duration-200">
+            Learn More
+          </span>
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+export default async function CalculatorsPage() {
+  // Check whether there's an active right-rail banner. If not, we skip the
+  // sidebar column entirely so the calculator grid uses the full width
+  // instead of leaving an empty 300px gap on the right.
+  const { data: rightAd } = await supabase
+    .from("ads")
+    .select("id")
+    .eq("page", "resources")
+    .eq("position", "right")
+    .eq("is_active", true)
+    .limit(1);
+  const hasRightAd = (rightAd?.length ?? 0) > 0;
+
   return (
     <div className="min-h-screen bg-cream pt-16">
 
@@ -101,56 +143,35 @@ export default function CalculatorsPage() {
       </div>
 
       {/* ── Intro strip — dark navy ── */}
-      <div className="bg-navy py-12">
-        <div className="container-padded max-w-3xl">
-          <p className="font-sans text-[16px] text-white/85 leading-relaxed mb-4">
+      <div className="bg-navy py-14">
+        <div className="container-padded max-w-5xl mx-auto">
+          <p className="font-sans text-[20px] leading-[1.7] text-white/85 mb-5">
             We&apos;ve put together a collection of calculators that will allow you to work through a
             number of scenarios and help plan your next investment or home purchases.
           </p>
-          <p className="font-sans text-[16px] text-white/85 leading-relaxed">
+          <p className="font-sans text-[20px] leading-[1.7] text-white/85">
             Select from the list of helpful calculators below.
           </p>
         </div>
       </div>
 
-      {/* ── Calculator grid + right-rail banner ── */}
+      {/* ── Calculator grid (+ right-rail banner if one is configured) ── */}
       <div className="bg-white py-16">
         <div className="mx-auto max-w-screen-xl xl:max-w-screen-2xl px-6 md:px-10">
-          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] gap-10 lg:gap-12 xl:gap-16">
-            <div className="min-w-0">
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-0 border-l border-t border-line">
-                {CALCULATORS.map((calc) => (
-                  <Link
-                    key={calc.label}
-                    href={calc.href}
-                    className="group flex flex-col items-center text-center border-r border-b border-line px-8 py-12 hover:bg-orange/3 transition-all duration-200"
-                  >
-                    {/* Icon */}
-                    <span className="text-ink/30 group-hover:text-orange transition-colors duration-200 mb-7">
-                      {calc.icon}
-                    </span>
-                    {/* Label */}
-                    <p className="font-mono text-[12px] uppercase tracking-[0.2em] text-navy font-semibold mb-8 leading-relaxed">
-                      {calc.label}
-                    </p>
-                    {/* Learn More button */}
-                    <span className="font-mono text-[10px] uppercase tracking-widest border border-navy/40 text-navy/70 px-6 py-2 group-hover:border-orange group-hover:text-orange group-hover:bg-white transition-all duration-200">
-                      Learn More
-                    </span>
-                  </Link>
-                ))}
+          {hasRightAd ? (
+            <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] gap-10 lg:gap-12 xl:gap-16">
+              <div className="min-w-0">
+                <CalculatorGrid />
               </div>
+              <aside className="hidden lg:block">
+                <div className="flex flex-col items-end">
+                  <AdSlot page="resources" position="right" />
+                </div>
+              </aside>
             </div>
-
-            {/* Right-rail skyscraper — admin-controlled via Ads Management
-                (page: resources, position: right). Renders nothing when no
-                active ad is configured. */}
-            <aside className="hidden lg:block">
-              <div className="flex flex-col items-end">
-                <AdSlot page="resources" position="right" />
-              </div>
-            </aside>
-          </div>
+          ) : (
+            <CalculatorGrid />
+          )}
         </div>
       </div>
 
