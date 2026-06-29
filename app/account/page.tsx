@@ -14,7 +14,7 @@ export default async function AccountPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, interest_type, is_circle_member, joined_at")
+    .select("full_name, is_circle_member, joined_at")
     .eq("id", user.id)
     .single();
 
@@ -31,7 +31,6 @@ export default async function AccountPage() {
         <ProfileForm
           fullName={profile?.full_name ?? user.user_metadata?.full_name ?? ""}
           email={user.email ?? ""}
-          interestType={profile?.interest_type ?? null}
         />
 
         <div className="border-t border-line pt-6 mt-8 flex flex-col gap-4">

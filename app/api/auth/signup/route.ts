@@ -11,9 +11,11 @@ export async function POST(request: Request) {
 
   // SECURITY: never let a self-signup grant member privileges (Developer/Agent).
   // The portal layout uses interest_type to gate access; only admins can upgrade
-  // a user to those roles via the admin panel. Anything other than the
-  // permitted "Buyer" value is coerced to null.
-  const SELF_ALLOWED_INTERESTS = new Set(["Buyer"]);
+  // a user to those roles via the admin panel. Anything outside the buyer-type
+  // allowlist is coerced to null. Developer/Agent applicants are routed to
+  // /list-a-listing from the signup page instead — that submits a lead Tim
+  // reviews and then upgrades the account via admin.
+  const SELF_ALLOWED_INTERESTS = new Set(["Buyer", "Owner-occupier", "Investor"]);
   const interestType = rawInterest && SELF_ALLOWED_INTERESTS.has(rawInterest)
     ? rawInterest
     : null;

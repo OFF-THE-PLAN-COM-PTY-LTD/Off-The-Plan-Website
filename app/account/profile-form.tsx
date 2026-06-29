@@ -5,12 +5,18 @@ import { useState } from "react";
 interface ProfileFormProps {
   fullName: string;
   email: string;
-  interestType: string | null;
 }
 
-export function ProfileForm({ fullName, email, interestType }: ProfileFormProps) {
+/**
+ * Buyer account profile form. Note: we deliberately do NOT expose an
+ * `interest_type` selector here — Developer/Agent membership is gated by
+ * admin approval (apply via /list-a-listing), and exposing the field on the
+ * client previously allowed any signed-in user to self-promote by PATCHing
+ * the profile. The signup form sets interest_type once, and admins can
+ * change it from /admin/members afterwards.
+ */
+export function ProfileForm({ fullName, email }: ProfileFormProps) {
   const [name, setName] = useState(fullName);
-  const [interest, setInterest] = useState(interestType ?? "");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +30,7 @@ export function ProfileForm({ fullName, email, interestType }: ProfileFormProps)
     const res = await fetch("/api/auth/profile", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ full_name: name, interest_type: interest || null }),
+      body: JSON.stringify({ full_name: name }),
     });
 
     if (!res.ok) {
@@ -49,16 +55,6 @@ export function ProfileForm({ fullName, email, interestType }: ProfileFormProps)
         <label className="section-label block mb-1.5">Email</label>
         <input type="email" value={email} disabled className={inputClass + " bg-white/50 text-ink/40 cursor-not-allowed"} />
         <p className="mt-1 font-mono text-label-sm text-ink/30">Email cannot be changed here.</p>
-      </div>
-      <div>
-        <label className="section-label block mb-1.5">Update my profile type <span className="normal-case font-sans text-ink/40 text-xs">(optional)</span></label>
-        <select value={interest} onChange={(e) => setInterest(e.target.value)} className={inputClass + " cursor-pointer"}>
-          <option value="">Select</option>
-          <option value="Owner-occupier">Owner-occupier</option>
-          <option value="Investor">Investor</option>
-          <option value="Developer">Developer</option>
-          <option value="Agent">Agent</option>
-        </select>
       </div>
 
       {error && <p className="font-sans text-body-md text-red-600">{error}</p>}
