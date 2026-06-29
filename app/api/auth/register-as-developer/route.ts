@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { z } from "zod";
 import { sendEmail } from "@/lib/email/send";
@@ -41,20 +42,27 @@ export async function POST(req: Request) {
     const fullName = `${first_name} ${last_name}`.trim();
     const interestType = role === "agency" ? "Agent" : "Developer";
 
-    // Create the auth user (with email confirmation) using the admin API so
-    // we can set profile fields atomically afterwards. createUser with
-    // email_confirm=false means Supabase still sends the standard
-    // verification email.
-    const { data: created, error: createErr } = await supabaseAdmin.auth.admin.createUser({
+    // Use the public signUp method (not admin.createUser) so Supabase's
+    // configured SMTP + Confirm-signup email template actually fires.
+    // admin.createUser creates the row but DOES NOT trigger any email,
+    // even with email_confirm=false. persistSession=false keeps any
+    // session token in this server-side client only — no cookies leak
+    // back to the user's browser, so they stay logged-out and see the
+    // "pending review" message.
+    const publicSupabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { auth: { persistSession: false } },
+    );
+    const { data: created, error: createErr } = await publicSupabase.auth.signUp({
       email,
       password,
-      email_confirm: false,
-      user_metadata: { full_name: fullName },
+      options: { data: { full_name: fullName } },
     });
     if (createErr) {
       // Common case: user already registered. Don't leak which — just say
       // we couldn't create the account.
-      console.error("register-as-developer createUser error:", createErr);
+      console.error("register-as-developer signUp error:", createErr);
       return NextResponse.json({ error: "Could not create your account. The email may already be registered." }, { status: 400 });
     }
     const userId = created.user?.id;
