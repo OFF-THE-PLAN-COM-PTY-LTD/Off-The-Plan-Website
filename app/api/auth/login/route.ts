@@ -15,6 +15,10 @@ function defaultLandingFor(profile: { is_admin?: boolean | null; interest_type?:
   return "/account";
 }
 
+/** Profile member_status values that should block sign-in. Admins bypass
+ *  this gate since `is_admin = true` is granted explicitly. */
+const SIGN_IN_BLOCKED_STATUSES = new Set(["pending", "rejected"]);
+
 export async function POST(request: Request) {
   const formData = await request.formData();
   const email = (formData.get("email") as string)?.trim();
@@ -55,6 +59,30 @@ export async function POST(request: Request) {
   const { data: signInData, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) return NextResponse.redirect(errorUrl);
 
+  // Look up the profile up-front: we need is_admin + interest_type for
+  // smart-routing AND member_status to gate pending/rejected accounts.
+  const userId = signInData.user?.id;
+  let profile: { is_admin: boolean | null; interest_type: string | null; member_status: string | null } | null = null;
+  if (userId) {
+    const { data } = await supabase
+      .from("profiles")
+      .select("is_admin, interest_type, member_status")
+      .eq("id", userId)
+      .maybeSingle();
+    profile = data as typeof profile;
+  }
+
+  // Gate: pending or rejected accounts cannot sign in. Admins bypass this
+  // since they're granted access explicitly. We sign the user back out
+  // before redirecting so the cookies don't carry a half-authenticated state.
+  const status = (profile?.member_status ?? "").toLowerCase();
+  if (!profile?.is_admin && SIGN_IN_BLOCKED_STATUSES.has(status)) {
+    await supabase.auth.signOut();
+    const blockedUrl = new URL("/login", request.url);
+    blockedUrl.searchParams.set("error", status); // "pending" or "rejected"
+    return NextResponse.redirect(blockedUrl);
+  }
+
   // If the user was bounced to /login from a protected page (e.g. middleware
   // saw "/admin/foo" with no auth and added ?redirect=/admin/foo), honour
   // that destination over the role-based default — it's a more specific
@@ -63,16 +91,6 @@ export async function POST(request: Request) {
   if (isSafeRedirect) {
     finalPath = explicitRedirect;
   } else {
-    const userId = signInData.user?.id;
-    let profile: { is_admin: boolean | null; interest_type: string | null } | null = null;
-    if (userId) {
-      const { data } = await supabase
-        .from("profiles")
-        .select("is_admin, interest_type")
-        .eq("id", userId)
-        .maybeSingle();
-      profile = data as typeof profile;
-    }
     finalPath = defaultLandingFor(profile);
   }
 

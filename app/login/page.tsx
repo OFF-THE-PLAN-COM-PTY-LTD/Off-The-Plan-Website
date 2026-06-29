@@ -5,6 +5,20 @@ import ForgotPassword from "./forgot-password";
 export const metadata: Metadata = { title: "Sign in" };
 
 export default function LoginPage({ searchParams }: { searchParams: { redirect?: string; error?: string } }) {
+  // Login route uses ?error=pending / ?error=rejected to surface member_status
+  // gates, alongside the default ?error=invalid (wrong credentials).
+  const errorMessage = (() => {
+    switch (searchParams.error) {
+      case "pending":
+        return "Your account is awaiting admin approval. We'll email you once approved.";
+      case "rejected":
+        return "Account access has been declined. Please contact us if you believe this is in error.";
+      case "invalid":
+      default:
+        return "Incorrect email or password.";
+    }
+  })();
+
   return (
     <div className="min-h-screen bg-cream flex items-center justify-center px-4 pt-16">
       <div className="w-full max-w-sm">
@@ -13,7 +27,7 @@ export default function LoginPage({ searchParams }: { searchParams: { redirect?:
 
         {searchParams.error && (
           <p className="mb-4 font-sans text-body-md text-red-600 bg-red-50 border border-red-200 px-3 py-2.5">
-            Incorrect email or password.
+            {errorMessage}
           </p>
         )}
 
@@ -35,8 +49,8 @@ export default function LoginPage({ searchParams }: { searchParams: { redirect?:
         <ForgotPassword />
 
         <p className="font-sans text-body-md text-ink/50 mt-6 text-center">
-          New to Off The Plan?{" "}
-          <Link href="/signup" className="text-orange hover:underline">Create an account</Link>
+          Listing a project?{" "}
+          <Link href="/list-a-listing" className="text-orange hover:underline">Apply to list with us</Link>
         </p>
       </div>
     </div>

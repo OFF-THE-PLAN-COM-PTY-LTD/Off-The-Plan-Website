@@ -14,22 +14,37 @@ export default function ListWithUsPage() {
     e.preventDefault();
     if (!agreed) return;
     setError(null);
-    setSubmitting(true);
     const fd = new FormData(e.currentTarget);
     const first = (fd.get("first_name") as string)?.trim() ?? "";
     const last = (fd.get("last_name") as string)?.trim() ?? "";
+    const password = (fd.get("password") as string) ?? "";
+    const confirm = (fd.get("confirm_password") as string) ?? "";
+
+    // Client-side gate before round-tripping. Matches the server-side rules
+    // but gives a clearer message than a generic 400.
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+    if (password !== confirm) {
+      setError("Passwords don't match.");
+      return;
+    }
+
+    setSubmitting(true);
     try {
-      const res = await fetch("/api/leads", {
+      const res = await fetch("/api/auth/register-as-developer", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          source: "list-a-listing",
-          contact_name: `${first} ${last}`.trim(),
-          email: fd.get("email"),
-          phone: fd.get("phone"),
-          company: fd.get("company"),
-          subject: `New ${role} registration`,
-          message: `Role: ${role}`,
+          role,
+          first_name: first,
+          last_name: last,
+          company: (fd.get("company") as string) ?? "",
+          email: (fd.get("email") as string) ?? "",
+          phone: (fd.get("phone") as string) ?? "",
+          password,
+          agreed,
         }),
       });
       if (!res.ok) {
@@ -48,9 +63,12 @@ export default function ListWithUsPage() {
     return (
       <div className="min-h-screen bg-navy flex items-center justify-center px-4">
         <div className="bg-white p-12 max-w-md w-full text-center shadow-xl">
-          <p className="font-display font-light text-navy text-section-lg mb-3">Thanks — we'll be in touch.</p>
+          <p className="font-display font-light text-navy text-section-lg mb-3">Account created — pending review.</p>
+          <p className="font-sans text-body-md text-ink/60 mb-3">
+            Thanks for applying to list with Off The Plan. We&apos;ve received your application and will review it within one business day.
+          </p>
           <p className="font-sans text-body-md text-ink/60 mb-8">
-            We've received your enquiry and will reach out within one business day.
+            You&apos;ll receive an email once your account is approved, after which you can sign in and start listing.
           </p>
           <Link href="/" className="btn-primary inline-block">Back to home</Link>
         </div>
@@ -132,6 +150,27 @@ export default function ListWithUsPage() {
               type="email"
               placeholder="Email"
               required
+              className="border border-line px-3 py-2.5 font-sans text-body-md outline-none focus:border-orange/60 w-full"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <input
+              name="password"
+              type="password"
+              placeholder="New Password"
+              required
+              minLength={8}
+              autoComplete="new-password"
+              className="border border-line px-3 py-2.5 font-sans text-body-md outline-none focus:border-orange/60 w-full"
+            />
+            <input
+              name="confirm_password"
+              type="password"
+              placeholder="Confirm Password"
+              required
+              minLength={8}
+              autoComplete="new-password"
               className="border border-line px-3 py-2.5 font-sans text-body-md outline-none focus:border-orange/60 w-full"
             />
           </div>
