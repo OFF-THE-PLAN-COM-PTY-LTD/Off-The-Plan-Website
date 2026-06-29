@@ -54,10 +54,17 @@ export async function POST(req: Request) {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       { auth: { persistSession: false } },
     );
+    // emailRedirectTo: send the user to a branded "Email confirmed, pending
+    // review" page after Supabase verifies their token. Without this they'd
+    // land on the home page with no feedback that confirmation worked.
+    const origin = new URL(req.url).origin;
     const { data: created, error: createErr } = await publicSupabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: fullName } },
+      options: {
+        data: { full_name: fullName },
+        emailRedirectTo: `${origin}/auth/email-confirmed`,
+      },
     });
     if (createErr) {
       console.error("register-as-developer signUp error:", createErr);
