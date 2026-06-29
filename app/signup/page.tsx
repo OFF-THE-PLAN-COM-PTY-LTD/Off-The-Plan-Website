@@ -8,7 +8,21 @@ export default function SignupPage({ searchParams }: { searchParams: { error?: s
     <div className="min-h-screen bg-cream flex items-center justify-center px-4 pt-16">
       <div className="w-full max-w-sm">
         <h1 className="font-display font-light text-navy text-section-lg mb-2">Create account</h1>
-        <p className="font-sans text-body-md text-ink/60 mb-8">Join the Off The Plan member community.</p>
+        <p className="font-sans text-body-md text-ink/60 mb-5">Join the Off The Plan member community as a buyer.</p>
+
+        {/* Developer/Agent path — surfaced BEFORE the form so users on the
+            wrong page can switch tracks without filling in buyer fields. */}
+        <div className="bg-cream-alt border border-line px-4 py-3 mb-7 flex items-start gap-3">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-orange flex-shrink-0 mt-0.5" aria-hidden="true">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+          </svg>
+          <p className="font-sans text-body-md text-ink/75 leading-snug">
+            Listing a project as a developer or agent?{" "}
+            <Link href="/list-a-listing" className="text-orange hover:underline font-medium">
+              Apply to list with us →
+            </Link>
+          </p>
+        </div>
 
         {searchParams.error && (
           <p className="mb-4 font-sans text-body-md text-red-600 bg-red-50 border border-red-200 px-3 py-2.5">
