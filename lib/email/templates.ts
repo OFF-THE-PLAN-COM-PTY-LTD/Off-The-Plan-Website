@@ -340,3 +340,63 @@ export function mediaKitRequestTemplate(args: MediaKitRequestArgs) {
   ].filter(Boolean).join("\n");
   return { subject, html, text };
 }
+
+// ──────────────────────────────────────────────────────────────────────
+// Account approved / rejected — sent when admin changes member_status
+// on the /admin/members page. Closes the loop for the applicant who
+// confirmed their email then sat in the review queue.
+// ──────────────────────────────────────────────────────────────────────
+
+export function accountApprovedTemplate(args: { full_name: string }) {
+  const subject = `You're approved — welcome to Off The Plan`;
+  const portalUrl = `${SITE_URL}/portal`;
+  const loginUrl = `${SITE_URL}/login`;
+  const html = shell(`
+    <h2 style="margin:0 0 16px;font-size:18px;font-weight:600;color:${PRIMARY};">
+      Welcome aboard, ${escapeHtml(args.full_name.split(" ")[0] || "there")}.
+    </h2>
+    <p style="margin:0 0 14px;">Great news — your Off The Plan account has been approved. You can now sign in and start setting up your developer profile and listings.</p>
+    <p style="margin:24px 0;text-align:center;">
+      <a href="${loginUrl}" style="background:${ACCENT};color:#ffffff;text-decoration:none;font-weight:600;padding:12px 28px;display:inline-block;letter-spacing:0.05em;">Sign in to your account</a>
+    </p>
+    <p style="margin:0 0 14px;font-size:13px;">Once signed in, head to <a href="${portalUrl}" style="color:${ACCENT};">your dashboard</a> to upload your logo, fill in your developer profile, and add your first listing.</p>
+    <p style="margin:24px 0 0;font-size:12px;color:#7a7a7a;">If you have any questions, just reply to this email — we'll be in touch.</p>
+  `);
+  const text = [
+    `Welcome aboard, ${args.full_name.split(" ")[0] || "there"}.`,
+    ``,
+    `Great news — your Off The Plan account has been approved. You can now sign in and start setting up your developer profile and listings.`,
+    ``,
+    `Sign in: ${loginUrl}`,
+    `Dashboard: ${portalUrl}`,
+    ``,
+    `If you have any questions, just reply to this email.`,
+  ].join("\n");
+  return { subject, html, text };
+}
+
+export function accountRejectedTemplate(args: { full_name: string }) {
+  const subject = `Update on your Off The Plan application`;
+  const html = shell(`
+    <h2 style="margin:0 0 16px;font-size:18px;font-weight:600;color:${PRIMARY};">
+      Update on your application
+    </h2>
+    <p style="margin:0 0 14px;">Hi ${escapeHtml(args.full_name.split(" ")[0] || "there")},</p>
+    <p style="margin:0 0 14px;">Thanks for your interest in listing with Off The Plan. After reviewing your application, we&apos;re unable to approve your account at this time.</p>
+    <p style="margin:0 0 14px;">If you believe this is in error, or you&apos;d like to discuss further, please reply to this email and our team will be in touch.</p>
+    <p style="margin:24px 0 0;font-size:12px;color:#7a7a7a;">Kind regards,<br>The Off The Plan team</p>
+  `);
+  const text = [
+    `Update on your application`,
+    ``,
+    `Hi ${args.full_name.split(" ")[0] || "there"},`,
+    ``,
+    `Thanks for your interest in listing with Off The Plan. After reviewing your application, we're unable to approve your account at this time.`,
+    ``,
+    `If you believe this is in error, or you'd like to discuss further, please reply to this email and our team will be in touch.`,
+    ``,
+    `Kind regards,`,
+    `The Off The Plan team`,
+  ].join("\n");
+  return { subject, html, text };
+}
