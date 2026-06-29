@@ -37,7 +37,7 @@ export default function ForgotPassword() {
           onClick={() => setOpen(true)}
           className="font-sans text-body-md text-ink/50 hover:text-orange hover:underline"
         >
-          Forgot password?
+          Forgot Your Password?
         </button>
       </div>
     );

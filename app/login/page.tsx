@@ -49,8 +49,8 @@ export default function LoginPage({ searchParams }: { searchParams: { redirect?:
         <ForgotPassword />
 
         <p className="font-sans text-body-md text-ink/50 mt-6 text-center">
-          Listing a project?{" "}
-          <Link href="/list-a-listing" className="text-orange hover:underline">Apply to list with us</Link>
+          Don&apos;t have an account?{" "}
+          <Link href="/list-a-listing" className="text-orange hover:underline">Sign up</Link>
         </p>
       </div>
     </div>
