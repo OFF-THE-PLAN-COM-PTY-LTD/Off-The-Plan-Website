@@ -59,14 +59,23 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function MakeChanges({ saving, saved }: { saving: boolean; saved: boolean }) {
+function MakeChanges({ saving, saved, dirty }: { saving: boolean; saved: boolean; dirty: boolean }) {
+  // Button greys out when nothing has been edited so re-clicking on an
+  // unchanged form doesn't trigger a useless save + "Saved successfully"
+  // flash. Active once any field in the section differs from the last
+  // saved snapshot. Hover-class only applied when actionable.
+  const disabled = saving || !dirty;
   return (
     <div className="flex items-center justify-end gap-3 mt-4">
       {saved && <span className="font-sans text-xs text-green-600">Saved successfully.</span>}
       <button
         type="submit"
-        disabled={saving}
-        className="font-mono text-[10px] uppercase tracking-widest px-5 py-2 border border-orange text-orange hover:bg-orange hover:text-white transition-colors disabled:opacity-50"
+        disabled={disabled}
+        className={`font-mono text-[10px] uppercase tracking-widest px-5 py-2 border transition-colors ${
+          disabled
+            ? "border-line text-ink/30 cursor-not-allowed"
+            : "border-orange text-orange hover:bg-orange hover:text-white"
+        }`}
       >
         {saving ? "Saving…" : "Make Changes"}
       </button>
@@ -406,7 +415,82 @@ export function ManageProfileForm({
   const [socialSaving, setSocialSaving] = useState(false);
   const [socialSaved, setSocialSaved] = useState(false);
 
-  async function saveSection(fields: Record<string, string | null>, setSaving: (v: boolean) => void, setSaved: (v: boolean) => void) {
+  // Snapshots of the last-saved values per section. Comparing the live
+  // state to the snapshot tells us whether anything is "dirty" — used to
+  // grey out the Make Changes button when there's nothing to save. After
+  // a successful save we replace the snapshot so the button greys out
+  // again until the next edit.
+  const personalSnapshot = useRef({
+    firstName: profile.first_name ?? "",
+    lastName: profile.last_name ?? "",
+    phone: profile.phone ?? "",
+    street: profile.street_address ?? "",
+    street2: profile.street_address_2 ?? "",
+    country: profile.country ?? "",
+    state: profile.state ?? "",
+    city: profile.city ?? "",
+    postcode: profile.postcode ?? "",
+  });
+  const companySnapshot = useRef({
+    businessName: profile.business_name ?? "",
+    abn: profile.abn ?? "",
+    about: profile.about ?? "",
+    companyEmail: profile.company_email ?? "",
+    companyPhone: profile.company_phone ?? "",
+    companyStreet: profile.company_street ?? "",
+    companyStreet2: profile.company_street_2 ?? "",
+    companyCountry: profile.company_country ?? "",
+    companyState: profile.company_state ?? "",
+    companyCity: profile.company_city ?? "",
+    companyPostcode: profile.company_postcode ?? "",
+  });
+  const socialSnapshot = useRef({
+    facebook: profile.facebook ?? "",
+    instagram: profile.instagram ?? "",
+    linkedin: profile.linkedin ?? "",
+    pinterest: profile.pinterest ?? "",
+    youtube: profile.youtube ?? "",
+    website: profile.website ?? "",
+  });
+
+  const personalDirty =
+    firstName !== personalSnapshot.current.firstName ||
+    lastName !== personalSnapshot.current.lastName ||
+    phone !== personalSnapshot.current.phone ||
+    street !== personalSnapshot.current.street ||
+    street2 !== personalSnapshot.current.street2 ||
+    country !== personalSnapshot.current.country ||
+    state !== personalSnapshot.current.state ||
+    city !== personalSnapshot.current.city ||
+    postcode !== personalSnapshot.current.postcode;
+
+  const companyDirty =
+    businessName !== companySnapshot.current.businessName ||
+    abn !== companySnapshot.current.abn ||
+    about !== companySnapshot.current.about ||
+    companyEmail !== companySnapshot.current.companyEmail ||
+    companyPhone !== companySnapshot.current.companyPhone ||
+    companyStreet !== companySnapshot.current.companyStreet ||
+    companyStreet2 !== companySnapshot.current.companyStreet2 ||
+    companyCountry !== companySnapshot.current.companyCountry ||
+    companyState !== companySnapshot.current.companyState ||
+    companyCity !== companySnapshot.current.companyCity ||
+    companyPostcode !== companySnapshot.current.companyPostcode;
+
+  const socialDirty =
+    facebook !== socialSnapshot.current.facebook ||
+    instagram !== socialSnapshot.current.instagram ||
+    linkedin !== socialSnapshot.current.linkedin ||
+    pinterest !== socialSnapshot.current.pinterest ||
+    youtube !== socialSnapshot.current.youtube ||
+    website !== socialSnapshot.current.website;
+
+  async function saveSection(
+    fields: Record<string, string | null>,
+    setSaving: (v: boolean) => void,
+    setSaved: (v: boolean) => void,
+    onSuccess?: () => void,
+  ) {
     setSaving(true);
     const res = await fetch("/api/portal/profile", {
       method: "PATCH",
@@ -417,6 +501,7 @@ export function ManageProfileForm({
     if (res.ok) {
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
+      onSuccess?.();
     }
   }
 
@@ -425,6 +510,7 @@ export function ManageProfileForm({
     saveSection(
       { first_name: firstName, last_name: lastName, phone, street_address: street, street_address_2: street2, country, state, city, postcode },
       setPersonalSaving, setPersonalSaved,
+      () => { personalSnapshot.current = { firstName, lastName, phone, street, street2, country, state, city, postcode }; },
     );
   }
 
@@ -433,6 +519,7 @@ export function ManageProfileForm({
     saveSection(
       { business_name: businessName, abn, about, company_email: companyEmail, company_phone: companyPhone, company_street: companyStreet, company_street_2: companyStreet2, company_country: companyCountry, company_state: companyState, company_city: companyCity, company_postcode: companyPostcode },
       setCompanySaving, setCompanySaved,
+      () => { companySnapshot.current = { businessName, abn, about, companyEmail, companyPhone, companyStreet, companyStreet2, companyCountry, companyState, companyCity, companyPostcode }; },
     );
   }
 
@@ -441,6 +528,7 @@ export function ManageProfileForm({
     saveSection(
       { facebook, instagram, linkedin, pinterest, youtube, website },
       setSocialSaving, setSocialSaved,
+      () => { socialSnapshot.current = { facebook, instagram, linkedin, pinterest, youtube, website }; },
     );
   }
 
@@ -492,7 +580,7 @@ export function ManageProfileForm({
             <Field label="City"><input value={city} onChange={(e) => setCity(e.target.value)} className={inp} /></Field>
             <Field label="PostCode"><input value={postcode} onChange={(e) => setPostcode(e.target.value)} className={inp} /></Field>
           </Row2>
-          <MakeChanges saving={personalSaving} saved={personalSaved} />
+          <MakeChanges saving={personalSaving} saved={personalSaved} dirty={personalDirty} />
         </form>
       </div>
 
@@ -535,7 +623,7 @@ export function ManageProfileForm({
             <Field label="City"><input value={companyCity} onChange={(e) => setCompanyCity(e.target.value)} className={inp} /></Field>
             <Field label="PostCode"><input value={companyPostcode} onChange={(e) => setCompanyPostcode(e.target.value)} className={inp} /></Field>
           </Row2>
-          <MakeChanges saving={companySaving} saved={companySaved} />
+          <MakeChanges saving={companySaving} saved={companySaved} dirty={companyDirty} />
         </form>
       </div>
 
@@ -555,7 +643,7 @@ export function ManageProfileForm({
           <SocialRow field="pinterest" label="Pinterest" value={pinterest} onChange={setPinterest} />
           <SocialRow field="youtube"   label="Youtube"   value={youtube}   onChange={setYoutube} />
           <SocialRow field="website"   label="Website"   value={website}   onChange={setWebsite} />
-          <MakeChanges saving={socialSaving} saved={socialSaved} />
+          <MakeChanges saving={socialSaving} saved={socialSaved} dirty={socialDirty} />
         </form>
       </div>
 
