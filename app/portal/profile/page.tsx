@@ -57,6 +57,7 @@ export default async function PortalProfile() {
           city: (profile?.city as string) ?? null,
           postcode: (profile?.postcode as string) ?? null,
           business_name: (profile?.business_name as string) ?? null,
+          abn: (profile?.abn as string) ?? null,
           about: (profile?.about as string) ?? null,
           company_email: (profile?.company_email as string) ?? null,
           company_phone: (profile?.company_phone as string) ?? null,

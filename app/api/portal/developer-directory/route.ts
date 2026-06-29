@@ -44,7 +44,7 @@ export async function POST(req: Request) {
     // directory entry. business_name etc. drive the public row.
     const { data: profile } = await supabaseAdmin
       .from("profiles")
-      .select("interest_type, business_name, about, developer_logo_url, company_logo_url, company_state, state, website")
+      .select("interest_type, business_name, abn, about, developer_logo_url, company_logo_url, company_state, state, website")
       .eq("id", user.id)
       .maybeSingle();
 
@@ -63,6 +63,7 @@ export async function POST(req: Request) {
     const synced = {
       name: (profile.business_name as string) || "Unnamed developer",
       description: (profile.about as string) || null,
+      abn: (profile.abn as string) || null,
       logo_url: (profile.developer_logo_url as string) || (profile.company_logo_url as string) || null,
       website: (profile.website as string) || null,
       state: (profile.company_state as string) || (profile.state as string) || null,

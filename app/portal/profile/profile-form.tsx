@@ -19,6 +19,7 @@ interface ProfileData {
   city: string | null;
   postcode: string | null;
   business_name: string | null;
+  abn: string | null;
   about: string | null;
   company_email: string | null;
   company_phone: string | null;
@@ -382,6 +383,7 @@ export function ManageProfileForm({
 
   // Company details state
   const [businessName, setBusinessName] = useState(profile.business_name ?? "");
+  const [abn, setAbn] = useState(profile.abn ?? "");
   const [about, setAbout] = useState(profile.about ?? "");
   const [companyEmail, setCompanyEmail] = useState(profile.company_email ?? "");
   const [companyPhone, setCompanyPhone] = useState(profile.company_phone ?? "");
@@ -429,7 +431,7 @@ export function ManageProfileForm({
   function handleCompany(e: React.FormEvent) {
     e.preventDefault();
     saveSection(
-      { business_name: businessName, about, company_email: companyEmail, company_phone: companyPhone, company_street: companyStreet, company_street_2: companyStreet2, company_country: companyCountry, company_state: companyState, company_city: companyCity, company_postcode: companyPostcode },
+      { business_name: businessName, abn, about, company_email: companyEmail, company_phone: companyPhone, company_street: companyStreet, company_street_2: companyStreet2, company_country: companyCountry, company_state: companyState, company_city: companyCity, company_postcode: companyPostcode },
       setCompanySaving, setCompanySaved,
     );
   }
@@ -498,7 +500,10 @@ export function ManageProfileForm({
       <div className="bg-white border border-[#dde1e9] border-t-0">
         <SectionHeader title="Company Details" />
         <form onSubmit={handleCompany} className="px-5 py-5 flex flex-col gap-4">
-          <Field label="Business Name"><input value={businessName} onChange={(e) => setBusinessName(e.target.value)} className={inp} /></Field>
+          <Row2>
+            <Field label="Business Name"><input value={businessName} onChange={(e) => setBusinessName(e.target.value)} className={inp} /></Field>
+            <Field label="ABN"><input value={abn} onChange={(e) => setAbn(e.target.value)} placeholder="11 222 333 444" className={inp} /></Field>
+          </Row2>
           <Field label="About"><textarea value={about} onChange={(e) => setAbout(e.target.value)} rows={3} className={inp + " resize-none"} /></Field>
           <Row2>
             <Field label="Email Address (if different from above)">

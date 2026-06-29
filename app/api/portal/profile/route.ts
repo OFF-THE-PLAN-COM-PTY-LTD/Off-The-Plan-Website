@@ -5,7 +5,7 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 const ALLOWED_FIELDS = new Set([
   "first_name", "last_name", "phone",
   "street_address", "street_address_2", "country", "state", "city", "postcode",
-  "business_name", "about",
+  "business_name", "abn", "about",
   "company_email", "company_phone",
   "company_street", "company_street_2", "company_country", "company_state", "company_city", "company_postcode",
   "facebook", "instagram", "linkedin", "pinterest", "youtube", "website",
