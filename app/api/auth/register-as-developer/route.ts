@@ -60,10 +60,23 @@ export async function POST(req: Request) {
       options: { data: { full_name: fullName } },
     });
     if (createErr) {
-      // Common case: user already registered. Don't leak which — just say
-      // we couldn't create the account.
       console.error("register-as-developer signUp error:", createErr);
-      return NextResponse.json({ error: "Could not create your account. The email may already be registered." }, { status: 400 });
+      // Surface a specific message for known failure modes rather than the
+      // catch-all "email already registered" — that lazy default cost us
+      // real debugging time when Supabase SMTP was misconfigured and the
+      // actual error was "Error sending confirmation email".
+      const msg = (createErr.message || "").toLowerCase();
+      let friendly: string;
+      if (msg.includes("already registered") || msg.includes("user already")) {
+        friendly = "An account with this email already exists. Try signing in instead.";
+      } else if (msg.includes("password") && msg.includes("short")) {
+        friendly = "Password is too short. Please use at least 8 characters.";
+      } else if (msg.includes("sending confirmation") || msg.includes("send email")) {
+        friendly = "Your account couldn't be created because we couldn't send the confirmation email. The team has been notified — please try again shortly.";
+      } else {
+        friendly = `Could not create your account: ${createErr.message || "unknown error"}.`;
+      }
+      return NextResponse.json({ error: friendly }, { status: 400 });
     }
     const userId = created.user?.id;
     if (!userId) {
