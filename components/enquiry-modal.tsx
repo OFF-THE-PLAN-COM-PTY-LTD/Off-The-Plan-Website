@@ -332,7 +332,7 @@ export function EnquiryModal({
                     Privacy Policy
                   </a>{" "}
                   or{" "}
-                  <a href="/terms" target="_blank" className="text-orange hover:underline">
+                  <a href="/terms-and-conditions.pdf" target="_blank" rel="noopener" className="text-orange hover:underline">
                     Terms &amp; Conditions
                   </a>
                 </p>

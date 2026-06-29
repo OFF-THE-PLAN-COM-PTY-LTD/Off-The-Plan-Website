@@ -269,7 +269,7 @@ export function Footer() {
             <span>|</span>
             <Link href="/privacy" className="hover:text-ink-light/60 transition-colors uppercase tracking-widest">Privacy Policy</Link>
             <span>|</span>
-            <Link href="/terms" className="hover:text-ink-light/60 transition-colors uppercase tracking-widest">Terms & Conditions</Link>
+            <a href="/terms-and-conditions.pdf" target="_blank" rel="noopener" className="hover:text-ink-light/60 transition-colors uppercase tracking-widest">Terms & Conditions</a>
           </div>
           <p className="font-brand text-xs font-medium text-ink-light/50 uppercase tracking-[0.18em]">
             Copyright {new Date().getFullYear()}

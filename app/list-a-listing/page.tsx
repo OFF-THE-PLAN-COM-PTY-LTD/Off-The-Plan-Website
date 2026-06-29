@@ -192,17 +192,17 @@ export default function ListWithUsPage() {
             />
             <label htmlFor="agree" className="font-sans text-body-md text-ink/70 cursor-pointer">
               I agree with{" "}
-              <Link href="/terms" className="text-orange hover:underline">
+              <a href="/terms-and-conditions.pdf" target="_blank" rel="noopener" className="text-orange hover:underline">
                 terms and conditions
-              </Link>
+              </a>
             </label>
           </div>
 
           {/* Actions row */}
           <div className="flex items-center justify-between mt-2">
-            <Link href="/terms" className="font-sans text-body-md text-ink/50 hover:text-orange transition-colors">
+            <a href="/terms-and-conditions.pdf" target="_blank" rel="noopener" className="font-sans text-body-md text-ink/50 hover:text-orange transition-colors">
               Terms and conditions *
-            </Link>
+            </a>
             <button
               type="submit"
               disabled={!agreed || submitting}
