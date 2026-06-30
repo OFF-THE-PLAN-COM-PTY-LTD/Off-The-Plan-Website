@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/supabase/auth-guards";
+import { sendEmail } from "@/lib/email/send";
+import { accountApprovedTemplate, accountRejectedTemplate } from "@/lib/email/templates";
 
 async function findAuthUserIdByEmail(email: string): Promise<string | null> {
   const target = email.toLowerCase();
@@ -12,6 +14,44 @@ async function findAuthUserIdByEmail(email: string): Promise<string | null> {
     if (data.users.length < 200) break;
   }
   return null;
+}
+
+/**
+ * When an agency's portal_status changes, mirror it onto the linked
+ * profiles.member_status (the login gate) and, on the initial
+ * pending → approved/rejected transition only, email the applicant.
+ *
+ * Best-effort: caller wraps this in try/catch — failures here must not
+ * break the admin save. Returns nothing.
+ */
+async function syncProfileStatusForAgency(agencyId: string, newPortalStatus: string) {
+  const { data: agency } = await supabaseAdmin
+    .from("agencies").select("email, name").eq("id", agencyId).single();
+  if (!agency?.email) return;
+
+  const authUserId = await findAuthUserIdByEmail(agency.email);
+  if (!authUserId) return;
+
+  const newMemberStatus =
+    newPortalStatus === "active" ? "approved"
+    : newPortalStatus === "inactive" ? "rejected"
+    : "pending";
+
+  const { data: prev } = await supabaseAdmin
+    .from("profiles").select("member_status").eq("id", authUserId).maybeSingle();
+
+  await supabaseAdmin
+    .from("profiles").update({ member_status: newMemberStatus }).eq("id", authUserId);
+
+  // Only email on the initial pending → approved/rejected transition.
+  // No mail on active↔inactive flips (already-approved users), and none
+  // on rejected→approved reactivation (admin chose to do that quietly).
+  if (prev?.member_status === "pending" && newMemberStatus !== "pending") {
+    const tmpl = newMemberStatus === "approved"
+      ? accountApprovedTemplate({ full_name: agency.name ?? "there" })
+      : accountRejectedTemplate({ full_name: agency.name ?? "there" });
+    await sendEmail({ to: agency.email, ...tmpl });
+  }
 }
 
 export async function PATCH(req: Request) {
@@ -85,59 +125,12 @@ export async function PATCH(req: Request) {
     const { error } = await supabaseAdmin.from("agencies").update(update).eq("id", id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-    // If portal_status changed, mirror it onto profiles.member_status (the
-    // login gate) and email the applicant. Best-effort — failures here
-    // don't break the admin save.
+    // If portal_status changed, mirror it onto profiles.member_status and
+    // email the applicant on the initial approve/reject transition. Best-
+    // effort — failures here don't break the admin save.
     if ("portal_status" in fields) {
       try {
-        const { data: agency } = await supabaseAdmin
-          .from("agencies")
-          .select("email, name")
-          .eq("id", id)
-          .single();
-        if (agency?.email) {
-          // Find linked auth user by email.
-          let authUserId: string | null = null;
-          for (let page = 1; page <= 50; page++) {
-            const { data } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 200 });
-            const hit = data?.users.find((u) => u.email?.toLowerCase() === agency.email.toLowerCase());
-            if (hit) { authUserId = hit.id; break; }
-            if (!data || data.users.length < 200) break;
-          }
-
-          if (authUserId) {
-            const newMemberStatus =
-              fields.portal_status === "active" ? "approved"
-              : fields.portal_status === "inactive" ? "rejected"
-              : "pending";
-
-            const { data: prevProfile } = await supabaseAdmin
-              .from("profiles")
-              .select("member_status")
-              .eq("id", authUserId)
-              .single();
-            const prevStatus = prevProfile?.member_status ?? null;
-
-            await supabaseAdmin
-              .from("profiles")
-              .update({ member_status: newMemberStatus })
-              .eq("id", authUserId);
-
-            // Only email if the status actually changed and we're moving in/out
-            // of pending (no email on active <-> inactive flips, which is just
-            // a portal toggle for already-approved users).
-            const transitioningFromPending = prevStatus === "pending";
-            if (transitioningFromPending && newMemberStatus !== "pending") {
-              const { accountApprovedTemplate, accountRejectedTemplate } =
-                await import("@/lib/email/templates");
-              const { sendEmail } = await import("@/lib/email/send");
-              const tmpl = newMemberStatus === "approved"
-                ? accountApprovedTemplate({ full_name: agency.name ?? "there" })
-                : accountRejectedTemplate({ full_name: agency.name ?? "there" });
-              await sendEmail({ to: agency.email, ...tmpl });
-            }
-          }
-        }
+        await syncProfileStatusForAgency(id, fields.portal_status);
       } catch (e) {
         console.error("Profile sync / approval email (non-fatal):", e);
       }
