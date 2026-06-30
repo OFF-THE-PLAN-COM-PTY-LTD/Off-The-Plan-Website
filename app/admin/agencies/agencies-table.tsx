@@ -40,7 +40,7 @@ type StatusKey = "pending" | "active" | "inactive" | "all";
 
 interface Props {
   agencies: Agency[];
-  activeStatus: string;
+  activeStatus: StatusKey;
   counts: Record<StatusKey, number>;
 }
 
@@ -52,7 +52,7 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
   const [emailFilter, setEmailFilter] = useState<EmailFilter>("all");
 
   // Confirm modal state
-  const [modal, setModal] = useState<{ agency: Agency; action: "deactivate" | "activate" } | null>(null);
+  const [modal, setModal] = useState<{ agency: Agency; action: "deactivate" | "activate" | "reject" } | null>(null);
   const [confirmText, setConfirmText] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -86,24 +86,8 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
     }
   }
 
-  async function handleReject(agency: Agency) {
-    if (!confirm(`Reject ${agency.name ?? agency.email}? They'll receive a decline email.`)) return;
-    setApprovingId(agency.id);
-    try {
-      const res = await fetch("/api/admin/agencies", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: agency.id, portal_status: "inactive" }),
-      });
-      if (!res.ok) {
-        const j = await res.json().catch(() => ({}));
-        alert(j.error ?? "Rejection failed.");
-        return;
-      }
-      startTransition(() => router.refresh());
-    } finally {
-      setApprovingId(null);
-    }
+  function handleReject(agency: Agency) {
+    openRejectModal(agency);
   }
 
   // Set-password modal state
@@ -244,6 +228,11 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
     setConfirmText("");
   }
 
+  function openRejectModal(agency: Agency) {
+    setModal({ agency, action: "reject" });
+    setConfirmText("");
+  }
+
   function closeModal() {
     setModal(null);
     setConfirmText("");
@@ -251,17 +240,22 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
 
   async function handleConfirm() {
     if (!modal) return;
-    const expected = modal.action === "deactivate" ? "DEACTIVATE" : "ACTIVATE";
+    const expected =
+      modal.action === "deactivate" ? "DEACTIVATE"
+      : modal.action === "activate" ? "ACTIVATE"
+      : "REJECT";
     if (confirmText !== expected) return;
 
     setSaving(true);
     try {
+      const targetStatus =
+        modal.action === "deactivate" || modal.action === "reject" ? "inactive" : "active";
       const res = await fetch("/api/admin/agencies", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id: modal.agency.id,
-          portal_status: modal.action === "deactivate" ? "inactive" : "active",
+          portal_status: targetStatus,
         }),
       });
       if (!res.ok) throw new Error("Failed");
@@ -274,7 +268,11 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
     }
   }
 
-  const expected = modal?.action === "deactivate" ? "DEACTIVATE" : "ACTIVATE";
+  const expected =
+    modal?.action === "deactivate" ? "DEACTIVATE"
+    : modal?.action === "activate" ? "ACTIVATE"
+    : modal?.action === "reject" ? "REJECT"
+    : "";
 
   return (
     <>
@@ -283,7 +281,7 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
         {(["pending", "active", "inactive", "all"] as StatusKey[]).map((key) => {
           const label = key === "all" ? "All" : key.charAt(0).toUpperCase() + key.slice(1);
           const href = key === "all" ? "/admin/agencies" : `/admin/agencies?status=${key}`;
-          const isActive = activeStatus === key || (activeStatus === "all" && key === "all");
+          const isActive = activeStatus === key;
           return (
             <a
               key={key}
@@ -500,12 +498,16 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-white border border-line w-full max-w-md p-6 shadow-lg">
             <h2 className="font-display font-semibold text-navy text-lg mb-1">
-              {modal.action === "deactivate" ? "Deactivate Portal" : "Activate Portal"}
+              {modal.action === "deactivate" ? "Deactivate Portal"
+                : modal.action === "activate" ? "Activate Portal"
+                : "Reject Application"}
             </h2>
             <p className="font-sans text-sm text-ink/60 mb-4">
               {modal.action === "deactivate"
                 ? `This will deactivate the portal for ${modal.agency.name ?? modal.agency.email}. They will lose access until reactivated.`
-                : `This will reactivate the portal for ${modal.agency.name ?? modal.agency.email}.`}
+                : modal.action === "activate"
+                ? `This will reactivate the portal for ${modal.agency.name ?? modal.agency.email}.`
+                : `This will reject ${modal.agency.name ?? modal.agency.email}'s application. They will receive a decline email and will not be able to sign in.`}
             </p>
             <p className="font-sans text-sm text-ink mb-2">
               Type <span className="font-mono font-bold">{expected}</span> to confirm:
@@ -531,7 +533,7 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
                 disabled={confirmText !== expected || saving}
                 className="font-sans text-sm px-4 py-2 bg-black text-white font-semibold disabled:opacity-40 hover:bg-ink/80 transition-colors"
               >
-                {saving ? "Saving..." : modal.action === "deactivate" ? "Deactivate" : "Activate"}
+                {saving ? "Saving..." : modal.action === "deactivate" ? "Deactivate" : modal.action === "activate" ? "Activate" : "Reject"}
               </button>
             </div>
           </div>

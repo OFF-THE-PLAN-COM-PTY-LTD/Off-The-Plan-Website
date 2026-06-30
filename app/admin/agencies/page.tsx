@@ -8,13 +8,19 @@ interface Props {
 }
 
 export default async function AdminAgenciesPage({ searchParams }: Props) {
-  const status = searchParams.status ?? "all";
+  const VALID_STATUSES = ["pending", "active", "inactive", "all"] as const;
+  type StatusKey = typeof VALID_STATUSES[number];
+
+  const rawStatus = searchParams.status ?? "all";
+  const status: StatusKey = (VALID_STATUSES as readonly string[]).includes(rawStatus)
+    ? (rawStatus as StatusKey)
+    : "all";
 
   let q = supabaseAdmin
     .from("agencies")
     .select("id, name, email, org_name, mobile, total_active_listings, email_verified, portal_status")
     .order("name", { ascending: true });
-  if (status !== "all" && ["pending", "active", "inactive"].includes(status)) {
+  if (status !== "all") {
     q = q.eq("portal_status", status);
   }
 
