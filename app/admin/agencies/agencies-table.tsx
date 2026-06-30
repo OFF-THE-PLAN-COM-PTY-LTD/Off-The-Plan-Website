@@ -11,7 +11,7 @@ type Agency = {
   mobile: string | null;
   total_active_listings: number;
   email_verified: boolean;
-  portal_status: "active" | "inactive";
+  portal_status: "active" | "inactive" | "pending";
 };
 
 type EmailFilter = "all" | "verified" | "unverified";
@@ -36,7 +36,15 @@ function suggestedPassword(name: string | null | undefined): string {
   return `${mm}_${transformed || "user"}_${yy}`;
 }
 
-export default function AgenciesTable({ agencies }: { agencies: Agency[] }) {
+type StatusKey = "pending" | "active" | "inactive" | "all";
+
+interface Props {
+  agencies: Agency[];
+  activeStatus: string;
+  counts: Record<StatusKey, number>;
+}
+
+export default function AgenciesTable({ agencies, activeStatus, counts }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -56,6 +64,47 @@ export default function AgenciesTable({ agencies }: { agencies: Agency[] }) {
   const [bulkSending, setBulkSending] = useState(false);
   const [bulkModalOpen, setBulkModalOpen] = useState(false);
   const [bulkConfirmText, setBulkConfirmText] = useState("");
+
+  const [approvingId, setApprovingId] = useState<string | null>(null);
+
+  async function handleApprove(agency: Agency) {
+    setApprovingId(agency.id);
+    try {
+      const res = await fetch("/api/admin/agencies", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: agency.id, portal_status: "active" }),
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        alert(j.error ?? "Approval failed.");
+        return;
+      }
+      startTransition(() => router.refresh());
+    } finally {
+      setApprovingId(null);
+    }
+  }
+
+  async function handleReject(agency: Agency) {
+    if (!confirm(`Reject ${agency.name ?? agency.email}? They'll receive a decline email.`)) return;
+    setApprovingId(agency.id);
+    try {
+      const res = await fetch("/api/admin/agencies", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: agency.id, portal_status: "inactive" }),
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        alert(j.error ?? "Rejection failed.");
+        return;
+      }
+      startTransition(() => router.refresh());
+    } finally {
+      setApprovingId(null);
+    }
+  }
 
   // Set-password modal state
   const [pwModal, setPwModal] = useState<{ agency: Agency } | null>(null);
@@ -229,6 +278,30 @@ export default function AgenciesTable({ agencies }: { agencies: Agency[] }) {
 
   return (
     <>
+      {/* Status filter chips — matches the Members tab pattern */}
+      <div className="flex items-center gap-1 border-b border-line mb-4">
+        {(["pending", "active", "inactive", "all"] as StatusKey[]).map((key) => {
+          const label = key === "all" ? "All" : key.charAt(0).toUpperCase() + key.slice(1);
+          const href = key === "all" ? "/admin/agencies" : `/admin/agencies?status=${key}`;
+          const isActive = activeStatus === key || (activeStatus === "all" && key === "all");
+          return (
+            <a
+              key={key}
+              href={href}
+              className={`font-mono text-[12px] uppercase tracking-widest px-4 py-2 border-b-2 transition-colors flex items-center gap-2 ${
+                isActive ? "border-orange text-ink" : "border-transparent text-ink/50 hover:text-ink"
+              }`}
+            >
+              {label}
+              <span className={`inline-flex items-center justify-center min-w-[18px] h-[16px] px-1 rounded-full text-[9px] font-bold ${
+                isActive ? "bg-orange text-white" : "bg-ink/10 text-ink/60"
+              }`}>
+                {counts[key]}
+              </span>
+            </a>
+          );
+        })}
+      </div>
       {/* Filter bar */}
       <div className="flex flex-wrap items-center gap-4 mb-6">
         <input
@@ -330,9 +403,11 @@ export default function AgenciesTable({ agencies }: { agencies: Agency[] }) {
                   <span className={`inline-block font-mono text-[10px] uppercase tracking-wider px-2 py-0.5 border ${
                     a.portal_status === "active"
                       ? "border-green-500 text-green-800"
+                      : a.portal_status === "pending"
+                      ? "border-orange text-orange bg-orange/10"
                       : "border-line text-ink"
                   }`}>
-                    {a.portal_status === "active" ? "Active" : "Inactive"}
+                    {a.portal_status === "active" ? "Active" : a.portal_status === "pending" ? "Pending" : "Inactive"}
                   </span>
                 </td>
                 <td className="px-4 py-4">
@@ -379,16 +454,35 @@ export default function AgenciesTable({ agencies }: { agencies: Agency[] }) {
                     >
                       {emailingId === a.id ? "Sending…" : "Email Set-Password Link"}
                     </button>
-                    <button
-                      onClick={() => openModal(a)}
-                      className={`w-full font-mono text-[10px] uppercase tracking-widest px-2 py-1.5 border transition-colors ${
-                        a.portal_status === "active"
-                          ? "border-red-400 text-red-700 hover:bg-red-500 hover:text-white hover:border-red-500"
-                          : "border-green-500 text-green-800 hover:bg-green-500 hover:text-white hover:border-green-500"
-                      }`}
-                    >
-                      {a.portal_status === "active" ? "Deactivate Portal" : "Activate Portal"}
-                    </button>
+                    {a.portal_status === "pending" ? (
+                      <div className="flex gap-1.5">
+                        <button
+                          onClick={() => handleApprove(a)}
+                          disabled={approvingId === a.id}
+                          className="flex-1 font-mono text-[10px] uppercase tracking-widest px-2 py-1.5 bg-green-700 text-white hover:bg-green-800 transition-colors disabled:opacity-50"
+                        >
+                          {approvingId === a.id ? "…" : "Approve"}
+                        </button>
+                        <button
+                          onClick={() => handleReject(a)}
+                          disabled={approvingId === a.id}
+                          className="flex-1 font-mono text-[10px] uppercase tracking-widest px-2 py-1.5 bg-red-700 text-white hover:bg-red-800 transition-colors disabled:opacity-50"
+                        >
+                          {approvingId === a.id ? "…" : "Reject"}
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => openModal(a)}
+                        className={`w-full font-mono text-[10px] uppercase tracking-widest px-2 py-1.5 border transition-colors ${
+                          a.portal_status === "active"
+                            ? "border-red-400 text-red-700 hover:bg-red-500 hover:text-white hover:border-red-500"
+                            : "border-green-500 text-green-800 hover:bg-green-500 hover:text-white hover:border-green-500"
+                        }`}
+                      >
+                        {a.portal_status === "active" ? "Deactivate Portal" : "Activate Portal"}
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>
