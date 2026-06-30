@@ -1,3 +1,9 @@
+// FALLBACK PAGE — as of 2026-06-30 this admin tab is hidden from the
+// sidebar (see app/admin/layout.tsx). The unified flow lives at
+// /admin/agencies, which mirrors approve/reject onto both profiles.member_status
+// AND agencies.portal_status. Approvals done HERE only touch profiles —
+// the agencies row will look "Pending" until someone re-approves on the
+// agencies page (which is safe — the email guard means no duplicate email).
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { MemberActions } from "./member-actions";
 import { MemberRowActions } from "./member-row-actions";
