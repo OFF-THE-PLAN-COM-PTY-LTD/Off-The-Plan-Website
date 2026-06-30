@@ -122,6 +122,23 @@ export async function POST(req: Request) {
       if (res.error) console.error("Lead insert (non-fatal):", res.error);
     });
 
+    // Mirror the new signup into the agencies table so they appear in the
+    // unified /admin/agencies view (with portal_status='pending' until an
+    // admin approves them). Non-fatal — admin can fix in /admin/agencies.
+    const { error: agencyErr } = await supabaseAdmin.from("agencies").insert({
+      name: fullName,
+      first_name,
+      last_name,
+      email,
+      org_name: company || null,
+      mobile: phone || null,
+      email_verified: false,
+      portal_status: "pending",
+    });
+    if (agencyErr) {
+      console.error("register-as-developer agencies insert (non-fatal):", agencyErr);
+    }
+
     // Notify admin + sales of the new application. Reply-To = the applicant.
     await sendEmail({
       to: EMAIL_ADMIN_TO,
