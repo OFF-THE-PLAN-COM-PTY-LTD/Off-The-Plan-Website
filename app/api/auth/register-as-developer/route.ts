@@ -109,7 +109,7 @@ export async function POST(req: Request) {
 
     // Insert into developer_leads so Tim's existing pipeline still shows
     // the application. Non-fatal if it fails.
-    await supabaseAdmin.from("developer_leads").insert({
+    const { error: leadErr } = await supabaseAdmin.from("developer_leads").insert({
       source: "list-a-listing",
       contact_name: fullName,
       email,
@@ -118,9 +118,10 @@ export async function POST(req: Request) {
       subject: `New ${role} application — account created (pending approval)`,
       message: `Auth user: ${userId}\nRole: ${interestType}\nAwaiting admin approval at /admin/members.`,
       notes: `Auth user: ${userId}\nRole: ${interestType}\nAwaiting admin approval.`,
-    }).then((res) => {
-      if (res.error) console.error("Lead insert (non-fatal):", res.error);
     });
+    if (leadErr) {
+      console.error("register-as-developer developer_leads insert (non-fatal):", leadErr);
+    }
 
     // Mirror the new signup into the agencies table so they appear in the
     // unified /admin/agencies view (with portal_status='pending' until an
