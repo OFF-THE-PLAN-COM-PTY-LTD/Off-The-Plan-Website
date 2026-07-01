@@ -14,6 +14,7 @@ Items below were found while walking Tim's I26 test package through the site. Fi
 - 🟠 **Verify vs legacy first** — could be a photocopy behaviour, not a regression. Don't fix until we confirm the legacy admin behaves differently.
 - 🟡 **Real gap** — genuine data-model or UX gap that affects real developers
 - ⚪ **Separate investigation** — not caused by I26 work; needs its own diagnostic
+- 🔵 **Owned by another developer** — not our team to fix; tracked here so it's not forgotten
 
 ---
 
@@ -31,6 +32,7 @@ Items below were found while walking Tim's I26 test package through the site. Fi
 | 8 | 🟡 | **Optional Uploads gap** | Section exists (floor plans, brochure PDF, price list, specifications, 3D tour) but easy for developers to overlook. Real listings would use these. Consider surfacing more prominently or renaming the section. | 30min |
 | 9 | 🟡 | **Property Features preset list missing common items** | Word doc had "storerooms for every residence", "pet-friendly building", "bicycle storage" — none in the preset checklist, all had to use "Add your own." Add these three (and any obvious peers) to the standard preset. | 30min |
 | 10 | ⚪ | **Agencies table row count anomaly** | `agencies` table shows 121 rows on `/admin/agencies`. Legacy site's "All Agency" table had 38 rows (per screenshots). Our import script added those 38; today's backfill added 7 more. That accounts for 45, not 121. Where did the other 76 come from? Possibly duplicates from a legacy signup form, a re-run import, or the legacy site writing to the same DB. Investigate before Tim sees the count. | 30min–2h to diagnose |
+| 11 | 🔵 **Owned by another developer** | **Payment / Billing integration** | `/portal/billing` is a stub — no Stripe or subscription flow wired up. **Not for us** — another developer on the team is responsible for this piece. Included here so it's not forgotten. Skipped during the I26 test (Step 5) and flagged to Tim. | (out of scope for us) |
 
 ---
 
