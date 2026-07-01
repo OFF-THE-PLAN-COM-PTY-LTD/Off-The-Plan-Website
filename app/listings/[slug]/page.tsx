@@ -108,30 +108,37 @@ export default async function DossierPage({ params }: Props) {
       <div className="bg-navy">
         <div className="container-padded py-6 flex flex-col lg:flex-row lg:items-start gap-6">
 
-          {/* Developer logo in white box — links to developer website if available */}
+          {/* Developer logo in white box — links to developer website if available.
+              Same cascade as the Contact Agent header: developer directory logo
+              -> the listing's own project logo -> the developer/portal name text
+              -> a blank fill. Portal-member listings usually only fill the
+              listing-level logo, so falling back to it fixes the blank box. */}
           {(() => {
-            const logoContent = dev.developer?.logo_url ? (
+            const displayLogo = dev.developer?.logo_url ?? dev.logo_url ?? null;
+            const displayName = dev.developer?.name ?? dev.portal_developer_name ?? null;
+            const displayWebsite = dev.developer?.website ?? dev.developer_website ?? null;
+            const logoContent = displayLogo ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={dev.developer.logo_url}
-                alt={dev.developer?.name ?? "Developer"}
+                src={displayLogo}
+                alt={displayName ?? "Developer"}
                 className="w-full h-full object-contain"
               />
-            ) : dev.developer ? (
+            ) : displayName ? (
               <p className="font-mono text-[7.5px] uppercase tracking-[0.2em] text-ink/60 text-center leading-[1.7]">
-                {dev.developer.name}
+                {displayName}
               </p>
             ) : (
               <div className="w-full h-full bg-navy/10" />
             );
             const wrapperClass = "flex-shrink-0 bg-white p-4 w-[110px] h-[110px] flex items-center justify-center";
-            return dev.developer?.website ? (
+            return displayWebsite ? (
               <a
-                href={dev.developer.website}
+                href={displayWebsite}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={wrapperClass + " transition-opacity hover:opacity-80"}
-                aria-label={`Visit ${dev.developer.name ?? "developer"} website`}
+                aria-label={`Visit ${displayName ?? "developer"} website`}
               >
                 {logoContent}
               </a>
