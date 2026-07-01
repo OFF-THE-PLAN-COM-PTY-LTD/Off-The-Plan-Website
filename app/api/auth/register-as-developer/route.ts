@@ -90,8 +90,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Account created but profile setup failed." }, { status: 500 });
     }
 
-    // Update profile with full role + pending status. The profile row is
-    // created by the auth trigger; we update the columns we own.
+    // Update profile with full role. Per Tim (2026-06-30): developer/agent
+    // accounts are auto-approved so applicants can start uploading listings
+    // immediately after confirming their email. Listings themselves still
+    // require admin approval before going live.
     const { error: profileErr } = await supabaseAdmin
       .from("profiles")
       .update({
@@ -99,7 +101,7 @@ export async function POST(req: Request) {
         interest_type: interestType,
         business_name: company || null,
         phone: phone || null,
-        member_status: "pending",
+        member_status: "approved",
       })
       .eq("id", userId);
     if (profileErr) {
@@ -115,17 +117,17 @@ export async function POST(req: Request) {
       email,
       company: company || null,
       phone: phone || null,
-      subject: `New ${role} application — account created (pending approval)`,
-      message: `Auth user: ${userId}\nRole: ${interestType}\nAwaiting admin approval at /admin/members.`,
-      notes: `Auth user: ${userId}\nRole: ${interestType}\nAwaiting admin approval.`,
+      subject: `New ${role} registration — ${fullName}`,
+      message: `Auth user: ${userId}\nRole: ${interestType}\nAuto-approved on signup — can log in as soon as they confirm their email.`,
+      notes: `Auth user: ${userId}\nRole: ${interestType}\nAuto-approved.`,
     });
     if (leadErr) {
       console.error("register-as-developer developer_leads insert (non-fatal):", leadErr);
     }
 
     // Mirror the new signup into the agencies table so they appear in the
-    // unified /admin/agencies view (with portal_status='pending' until an
-    // admin approves them). Non-fatal — admin can fix in /admin/agencies.
+    // unified /admin/agencies view immediately as Active (auto-approved).
+    // Non-fatal — admin can fix in /admin/agencies if this fails.
     const { error: agencyErr } = await supabaseAdmin.from("agencies").insert({
       name: fullName,
       first_name,
@@ -133,28 +135,28 @@ export async function POST(req: Request) {
       email,
       org_name: company || null,
       mobile: phone || null,
-      email_verified: false,
-      portal_status: "pending",
+      email_verified: true,
+      portal_status: "active",
     });
     if (agencyErr) {
       console.error("register-as-developer agencies insert (non-fatal):", agencyErr);
     }
 
-    // Notify admin + sales of the new application. Reply-To = the applicant.
+    // Notify admin + sales of the new registration. Reply-To = the applicant.
     await sendEmail({
       to: EMAIL_ADMIN_TO,
       cc: [EMAIL_SALES_CC],
       replyTo: email,
-      subject: `New ${role} application — ${fullName}`,
-      html: `<p>A new ${role} application has been submitted via /list-a-listing.</p>
+      subject: `New ${role} registration — ${fullName}`,
+      html: `<p>A new ${role} has registered via /list-a-listing.</p>
         <p><strong>Name:</strong> ${fullName}<br>
         <strong>Email:</strong> ${email}<br>
         ${company ? `<strong>Company:</strong> ${company}<br>` : ""}
         ${phone ? `<strong>Phone:</strong> ${phone}<br>` : ""}
         <strong>Role:</strong> ${interestType}</p>
-        <p>The account is in <strong>pending</strong> state. Approve or reject in
-        <a href="${process.env.NEXT_PUBLIC_APP_URL ?? "https://offtheplan.com.au"}/admin/members">/admin/members</a>.</p>`,
-      text: `New ${role} application: ${fullName} <${email}>${company ? ` (${company})` : ""}${phone ? `, ${phone}` : ""}.\nPending approval at /admin/members.`,
+        <p>The account is <strong>auto-approved</strong> — they can sign in and upload listings as soon as they confirm their email. Listings still require your approval before going live in
+        <a href="${process.env.NEXT_PUBLIC_APP_URL ?? "https://offtheplan.com.au"}/admin/listings">/admin/listings</a>.</p>`,
+      text: `New ${role} registration: ${fullName} <${email}>${company ? ` (${company})` : ""}${phone ? `, ${phone}` : ""}.\nAuto-approved. Listings still require admin approval at /admin/listings.`,
     });
 
     return NextResponse.json({ ok: true }, { status: 201 });

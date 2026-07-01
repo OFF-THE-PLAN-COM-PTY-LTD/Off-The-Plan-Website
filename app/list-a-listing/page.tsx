@@ -63,12 +63,12 @@ export default function ListWithUsPage() {
     return (
       <div className="min-h-screen bg-navy flex items-center justify-center px-4">
         <div className="bg-white p-12 max-w-md w-full text-center shadow-xl">
-          <p className="font-display font-light text-navy text-section-lg mb-3">Account created — pending review.</p>
+          <p className="font-display font-light text-navy text-section-lg mb-3">Account created — check your inbox.</p>
           <p className="font-sans text-body-md text-ink/60 mb-3">
-            Thanks for applying to list with Off The Plan. We&apos;ve received your application and will review it within one business day.
+            Thanks for signing up with Off The Plan. We&apos;ve sent a confirmation link to your email.
           </p>
           <p className="font-sans text-body-md text-ink/60 mb-8">
-            You&apos;ll receive an email once your account is approved, after which you can sign in and start listing.
+            Once confirmed, you can sign in and start uploading your listings. Our team reviews each listing before it goes live on the site.
           </p>
           <Link href="/" className="btn-primary inline-block">Back to home</Link>
         </div>

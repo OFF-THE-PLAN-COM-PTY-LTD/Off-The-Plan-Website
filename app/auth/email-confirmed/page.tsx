@@ -1,11 +1,11 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 
-// Landing page after Supabase verifies a new signup's email. We don't call
-// exchangeCodeForSession here on purpose — new Developer/Agent accounts are
-// in member_status='pending', and creating a session would let them bypass
-// the pending-gate on the login route. So we just show a clear confirmation
-// message; they sign in normally once admin approves them.
+// Landing page after Supabase verifies a new signup's email. Per Tim
+// (2026-06-30) new Developer/Agent accounts are auto-approved, so the
+// applicant can sign in immediately — this page is now purely a friendly
+// confirmation before they head to /login. We deliberately don't call
+// exchangeCodeForSession here (keeping session establishment to /login).
 
 export const metadata: Metadata = {
   title: "Email confirmed | Off The Plan",
@@ -27,9 +27,9 @@ export default function EmailConfirmedPage() {
           Thanks for confirming your email address.
         </p>
         <p className="font-sans text-body-md text-ink/65 mb-8">
-          Your account is now in our review queue — we&apos;ll email you within one business day once it&apos;s approved, and you&apos;ll be able to sign in and start listing.
+          Your account is ready. Sign in to start uploading your listings — our team reviews each listing before it goes live on the site.
         </p>
-        <Link href="/" className="btn-primary inline-block">Back to home</Link>
+        <Link href="/login" className="btn-primary inline-block">Sign in</Link>
       </div>
     </div>
   );
