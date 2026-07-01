@@ -63,20 +63,32 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Admin routes — must also have is_admin = true
-  const isAdminPath = pathname.startsWith("/admin") || pathname.startsWith("/api/admin");
-  if (isAdminPath && user) {
+  // Admin routes:
+  //   /admin/*      (UI)  — admin only. Non-admins redirect to home.
+  //   /api/admin/*  (API) — admin OR Developer/Agent portal member. Several
+  //                         admin API routes are intentionally shared with
+  //                         the portal listing form (upload, gallery, agents,
+  //                         listings) and gate finer permissions themselves
+  //                         via requireMemberOrAdmin. Middleware just enforces
+  //                         "one of these two roles" and lets the route decide.
+  const isAdminUiPath = pathname.startsWith("/admin");
+  const isAdminApiPath = pathname.startsWith("/api/admin");
+  if ((isAdminUiPath || isAdminApiPath) && user) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("is_admin")
+      .select("is_admin, interest_type")
       .eq("id", user.id)
       .maybeSingle();
 
-    if (!profile?.is_admin) {
-      if (isApiRoute) {
-        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-      }
+    const isAdmin = !!profile?.is_admin;
+    const interestType = (profile?.interest_type as string | null | undefined) ?? null;
+    const isMember = !!interestType && ["Developer", "Agent"].includes(interestType);
+
+    if (isAdminUiPath && !isAdmin) {
       return NextResponse.redirect(new URL("/", request.url));
+    }
+    if (isAdminApiPath && !isAdmin && !isMember) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
   }
 
