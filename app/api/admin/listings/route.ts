@@ -144,10 +144,18 @@ function buildListingData(fields: Record<string, unknown>) {
   };
 }
 
-async function syncFloorPlans(developmentId: string, floorPlans: unknown[]) {
-  if (!Array.isArray(floorPlans)) return;
-  await supabaseAdmin.from("development_floor_plans").delete().eq("development_id", developmentId);
-  if (floorPlans.length === 0) return;
+async function syncFloorPlans(developmentId: string, floorPlans: unknown[]): Promise<string | null> {
+  if (!Array.isArray(floorPlans)) return null;
+  console.log(`[syncFloorPlans] development_id=${developmentId}, incoming rows=${floorPlans.length}`);
+  const { error: delErr } = await supabaseAdmin
+    .from("development_floor_plans")
+    .delete()
+    .eq("development_id", developmentId);
+  if (delErr) {
+    console.error(`[syncFloorPlans] DELETE failed:`, delErr);
+    return `Failed to clear existing configurations: ${delErr.message}`;
+  }
+  if (floorPlans.length === 0) return null;
   const rows = (floorPlans as Record<string, unknown>[]).map((fp) => ({
     development_id: developmentId,
     beds: fp.beds ? Number(fp.beds) : null,
@@ -169,7 +177,16 @@ async function syncFloorPlans(developmentId: string, floorPlans: unknown[]) {
     unit_suite_no: fp.unit_suite_no || null,
     property_sub_type: fp.property_sub_type || null,
   }));
-  await supabaseAdmin.from("development_floor_plans").insert(rows);
+  console.log(`[syncFloorPlans] first row:`, JSON.stringify(rows[0]));
+  const { error: insErr } = await supabaseAdmin
+    .from("development_floor_plans")
+    .insert(rows);
+  if (insErr) {
+    console.error(`[syncFloorPlans] INSERT failed:`, insErr);
+    return `Failed to save configurations: ${insErr.message}`;
+  }
+  console.log(`[syncFloorPlans] inserted ${rows.length} rows successfully`);
+  return null;
 }
 
 export async function POST(req: Request) {
@@ -231,7 +248,8 @@ export async function POST(req: Request) {
       }
       const { error } = await supabaseAdmin.from("developments").update(data).eq("id", id);
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-      await syncFloorPlans(id, floor_plans ?? []);
+      const fpErr = await syncFloorPlans(id, floor_plans ?? []);
+      if (fpErr) return NextResponse.json({ error: fpErr }, { status: 500 });
     } else {
       // INSERT — generate slug if not supplied (portal members never set one).
       const baseSlug = data.slug ? slugify(String(data.slug)) : slugify(String(data.name));
@@ -244,7 +262,8 @@ export async function POST(req: Request) {
         .single();
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
       if (inserted && floor_plans?.length) {
-        await syncFloorPlans(inserted.id, floor_plans);
+        const fpErr = await syncFloorPlans(inserted.id, floor_plans);
+        if (fpErr) return NextResponse.json({ error: fpErr }, { status: 500 });
       }
     }
 
