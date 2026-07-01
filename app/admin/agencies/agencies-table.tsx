@@ -277,8 +277,12 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
   return (
     <>
       {/* Status filter chips — matches the Members tab pattern */}
+      {/* "pending" hidden 2026-06-30 — accounts now auto-approve on signup so
+          the tab would always be empty. Direct URL /admin/agencies?status=pending
+          still works if we ever need it (or manually park an account). Re-add
+          "pending" to the array below to bring the chip back. */}
       <div className="flex items-center gap-1 border-b border-line mb-4">
-        {(["pending", "active", "inactive", "all"] as StatusKey[]).map((key) => {
+        {(["active", "inactive", "all"] as StatusKey[]).map((key) => {
           const label = key === "all" ? "All" : key.charAt(0).toUpperCase() + key.slice(1);
           const href = key === "all" ? "/admin/agencies" : `/admin/agencies?status=${key}`;
           const isActive = activeStatus === key;
