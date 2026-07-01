@@ -266,21 +266,31 @@ export default async function DossierPage({ params }: Props) {
             <div className="lg:sticky lg:top-24">
 
               {/* ── Contact Agent header ── */}
+              {/* Logo cascade: developer directory logo (linked via developer_id)
+                  → the listing's own project logo (uploaded on the listing form)
+                  → 2-letter monogram from the developer or the free-text
+                  portal_developer_name a member typed. Portal-member listings
+                  usually only fill the listing-level logo, so falling back to
+                  it prevents a blank white square in the Contact Agent header. */}
               <div className="bg-navy flex items-center gap-3 px-4 py-3">
-                {dev.developer?.logo_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={dev.developer.logo_url}
-                    alt={dev.developer.name ?? "Developer"}
-                    className="w-10 h-10 object-contain bg-white p-1 flex-shrink-0"
-                  />
-                ) : (
-                  <div className="w-10 h-10 bg-white/10 flex items-center justify-center flex-shrink-0">
-                    <span className="font-mono text-[7px] uppercase text-white/60">
-                      {dev.developer?.name?.slice(0, 2) ?? ""}
-                    </span>
-                  </div>
-                )}
+                {(() => {
+                  const headerLogo = dev.developer?.logo_url ?? dev.logo_url ?? null;
+                  const headerName = dev.developer?.name ?? dev.portal_developer_name ?? null;
+                  return headerLogo ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={headerLogo}
+                      alt={headerName ?? "Developer"}
+                      className="w-10 h-10 object-contain bg-white p-1 flex-shrink-0"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 bg-white/10 flex items-center justify-center flex-shrink-0">
+                      <span className="font-mono text-[7px] uppercase text-white/60">
+                        {headerName?.slice(0, 2) ?? ""}
+                      </span>
+                    </div>
+                  );
+                })()}
                 <p className="font-mono text-[13px] font-semibold uppercase tracking-widest text-white">
                   Contact Agent
                 </p>
@@ -303,8 +313,14 @@ export default async function DossierPage({ params }: Props) {
                   const phone = primary?.mobile ?? dev.agent_phone ?? null;
                   const email = primary?.email ?? dev.agent_email ?? null;
                   const agentPhoto = primary?.photo_url ?? null;
-                  const developerLogo = dev.developer?.logo_url ?? null;
-                  const monogram = name?.slice(0, 2) ?? dev.developer?.name?.slice(0, 2) ?? "";
+                  // Same fallback logic as the header above — prefer the linked
+                  // developer directory logo, else use the listing's own logo.
+                  const developerLogo = dev.developer?.logo_url ?? dev.logo_url ?? null;
+                  const monogram =
+                    name?.slice(0, 2)
+                    ?? dev.developer?.name?.slice(0, 2)
+                    ?? dev.portal_developer_name?.slice(0, 2)
+                    ?? "";
 
                   return (
                     <div className="flex items-start gap-3 mb-3">
