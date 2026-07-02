@@ -207,24 +207,29 @@ interface CategoryConfig {
  */
 export const DEFAULT_CARD_FIELDS: CardFieldDef[] = [BEDS, BATH, GARAGE, TOTAL_SIZE];
 
-const CATEGORY_CONFIG: Record<string, CategoryConfig> = {
-  "New Apartments":         { card: [BEDS, BATH, GARAGE, TOTAL_SIZE] },
-  Townhouses:               { card: [BEDS, BATH, GARAGE, TOTAL_SIZE] },
-  "Land and Estates":       { card: [LOT_NUMBER, LAND_AREA, FRONTAGE, DEPTH] },
-  "House & Land":           {
-    card:       [BEDS, BATH, GARAGE, LAND_SIZE],
-    stocklist:  [BEDS, BATH, GARAGE, HOUSE_SIZE, LAND_SIZE, FRONTAGE],
-  },
-  Houses:                   {
-    card:       [BEDS, BATH, GARAGE, LAND_SIZE],
-    stocklist:  [BEDS, BATH, GARAGE, HOUSE_SIZE, LAND_SIZE, FRONTAGE],
-  }, // legacy alias for House & Land
-  "Over 55's / Retirement": { card: [BEDS, BATH, GARAGE, TOTAL_SIZE] },
-  Commercial:               {
-    card:       [FLOOR_AREA, LEVEL, CAR_SPACES],
-    stocklist:  [UNIT_SUITE, PROPERTY_SUB_TYPE, FLOOR_AREA, LEVEL, CAR_SPACES],
-  },
-};
+// Ched confirmed 2026-07-02 against the legacy admin: every listing category
+// (New Apartments, Townhouses, Land and Estates, House & Land, Over 55s /
+// Retirement, Commercial) uses the SAME Configuration Summary field set —
+// Beds / Bath / Garage / Total Size / Price From. Legacy does not swap in
+// Lot No. / Frontage / Depth / Floor Area / etc. per category.
+//
+// We revert to that behavior here by leaving CATEGORY_CONFIG empty — every
+// category falls back to DEFAULT_CARD_FIELDS via the helpers below.
+//
+// The per-category CardFieldDef defs above (LOT_NUMBER, LAND_AREA, FRONTAGE,
+// DEPTH, HOUSE_SIZE, LAND_SIZE, FLOOR_AREA, LEVEL, CAR_SPACES, UNIT_SUITE,
+// PROPERTY_SUB_TYPE) are intentionally retained even though nothing in
+// CATEGORY_CONFIG references them today. If Tim ever asks for per-category
+// fields ("dev spec v4" originally proposed this), the field defs are
+// ready to wire back into a category entry — no rewrite needed.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _UNUSED_FIELD_DEFS_KEPT_FOR_FUTURE_SCOPE = [
+  LOT_NUMBER, LAND_AREA, FRONTAGE, DEPTH,
+  HOUSE_SIZE, LAND_SIZE, FLOOR_AREA, LEVEL,
+  CAR_SPACES, UNIT_SUITE, PROPERTY_SUB_TYPE,
+];
+
+const CATEGORY_CONFIG: Record<string, CategoryConfig> = {};
 
 export function getCardFields(category: string | null | undefined): CardFieldDef[] {
   if (!category) return DEFAULT_CARD_FIELDS;
