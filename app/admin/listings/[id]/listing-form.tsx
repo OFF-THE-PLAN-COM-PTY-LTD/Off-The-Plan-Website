@@ -199,6 +199,10 @@ interface Agent {
   isNew?: boolean;
   saving?: boolean;
   deleting?: boolean;
+  // Transient UI flag flipped on for ~2.5s after a successful save so the
+  // Save button can show "✓ Saved" and the admin actually knows their click
+  // did something. Fades back to false via setTimeout.
+  justSaved?: boolean;
 }
 
 interface Props {
@@ -651,7 +655,7 @@ function AgentManager({
 
   async function saveAgent(index: number) {
     const agent = agents[index];
-    setAgents((prev) => prev.map((a, i) => (i === index ? { ...a, saving: true } : a)));
+    setAgents((prev) => prev.map((a, i) => (i === index ? { ...a, saving: true, justSaved: false } : a)));
 
     let id = agent.id;
     if (agent.isNew) {
@@ -670,9 +674,17 @@ function AgentManager({
       });
     }
 
+    // Flip on `justSaved` for ~2.5s so the Save button reads "✓ Saved" —
+    // otherwise there's no visible confirmation the click did anything and
+    // admins will double-click / worry / re-save.
     setAgents((prev) =>
-      prev.map((a, i) => (i === index ? { ...a, id, isNew: false, saving: false } : a))
+      prev.map((a, i) => (i === index ? { ...a, id, isNew: false, saving: false, justSaved: true } : a))
     );
+    setTimeout(() => {
+      setAgents((prev) =>
+        prev.map((a, i) => (i === index && a.id === id ? { ...a, justSaved: false } : a))
+      );
+    }, 2500);
   }
 
   async function deleteAgent(index: number) {
@@ -785,9 +797,13 @@ function AgentManager({
                   type="button"
                   onClick={() => saveAgent(i)}
                   disabled={agent.saving || agent.deleting}
-                  className="font-mono text-[10px] uppercase tracking-widest px-3 py-2 border border-teal-400 text-teal-600 hover:bg-teal-500 hover:text-white hover:border-teal-500 transition-colors disabled:opacity-50 whitespace-nowrap"
+                  className={`font-mono text-[10px] uppercase tracking-widest px-3 py-2 border transition-colors disabled:opacity-50 whitespace-nowrap ${
+                    agent.justSaved
+                      ? "border-green-500 text-green-700 bg-green-50"
+                      : "border-teal-400 text-teal-600 hover:bg-teal-500 hover:text-white hover:border-teal-500"
+                  }`}
                 >
-                  {agent.saving ? "Saving…" : "Save"}
+                  {agent.saving ? "Saving…" : agent.justSaved ? "✓ Saved" : "Save"}
                 </button>
                 <button
                   type="button"
