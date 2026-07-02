@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -1237,12 +1237,8 @@ export function ListingForm({
 
   // ─── Submit ───────────────────────────────────────────────────────────────
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setSaving(true);
-    setError(null);
-
-    const payload = {
+  function buildPayload() {
+    return {
       _method: isNew ? "POST" : "PATCH",
       id: isNew ? undefined : id,
       // Category
@@ -1277,9 +1273,6 @@ export function ListingForm({
       sale_office_postcode: saleOfficePostcode || null,
       // Details
       display_suite_timing: displaySuiteTiming || null,
-      // `description_html` is the canonical rich content rendered on the public
-      // listing detail page. We also write a stripped plain-text mirror to
-      // `description` + `summary` for SEO, search indexing, and OG/share cards.
       description_html: description || null,
       description: description ? htmlToPlainText(description) || null : null,
       summary: description ? htmlToPlainText(description) || null : null,
@@ -1345,6 +1338,69 @@ export function ListingForm({
         (r) => r.bed || r.bath || r.parking || r.size || r.price || r.lot_number || r.land_area || r.frontage || r.depth || r.house_size || r.land_size || r.floor_area || r.level || r.unit_suite_no || r.property_sub_type,
       ),
     };
+  }
+
+  // ── Autosave (2026-07-02) ──────────────────────────────────────────────
+  // Compute a fingerprint of the current form state on every render. Then a
+  // debounced effect (below) checks if it has drifted from what's on the
+  // server and silently PATCHes if so. This preserves in-progress work when
+  // a member starts a listing, wanders off to another tab, and comes back.
+  //
+  // Uses the same /api/admin/listings endpoint as the explicit Save button;
+  // just doesn't redirect afterwards. Errors are logged and shown as a small
+  // "Save failed" hint next to the Save button — they don't block the form.
+  //
+  // Skipped for new listings (isNew) because there's no id to PATCH yet;
+  // the draft-first flow means the edit page always has an id anyway.
+  const currentFingerprint = JSON.stringify(buildPayload());
+  const lastSavedFingerprintRef = useRef<string>("");
+  const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  // Track the mounted-since-render timestamp so we can skip the initial
+  // "state is identical to props" state and only autosave real user changes.
+  const mountedRef = useRef(false);
+
+  useEffect(() => {
+    // On first render, seed the ref with the initial fingerprint so we
+    // don't autosave the untouched form.
+    if (!mountedRef.current) {
+      lastSavedFingerprintRef.current = currentFingerprint;
+      mountedRef.current = true;
+      return;
+    }
+    if (isNew || saving) return;
+    if (currentFingerprint === lastSavedFingerprintRef.current) return;
+
+    const timer = setTimeout(async () => {
+      setAutoSaveStatus("saving");
+      try {
+        const res = await fetch("/api/admin/listings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: currentFingerprint,
+        });
+        if (!res.ok) {
+          setAutoSaveStatus("error");
+          return;
+        }
+        lastSavedFingerprintRef.current = currentFingerprint;
+        setAutoSaveStatus("saved");
+        // Fade the "Saved" pill back to idle after a moment so it doesn't
+        // sit there stale after inactivity.
+        setTimeout(() => setAutoSaveStatus("idle"), 2500);
+      } catch (err) {
+        console.error("Autosave failed:", err);
+        setAutoSaveStatus("error");
+      }
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [currentFingerprint, isNew, saving]);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    setError(null);
+
+    const payload = buildPayload();
 
     const res = await fetch("/api/admin/listings", {
       method: "POST",
@@ -1359,6 +1415,10 @@ export function ListingForm({
       if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
+
+    // Mark the current state as saved so the autosave doesn't immediately
+    // fire again right before we navigate away.
+    lastSavedFingerprintRef.current = JSON.stringify(payload);
 
     router.push(isPortal ? "/portal/listings" : "/admin/listings");
     router.refresh();
@@ -2194,9 +2254,12 @@ export function ListingForm({
         {/* Filled-color scheme (2026-06-30): Back = ink/black, Save = green,
             Preview = orange, Delete = red. Same font/tracking as the rest of
             the admin UI so it doesn't feel out of place. Back honours isPortal
-            so portal users don't get bounced by middleware to /admin/listings. */}
+            so portal users don't get bounced by middleware to /admin/listings.
+
+            Autosave indicator (2026-07-02) sits next to the Save button so
+            users can see their changes are being persisted every few seconds. */}
         <div className="flex items-center justify-between pt-4">
-          <div className="flex gap-3">
+          <div className="flex items-center gap-3">
             <Link
               href={isPortal ? "/portal/listings" : "/admin/listings"}
               className="font-mono text-[10px] uppercase tracking-widest px-4 py-2.5 bg-ink text-white hover:bg-ink/80 transition-colors inline-flex items-center gap-1.5"
@@ -2206,6 +2269,19 @@ export function ListingForm({
             <button type="submit" disabled={saving || deleting} className="font-mono text-[10px] uppercase tracking-widest px-4 py-2.5 bg-green-700 text-white hover:bg-green-800 transition-colors disabled:opacity-50">
               {saving ? "Saving…" : "Save"}
             </button>
+            {!isNew && autoSaveStatus !== "idle" && (
+              <span
+                className={`font-mono text-[10px] uppercase tracking-widest ${
+                  autoSaveStatus === "saving" ? "text-ink/50"
+                  : autoSaveStatus === "saved" ? "text-green-700"
+                  : "text-red-600"
+                }`}
+              >
+                {autoSaveStatus === "saving" ? "Autosaving…"
+                  : autoSaveStatus === "saved" ? "✓ Saved"
+                  : "Autosave failed"}
+              </span>
+            )}
             {!isNew && existing?.slug && (
               <Link
                 href={`/listings/${existing.slug}`}

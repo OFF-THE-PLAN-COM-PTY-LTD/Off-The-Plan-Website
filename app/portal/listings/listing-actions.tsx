@@ -45,14 +45,18 @@ export function PortalListingActions({ id, slug, isPublished, isFeatured, name }
   return (
     <>
       <div className="flex flex-wrap gap-1.5">
-        <a
-          href={`/listings/${slug}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="font-mono text-[9px] uppercase tracking-widest px-2.5 py-1.5 border border-line text-ink/60 hover:border-navy hover:text-navy transition-colors whitespace-nowrap"
-        >
-          View Listing
-        </a>
+        {/* View Listing only makes sense once the listing is publicly reachable —
+            drafts return 404 at /listings/<slug>, so the button was misleading. */}
+        {isPublished && (
+          <a
+            href={`/listings/${slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-mono text-[9px] uppercase tracking-widest px-2.5 py-1.5 border border-line text-ink/60 hover:border-navy hover:text-navy transition-colors whitespace-nowrap"
+          >
+            View Listing
+          </a>
+        )}
         <Link
           href={`/portal/listings/${id}/edit`}
           className="font-mono text-[9px] uppercase tracking-widest px-2.5 py-1.5 border border-orange text-orange hover:bg-orange hover:text-white transition-colors whitespace-nowrap"
