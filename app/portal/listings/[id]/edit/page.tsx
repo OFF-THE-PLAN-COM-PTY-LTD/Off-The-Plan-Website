@@ -43,6 +43,13 @@ export default async function PortalListingEditPage({ params }: Props) {
   // If listing not found or doesn't belong to this user, 404
   if (!devResult.data) notFound();
 
+  // Empty drafts (created by the /portal/listings/new draft-first flow) carry
+  // a placeholder name so the DB insert satisfies any NOT NULL constraint.
+  // Show it as blank in the form so the user isn't editing over "Untitled listing".
+  if ((devResult.data.name as string) === "Untitled listing") {
+    devResult.data.name = "";
+  }
+
   const gallery = (galleryResult.data ?? []).map((img) => ({
     id: img.id as string,
     url: img.url as string,
