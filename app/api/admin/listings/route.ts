@@ -158,7 +158,10 @@ async function syncFloorPlans(developmentId: string, floorPlans: unknown[]): Pro
   if (floorPlans.length === 0) return null;
   const rows = (floorPlans as Record<string, unknown>[]).map((fp) => ({
     development_id: developmentId,
-    beds: fp.beds ? Number(fp.beds) : null,
+    // beds is stored as text so it can hold "1+S" / "3+S" etc. Preserve
+    // whatever the admin typed rather than coercing to a number and losing
+    // the "+S" suffix.
+    beds: fp.beds ? String(fp.beds).trim() : null,
     bath: fp.bath ? Number(fp.bath) : null,
     garage: fp.garage ? Number(fp.garage) : null,
     internal_sqm: fp.internal_sqm ? Number(fp.internal_sqm) : null,

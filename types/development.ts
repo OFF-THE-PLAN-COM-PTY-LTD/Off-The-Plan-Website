@@ -96,7 +96,9 @@ export interface DevelopmentFloorPlan {
   price_from: number | null;
   price_display: string | null;
   image_url: string | null;
-  beds: number | null;
+  // beds is text (not numeric) so it can hold values like "1+S" or "3+S"
+  // that the legacy site uses for "Bedroom + Study" configurations.
+  beds: string | null;
   bath: number | null;
   garage: number | null;
   // Land Estates fields (PDF spec v4, migration 030).

@@ -58,8 +58,10 @@ const BEDS: CardFieldDef = {
   stocklistKey: "bed",
   label: "Beds",
   icon: BedIcon,
-  type: "number",
-  placeholder: "3",
+  // Text (not number) so admins can write "1+S", "3+S" etc. for
+  // "Bedroom + Study" configurations that the legacy site uses.
+  type: "text",
+  placeholder: "3 (or 3+S)",
   inputWidth: "w-20",
 };
 const BATH: CardFieldDef = {
