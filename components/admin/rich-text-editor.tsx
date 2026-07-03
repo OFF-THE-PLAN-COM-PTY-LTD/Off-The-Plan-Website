@@ -4,7 +4,7 @@ import { useEditor, EditorContent, Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 interface Props {
   value: string;
@@ -13,7 +13,20 @@ interface Props {
   minHeight?: number;
 }
 
+// Batching every keystroke to the parent (a ~1700-line listing form) was
+// causing visible typing lag: each character re-rendered the whole form.
+// We now debounce onChange to ~200ms while typing, and flush immediately
+// on blur so a save right after typing never loses the last few chars.
+const ONCHANGE_DEBOUNCE_MS = 200;
+
 export function RichTextEditor({ value, onChange, minHeight = 400 }: Props) {
+  // Track the last HTML we emitted so the "external value changed" effect
+  // below can distinguish parent-driven updates (load existing content) from
+  // echoes of our own onChange — the latter must NOT trigger setContent, or
+  // the cursor gets reset while the user is typing.
+  const lastEmittedRef = useRef<string>(value);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -36,18 +49,51 @@ export function RichTextEditor({ value, onChange, minHeight = 400 }: Props) {
         class: "max-w-none font-sans text-sm text-ink focus:outline-none px-4 py-3",
         style: `min-height: ${minHeight}px;`,
       },
+      handleDOMEvents: {
+        blur: (view) => {
+          // Flush any pending debounced update so a save-then-blur never
+          // loses the tail of what the user typed.
+          if (debounceRef.current) {
+            clearTimeout(debounceRef.current);
+            debounceRef.current = null;
+            const html = view.dom.innerHTML;
+            lastEmittedRef.current = html;
+            onChange(html);
+          }
+          return false;
+        },
+      },
     },
-    onUpdate: ({ editor }) => onChange(editor.getHTML()),
+    onUpdate: ({ editor }) => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => {
+        const html = editor.getHTML();
+        lastEmittedRef.current = html;
+        onChange(html);
+        debounceRef.current = null;
+      }, ONCHANGE_DEBOUNCE_MS);
+    },
   });
 
-  // Keep editor synced when value changes externally (e.g. loading existing article)
+  // Keep editor synced when value changes EXTERNALLY (e.g. loading existing
+  // article, form reset). Skip when value matches what we last emitted —
+  // that's just the parent echoing our own update back and calling
+  // setContent would reset the cursor mid-typing.
   useEffect(() => {
     if (!editor) return;
-    if (value !== editor.getHTML()) {
-      editor.commands.setContent(value || "", false);
-    }
+    if (value === lastEmittedRef.current) return;
+    if (value === editor.getHTML()) return;
+    editor.commands.setContent(value || "", false);
+    lastEmittedRef.current = value;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editor, value]);
+
+  // Clear the debounce on unmount so we don't call setState on an unmounted parent.
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
 
   if (!editor) return null;
 
