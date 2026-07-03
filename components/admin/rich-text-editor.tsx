@@ -58,8 +58,16 @@ function RichTextEditorInner({ value, onChange, minHeight = 400 }: Props) {
       immediatelyRender: false,
       editorProps: {
         attributes: {
+          // spellcheck=false: browser spellcheck on a large contenteditable is
+          //   expensive and was contributing to visible typing lag in the
+          //   ~1700-line listing form (plain <textarea> nearby was fine).
+          //   Copywriters can rely on their OS keyboard/editor for spelling.
+          // contain: layout paint: scopes reflow/repaint to the editor so
+          //   growing the contenteditable doesn't reflow the whole form
+          //   below it on every keystroke.
           class: "max-w-none font-sans text-sm text-ink focus:outline-none px-4 py-3",
-          style: `min-height: ${minHeight}px;`,
+          style: `min-height: ${minHeight}px; contain: layout paint;`,
+          spellcheck: "false",
         },
         handleDOMEvents: {
           blur: (view) => {
