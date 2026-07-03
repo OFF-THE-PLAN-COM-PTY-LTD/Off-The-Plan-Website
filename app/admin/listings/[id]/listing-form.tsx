@@ -1693,7 +1693,7 @@ export function ListingForm({
             />
           </div>
           <div className="mb-4">
-            <label className={lbl}>Brief Description *</label>
+            <label className={lbl}>Listing Description *</label>
             <RichTextEditor
               value={description}
               onChange={setDescription}

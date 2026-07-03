@@ -32,7 +32,7 @@ These render regardless of which category is selected:
 
 **Description**
 - Location Description
-- Brief Description (req)
+- Listing Description (req)
 - Suburb / State (display)
 
 **Display Suite**
