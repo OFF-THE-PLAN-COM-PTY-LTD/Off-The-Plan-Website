@@ -4,7 +4,7 @@ import { useEditor, EditorContent, Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
-import { useEffect, useRef } from "react";
+import { memo, useEffect, useRef } from "react";
 
 interface Props {
   value: string;
@@ -13,82 +13,82 @@ interface Props {
   minHeight?: number;
 }
 
-// Batching every keystroke to the parent (a ~1700-line listing form) was
-// causing visible typing lag: each character re-rendered the whole form.
-// We now debounce onChange to ~200ms while typing, and flush immediately
-// on blur so a save right after typing never loses the last few chars.
-const ONCHANGE_DEBOUNCE_MS = 200;
+// Why this is memo(() => true):
+// The listing form is ~1700 lines with dozens of state vars. Every character
+// typed here → debounced onChange → parent setDescription → parent re-render,
+// which cascaded back into re-rendering this component AND running TipTap's
+// internal reconciliation. That's what made typing visibly laggy.
+//
+// The editor is now self-contained after mount: it captures `value` once via
+// the useEditor `content` option and never re-syncs from prop changes. React
+// never re-renders this component after the initial mount, so parent updates
+// stay entirely inside the parent. onChange is read through a ref so the
+// latest handler is always called.
+//
+// If a caller ever needs to reset the editor with new content, remount it
+// with a React `key` prop (e.g. `key={listingId}` when switching listings) —
+// don't try to push a new `value` prop; it will be ignored by design.
+const ONCHANGE_DEBOUNCE_MS = 300;
 
-export function RichTextEditor({ value, onChange, minHeight = 400 }: Props) {
-  // Track the last HTML we emitted so the "external value changed" effect
-  // below can distinguish parent-driven updates (load existing content) from
-  // echoes of our own onChange — the latter must NOT trigger setContent, or
-  // the cursor gets reset while the user is typing.
-  const lastEmittedRef = useRef<string>(value);
+function RichTextEditorInner({ value, onChange, minHeight = 400 }: Props) {
+  // Ref-based handler so the debounce closure below always calls the latest
+  // onChange without needing this component to re-render.
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const editor = useEditor({
-    extensions: [
-      StarterKit.configure({
-        heading: { levels: [2, 3] },
-        bulletList: { HTMLAttributes: { class: "list-disc pl-6" } },
-        orderedList: { HTMLAttributes: { class: "list-decimal pl-6" } },
-      }),
-      Link.configure({
-        openOnClick: false,
-        HTMLAttributes: { class: "text-orange underline hover:text-orange/80" },
-      }),
-      Image.configure({
-        HTMLAttributes: { class: "max-w-full h-auto my-4" },
-      }),
-    ],
-    content: value,
-    immediatelyRender: false,
-    editorProps: {
-      attributes: {
-        class: "max-w-none font-sans text-sm text-ink focus:outline-none px-4 py-3",
-        style: `min-height: ${minHeight}px;`,
-      },
-      handleDOMEvents: {
-        blur: (view) => {
-          // Flush any pending debounced update so a save-then-blur never
-          // loses the tail of what the user typed.
-          if (debounceRef.current) {
-            clearTimeout(debounceRef.current);
-            debounceRef.current = null;
-            const html = view.dom.innerHTML;
-            lastEmittedRef.current = html;
-            onChange(html);
-          }
-          return false;
+  const editor = useEditor(
+    {
+      extensions: [
+        StarterKit.configure({
+          heading: { levels: [2, 3] },
+          bulletList: { HTMLAttributes: { class: "list-disc pl-6" } },
+          orderedList: { HTMLAttributes: { class: "list-decimal pl-6" } },
+        }),
+        Link.configure({
+          openOnClick: false,
+          HTMLAttributes: { class: "text-orange underline hover:text-orange/80" },
+        }),
+        Image.configure({
+          HTMLAttributes: { class: "max-w-full h-auto my-4" },
+        }),
+      ],
+      content: value,
+      immediatelyRender: false,
+      editorProps: {
+        attributes: {
+          class: "max-w-none font-sans text-sm text-ink focus:outline-none px-4 py-3",
+          style: `min-height: ${minHeight}px;`,
+        },
+        handleDOMEvents: {
+          blur: (view) => {
+            // Flush pending debounced update on blur so save-then-blur never
+            // loses the tail of what the user typed.
+            if (debounceRef.current) {
+              clearTimeout(debounceRef.current);
+              debounceRef.current = null;
+              onChangeRef.current(view.dom.innerHTML);
+            }
+            return false;
+          },
         },
       },
+      onUpdate: ({ editor }) => {
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        debounceRef.current = setTimeout(() => {
+          onChangeRef.current(editor.getHTML());
+          debounceRef.current = null;
+        }, ONCHANGE_DEBOUNCE_MS);
+      },
     },
-    onUpdate: ({ editor }) => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-      debounceRef.current = setTimeout(() => {
-        const html = editor.getHTML();
-        lastEmittedRef.current = html;
-        onChange(html);
-        debounceRef.current = null;
-      }, ONCHANGE_DEBOUNCE_MS);
-    },
-  });
+    // Empty deps: initialise once, ignore later prop changes. See file-top
+    // comment — reset via React `key` remount if you ever need to.
+    [],
+  );
 
-  // Keep editor synced when value changes EXTERNALLY (e.g. loading existing
-  // article, form reset). Skip when value matches what we last emitted —
-  // that's just the parent echoing our own update back and calling
-  // setContent would reset the cursor mid-typing.
-  useEffect(() => {
-    if (!editor) return;
-    if (value === lastEmittedRef.current) return;
-    if (value === editor.getHTML()) return;
-    editor.commands.setContent(value || "", false);
-    lastEmittedRef.current = value;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editor, value]);
-
-  // Clear the debounce on unmount so we don't call setState on an unmounted parent.
+  // Clear the debounce on unmount so we don't call setState on an unmounted
+  // parent, and don't fire onChange after teardown.
   useEffect(() => {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -104,6 +104,11 @@ export function RichTextEditor({ value, onChange, minHeight = 400 }: Props) {
     </div>
   );
 }
+
+// Never re-render on parent updates. The editor is imperatively controlled
+// after mount; new `value`/`onChange`/`minHeight` props from the parent are
+// intentionally ignored (onChange stays fresh via ref). See file-top comment.
+export const RichTextEditor = memo(RichTextEditorInner, () => true);
 
 function Toolbar({ editor }: { editor: Editor }) {
   const Btn = ({
