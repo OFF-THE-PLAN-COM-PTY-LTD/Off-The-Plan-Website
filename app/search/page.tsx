@@ -123,7 +123,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       <div className="shadow-md" style={{ background: "#1a2340" }}>
 
         {/* Top strip: subtitle + title */}
-        <div className="container-padded pt-3 pb-1.5">
+        <div className="container-search pt-3 pb-1.5">
           <p className="font-sans text-[9px] uppercase tracking-[0.2em] text-white/40 mb-0.5">
             The New Home for Off-The-Plan Property
           </p>
@@ -133,7 +133,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         </div>
 
         {/* State quick-tabs */}
-        <div className="container-padded flex items-center gap-5 py-1.5 border-b border-white/10">
+        <div className="container-search flex items-center gap-5 py-1.5 border-b border-white/10">
           {AU_STATES.map((st) => (
             <Link
               key={st.abbr}
@@ -150,7 +150,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         </div>
 
         {/* Filter form */}
-        <div className="container-padded py-2.5">
+        <div className="container-search py-2.5">
           <form method="GET" action="/search" className="flex flex-col md:flex-row md:items-stretch gap-0">
 
             {/* Suburb */}
@@ -239,13 +239,13 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         </div>
       </div>
 
-      <div className="container-padded py-10">
+      <div className="container-search py-10">
         <p className="font-mono text-[11px] text-ink/40 mb-8 uppercase tracking-widest">
           {results.length} listing{results.length !== 1 ? "s" : ""}
         </p>
 
         {results.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
             {(() => {
               // Banner is admin-driven via Admin > Ads Management (page:
               // "listings", position: "middle"). AdSlot returns null when no
@@ -257,7 +257,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                 </div>
               );
               const cards: React.ReactNode[] = results.map((dev) => (
-                <PropertyCard key={dev.id} development={dev} layout="tall" />
+                <PropertyCard key={dev.id} development={dev} layout="tall" imageHeight="aspect-[2/1]" />
               ));
               // Tim (PDF p.4): "This banner needs to be pos. 4 / Currently pos.9".
               // Insert at index 3 so the banner is the 4th tile in the grid.
