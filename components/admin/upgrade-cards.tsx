@@ -18,11 +18,12 @@ interface Upgrade {
   isPromoFlag: boolean;
   /** Stripe checkout tier — present on portal upgrades; unused in admin view. */
   tier?: string;
+  /** Illustrative mockup shown on the card (from lib/upgrade-tiers.ts). */
+  image: string;
 }
 
 interface UpgradeCardsProps {
   upgrades: Upgrade[];
-  listingImages: string[];
   projects: Project[];
   promoFlagHref?: string;
   /**
@@ -33,10 +34,8 @@ interface UpgradeCardsProps {
   checkout?: boolean;
 }
 
-export default function UpgradeCards({ upgrades, listingImages, projects, promoFlagHref = "/admin/listings", checkout = false }: UpgradeCardsProps) {
+export default function UpgradeCards({ upgrades, projects, promoFlagHref = "/admin/listings", checkout = false }: UpgradeCardsProps) {
   const [activeModal, setActiveModal] = useState<string | null>(null);
-
-  const slots = Array.from({ length: 6 }, (_, i) => listingImages[i] ?? null);
 
   return (
     <>
@@ -59,17 +58,16 @@ export default function UpgradeCards({ upgrades, listingImages, projects, promoF
               <span className="text-gray-400 text-sm"> /month</span>
             </div>
 
-            {/* 6-image grid */}
-            <div className="mx-4 mb-4 grid grid-cols-3 gap-1">
-              {slots.map((src, i) => (
-                <div key={i} className="relative bg-gray-100 overflow-hidden rounded-sm" style={{ aspectRatio: "16/9" }}>
-                  {src ? (
-                    <Image src={src} alt="" fill className="object-cover" />
-                  ) : (
-                    <div className="w-full h-full bg-gray-200" />
-                  )}
-                </div>
-              ))}
+            {/* Illustrative mockup of what the upgrade looks like on the site */}
+            <div className="mx-4 mb-4 overflow-hidden rounded-sm border border-gray-100">
+              <Image
+                src={u.image}
+                alt={`${u.name} example`}
+                width={3456}
+                height={9035}
+                className="w-full h-auto"
+                sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+              />
             </div>
 
             {/* Features */}

@@ -17,6 +17,12 @@ export interface UpgradeTier {
   isPromoFlag: boolean;
   /** Stripe checkout tier key — matches CheckoutTier in lib/stripe/server.ts. */
   tier: "promo_flag" | "featured_tier2" | "featured_tier1" | "home_banner";
+  /**
+   * Illustrative mockup shown on the pricing cards so buyers can see what the
+   * upgrade looks like on the live site. Served from /public/plans_and_pricing/
+   * (extracted from the legacy site). Tall image — rendered full card width.
+   */
+  image: string;
 }
 
 export const UPGRADE_TIERS: UpgradeTier[] = [
@@ -32,6 +38,7 @@ export const UPGRADE_TIERS: UpgradeTier[] = [
     cta: "ADD A PROMO FLAG",
     isPromoFlag: true,
     tier: "promo_flag",
+    image: "/plans_and_pricing/OTP-Pricing-Flag.jpg",
   },
   {
     name: "Featured Project Tier 2",
@@ -45,6 +52,7 @@ export const UPGRADE_TIERS: UpgradeTier[] = [
     cta: "REQUEST AN UPGRADE",
     isPromoFlag: false,
     tier: "featured_tier2",
+    image: "/plans_and_pricing/OTP-Pricing-Tier2.jpg",
   },
   {
     name: "Featured Project Tier 1",
@@ -58,6 +66,7 @@ export const UPGRADE_TIERS: UpgradeTier[] = [
     cta: "REQUEST AN UPGRADE",
     isPromoFlag: false,
     tier: "featured_tier1",
+    image: "/plans_and_pricing/OTP-Pricing-Tier1.jpg",
   },
   {
     name: "Home Page Main Banner",
@@ -71,5 +80,6 @@ export const UPGRADE_TIERS: UpgradeTier[] = [
     cta: "REQUEST AN UPGRADE",
     isPromoFlag: false,
     tier: "home_banner",
+    image: "/plans_and_pricing/OTP-Pricing-mainbanner.jpg",
   },
 ];

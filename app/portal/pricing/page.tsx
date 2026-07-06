@@ -47,19 +47,10 @@ export default async function PortalPricing() {
 
   const { data: devs } = await supabaseAdmin
     .from("developments")
-    .select("id, name, hero_image_url, feature_image_url, is_featured, images:development_images(url, is_hero)")
+    .select("id, name")
     .eq("owner_user_id", user.id)
     .order("is_featured", { ascending: false })
     .limit(50);
-
-  const listingImages: string[] = (devs ?? [])
-    .map((d) => {
-      const imgs = (d.images ?? []) as { url: string; is_hero: boolean }[];
-      const hero = imgs.find((i) => i.is_hero)?.url ?? imgs[0]?.url;
-      return hero ?? d.hero_image_url ?? d.feature_image_url ?? "";
-    })
-    .filter(Boolean)
-    .slice(0, 6);
 
   const projects = (devs ?? []).map((d) => ({ id: d.id, name: d.name }));
 
@@ -159,7 +150,6 @@ export default async function PortalPricing() {
 
       <UpgradeCards
         upgrades={upgrades}
-        listingImages={listingImages}
         projects={projects}
         promoFlagHref="/portal/listings"
         checkout

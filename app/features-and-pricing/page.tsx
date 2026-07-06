@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Metadata } from "next";
 import { ImageAutoSlider } from "@/components/ui/image-auto-slider";
 import type { SliderItem } from "@/components/ui/image-auto-slider";
@@ -398,6 +399,17 @@ export default async function FeaturesAndPricingPage() {
                     ${u.price.toLocaleString()}
                   </span>
                   <span className="font-sans text-ink/40 text-sm ml-1">/month</span>
+                </div>
+                {/* Illustrative mockup of what the upgrade looks like on the site */}
+                <div className="mx-5 mt-4 overflow-hidden border border-line">
+                  <Image
+                    src={u.image}
+                    alt={`${u.name} example`}
+                    width={3456}
+                    height={9035}
+                    className="w-full h-auto"
+                    sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+                  />
                 </div>
                 {/* Features */}
                 <ul className="px-5 py-5 flex flex-col gap-2.5 flex-1">

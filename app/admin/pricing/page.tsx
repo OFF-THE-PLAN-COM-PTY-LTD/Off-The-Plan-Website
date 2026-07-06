@@ -2,6 +2,7 @@ import Image from "next/image";
 import { CheckCircle } from "lucide-react";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import UpgradeCards from "@/components/admin/upgrade-cards";
+import { UPGRADE_TIERS } from "@/lib/upgrade-tiers";
 
 const plans = [
   {
@@ -30,91 +31,18 @@ const plans = [
   },
 ];
 
-const upgrades = [
-  {
-    name: "Promo Flag",
-    price: 50,
-    features: [
-      "Available for all properties",
-      "Promotional flag on the listing",
-      "Add a short snappy message",
-      "$50 + GST per month",
-    ],
-    cta: "ADD A PROMO FLAG",
-    isPromoFlag: true,
-  },
-  {
-    name: "Featured Project Tier 2",
-    price: 200,
-    features: [
-      "Available for all properties",
-      "Property featured under the home page banner (2nd row)",
-      "$200 + GST per month",
-      "Up to 8 available each month",
-    ],
-    cta: "REQUEST AN UPGRADE",
-    isPromoFlag: false,
-  },
-  {
-    name: "Featured Project Tier 1",
-    price: 400,
-    features: [
-      "Available to New Apartments and Townhouses",
-      "Property featured under the home page banner",
-      "$400 + GST per month",
-      "Up to 6 available each month",
-    ],
-    cta: "REQUEST AN UPGRADE",
-    isPromoFlag: false,
-  },
-  {
-    name: "Home Page Main Banner",
-    price: 1000,
-    features: [
-      "Available to: New Apartments and Townhouses",
-      "Up to 3 available per month, 33% share of voice",
-      "Feature HERO project on home page",
-      "$1000 + GST",
-    ],
-    cta: "REQUEST AN UPGRADE",
-    isPromoFlag: false,
-  },
-];
-
-function _ListingImageGrid({ images }: { images: string[] }) {
-  const slots = Array.from({ length: 6 }, (_, i) => images[i] ?? null);
-  return (
-    <div className="grid grid-cols-3 gap-1">
-      {slots.map((src, i) => (
-        <div key={i} className="relative aspect-video bg-gray-100 overflow-hidden rounded-sm">
-          {src ? (
-            <Image src={src} alt="" fill className="object-cover" />
-          ) : (
-            <div className="w-full h-full bg-gray-200" />
-          )}
-        </div>
-      ))}
-    </div>
-  );
-}
+// Featured Upgrade tiers come from lib/upgrade-tiers.ts (single source of
+// truth shared with the member portal and public pricing page).
+const upgrades = UPGRADE_TIERS;
 
 export default async function PricingPage() {
-  // Fetch developments — featured first for images, all for project dropdown
+  // Fetch published developments for the "request an upgrade" project dropdown.
   const { data: devs } = await supabaseAdmin
     .from("developments")
-    .select("id, name, hero_image_url, feature_image_url, is_featured, images:development_images(url, is_hero)")
+    .select("id, name")
     .eq("is_published", true)
     .order("is_featured", { ascending: false })
     .limit(50);
-
-  const listingImages: string[] = (devs ?? [])
-    .map((d) => {
-      const imgs = (d.images ?? []) as { url: string; is_hero: boolean }[];
-      const hero = imgs.find((i) => i.is_hero)?.url ?? imgs[0]?.url;
-      return hero ?? d.hero_image_url ?? d.feature_image_url ?? "";
-    })
-    .filter(Boolean)
-    .slice(0, 6);
 
   const projects = (devs ?? []).map((d) => ({ id: d.id, name: d.name }));
 
@@ -210,7 +138,6 @@ export default async function PricingPage() {
 
       <UpgradeCards
         upgrades={upgrades}
-        listingImages={listingImages}
         projects={projects}
       />
     </div>
