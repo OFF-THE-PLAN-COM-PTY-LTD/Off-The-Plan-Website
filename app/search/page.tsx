@@ -257,7 +257,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                 </div>
               );
               const cards: React.ReactNode[] = results.map((dev) => (
-                <PropertyCard key={dev.id} development={dev} layout="tall" />
+                <PropertyCard key={dev.id} development={dev} layout="tall" imageHeight="aspect-[2/1]" />
               ));
               // Tim (PDF p.4): "This banner needs to be pos. 4 / Currently pos.9".
               // Insert at index 3 so the banner is the 4th tile in the grid.
