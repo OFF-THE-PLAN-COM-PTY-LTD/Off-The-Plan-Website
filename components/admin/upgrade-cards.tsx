@@ -16,6 +16,8 @@ interface Upgrade {
   features: string[];
   cta: string;
   isPromoFlag: boolean;
+  /** Stripe checkout tier — present on portal upgrades; unused in admin view. */
+  tier?: string;
 }
 
 interface UpgradeCardsProps {
@@ -23,9 +25,15 @@ interface UpgradeCardsProps {
   listingImages: string[];
   projects: Project[];
   promoFlagHref?: string;
+  /**
+   * When true, every card CTA links straight to Stripe checkout for that
+   * tier instead of opening the manual "request an upgrade" modal. Enabled
+   * in the member portal; left off in the admin view.
+   */
+  checkout?: boolean;
 }
 
-export default function UpgradeCards({ upgrades, listingImages, projects, promoFlagHref = "/admin/listings" }: UpgradeCardsProps) {
+export default function UpgradeCards({ upgrades, listingImages, projects, promoFlagHref = "/admin/listings", checkout = false }: UpgradeCardsProps) {
   const [activeModal, setActiveModal] = useState<string | null>(null);
 
   const slots = Array.from({ length: 6 }, (_, i) => listingImages[i] ?? null);
@@ -76,7 +84,15 @@ export default function UpgradeCards({ upgrades, listingImages, projects, promoF
 
             {/* CTA */}
             <div className="px-4 pb-4 mt-auto">
-              {u.isPromoFlag ? (
+              {checkout ? (
+                <a
+                  href={`/api/stripe/checkout?tier=${u.tier}`}
+                  className="block text-center py-2.5 text-xs font-bold uppercase tracking-widest text-white transition-opacity hover:opacity-80"
+                  style={{ background: "#1a2340" }}
+                >
+                  {u.cta}
+                </a>
+              ) : u.isPromoFlag ? (
                 <a
                   href={promoFlagHref}
                   className="block text-center py-2.5 text-xs font-bold uppercase tracking-widest text-white transition-opacity hover:opacity-80"

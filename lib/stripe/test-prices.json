@@ -1,0 +1,15 @@
+{
+  "_comment": "Stripe TEST-MODE price IDs for Off The Plan. Account: offtheplan.com.au (acct_1JQR7qD2vyHqEf5F), shared with SubtleMove. All products tagged metadata.platform=off-the-plan. Regenerate/replace with live IDs before production.",
+  "mode": "test",
+  "account": "acct_1JQR7qD2vyHqEf5F",
+  "currency": "aud",
+  "tax_behavior": "exclusive",
+  "prices": {
+    "agency_listing":   { "amount": 299,  "price_id": "price_1TqJ7lD2vyHqEf5FW8wOKPNx", "product_id": "prod_Upz540XAENApyL" },
+    "builders_package": { "amount": 399,  "price_id": "price_1TqJ7oD2vyHqEf5FFuyyYcXp", "product_id": "prod_Upz551kOwDOyq2" },
+    "promo_flag":       { "amount": 50,   "price_id": "price_1TqJ7sD2vyHqEf5FeabAuYA3", "product_id": "prod_Upz6p3EK24vFCk" },
+    "featured_tier2":   { "amount": 200,  "price_id": "price_1TqJ7wD2vyHqEf5FrFhqzRjG", "product_id": "prod_Upz67Tfpboehma" },
+    "featured_tier1":   { "amount": 400,  "price_id": "price_1TqJ80D2vyHqEf5FS6sARaKh", "product_id": "prod_Upz60Bb8UGGSz4" },
+    "home_banner":      { "amount": 1000, "price_id": "price_1TqJ83D2vyHqEf5F3zvb5HPR", "product_id": "prod_Upz6oYwx8mD1wq" }
+  }
+}

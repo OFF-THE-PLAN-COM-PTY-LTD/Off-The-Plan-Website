@@ -15,6 +15,8 @@ export interface UpgradeTier {
   cta: string;
   /** Promo Flag is the only tier that doesn't open the upgrade-request modal. */
   isPromoFlag: boolean;
+  /** Stripe checkout tier key — matches CheckoutTier in lib/stripe/server.ts. */
+  tier: "promo_flag" | "featured_tier2" | "featured_tier1" | "home_banner";
 }
 
 export const UPGRADE_TIERS: UpgradeTier[] = [
@@ -29,6 +31,7 @@ export const UPGRADE_TIERS: UpgradeTier[] = [
     ],
     cta: "ADD A PROMO FLAG",
     isPromoFlag: true,
+    tier: "promo_flag",
   },
   {
     name: "Featured Project Tier 2",
@@ -41,6 +44,7 @@ export const UPGRADE_TIERS: UpgradeTier[] = [
     ],
     cta: "REQUEST AN UPGRADE",
     isPromoFlag: false,
+    tier: "featured_tier2",
   },
   {
     name: "Featured Project Tier 1",
@@ -53,6 +57,7 @@ export const UPGRADE_TIERS: UpgradeTier[] = [
     ],
     cta: "REQUEST AN UPGRADE",
     isPromoFlag: false,
+    tier: "featured_tier1",
   },
   {
     name: "Home Page Main Banner",
@@ -65,5 +70,6 @@ export const UPGRADE_TIERS: UpgradeTier[] = [
     ],
     cta: "REQUEST AN UPGRADE",
     isPromoFlag: false,
+    tier: "home_banner",
   },
 ];
