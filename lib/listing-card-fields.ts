@@ -219,28 +219,40 @@ export const DEFAULT_CARD_FIELDS: CardFieldDef[] = [BEDS, BATH, GARAGE, TOTAL_SI
 // Keys match the `type` column values on `developments` exactly (confirmed by
 // live-admin scrape in lib/category-features.ts) — mismatched strings would
 // silently fall back to the default set.
+// Land Estates — spec p2. Card + stocklist are the same four fields.
+const LAND_ESTATES_CONFIG: CategoryConfig = {
+  card: [LOT_NUMBER, LAND_AREA, FRONTAGE, DEPTH],
+};
+// House and Land — spec pp2–3. Card shows Land Size (the differentiator);
+// House Size + Frontage are captured in the stocklist only (4-field card cap).
+const HOUSE_AND_LAND_CONFIG: CategoryConfig = {
+  card: [BEDS, BATH, GARAGE, LAND_SIZE],
+  stocklist: [BEDS, BATH, GARAGE, HOUSE_SIZE, LAND_SIZE, FRONTAGE],
+};
+// Commercial — spec pp3–4. Card is 3 fields (fewer relevant summary fields);
+// Unit/Suite No. + Property Sub-Type are stocklist-only.
+const COMMERCIAL_CONFIG: CategoryConfig = {
+  card: [FLOOR_AREA, LEVEL, CAR_SPACES],
+  stocklist: [UNIT_SUITE, PROPERTY_SUB_TYPE, FLOOR_AREA, LEVEL, CAR_SPACES],
+};
+
 const CATEGORY_CONFIG: Record<string, CategoryConfig> = {
-  // Land Estates — spec p2. Card + stocklist are the same four fields.
-  "Land and Estates": {
-    card: [LOT_NUMBER, LAND_AREA, FRONTAGE, DEPTH],
-  },
-  // House and Land — spec pp2–3. Card shows Land Size (the differentiator);
-  // House Size + Frontage are captured in the stocklist only (4-field card cap).
-  "House & Land": {
-    card: [BEDS, BATH, GARAGE, LAND_SIZE],
-    stocklist: [BEDS, BATH, GARAGE, HOUSE_SIZE, LAND_SIZE, FRONTAGE],
-  },
-  Houses: {
-    // Legacy alias for House & Land (see CATEGORY_FEATURES).
-    card: [BEDS, BATH, GARAGE, LAND_SIZE],
-    stocklist: [BEDS, BATH, GARAGE, HOUSE_SIZE, LAND_SIZE, FRONTAGE],
-  },
-  // Commercial — spec pp3–4. Card is 3 fields (fewer relevant summary fields);
-  // Unit/Suite No. + Property Sub-Type are stocklist-only.
-  Commercial: {
-    card: [FLOOR_AREA, LEVEL, CAR_SPACES],
-    stocklist: [UNIT_SUITE, PROPERTY_SUB_TYPE, FLOOR_AREA, LEVEL, CAR_SPACES],
-  },
+  // Canonical portal taxonomy (PORTAL_TYPES) — used by the public site and the
+  // portal listing form.
+  "Land and Estates": LAND_ESTATES_CONFIG,
+  "House & Land": HOUSE_AND_LAND_CONFIG,
+  Commercial: COMMERCIAL_CONFIG,
+
+  // Legacy admin taxonomy (TYPES) aliases — the older /admin listing form still
+  // offers these names, and some imported listings were saved with them. Mapped
+  // to the same field sets so custom fields work regardless of which spelling a
+  // listing's `type` was saved with. ("House & Land" and "Commercial" are spelled
+  // identically in both taxonomies, so they need no separate alias.)
+  Land: LAND_ESTATES_CONFIG,
+  Houses: HOUSE_AND_LAND_CONFIG,
+
+  // Legacy residential types (Apartment, Townhouse, Villa, Mixed Use) fall
+  // through to DEFAULT_CARD_FIELDS — same as their portal equivalents.
 };
 
 export function getCardFields(category: string | null | undefined): CardFieldDef[] {

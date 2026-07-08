@@ -36,6 +36,30 @@ describe("per-category Configuration Summary (card) fields", () => {
     expect(keys(card)).toEqual(["floor_area_sqm", "level", "garage"]);
   });
 
+  test("legacy admin type 'Land' maps to the Land Estates fields", () => {
+    expect(keys(getCardFields("Land"))).toEqual([
+      "lot_number",
+      "land_area_sqm",
+      "frontage_m",
+      "depth_m",
+    ]);
+  });
+
+  test("legacy alias 'Houses' maps to House & Land fields", () => {
+    expect(keys(getCardFields("Houses"))).toEqual([
+      "beds",
+      "bath",
+      "garage",
+      "land_size_sqm",
+    ]);
+  });
+
+  test("legacy residential types keep the default set", () => {
+    for (const type of ["Apartment", "Townhouse", "Villa", "Mixed Use"]) {
+      expect(getCardFields(type)).toEqual(DEFAULT_CARD_FIELDS);
+    }
+  });
+
   test("residential categories keep the default set", () => {
     for (const type of ["New Apartments", "Townhouses", "Over 55's / Retirement"]) {
       expect(getCardFields(type)).toEqual(DEFAULT_CARD_FIELDS);
