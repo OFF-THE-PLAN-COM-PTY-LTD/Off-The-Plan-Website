@@ -220,11 +220,9 @@ interface Props {
 
 const AU_STATES = ["ACT", "NSW", "NT", "QLD", "SA", "TAS", "VIC", "WA"];
 
-const TYPES = [
-  "Apartment", "House & Land", "Townhouse", "Villa",
-  "Land", "Commercial", "Mixed Use",
-];
-
+// Canonical listing taxonomy — matches the public site + portal. The admin
+// form and the portal form both use this one list (was previously a separate
+// legacy set: Apartment / Townhouse / Villa / Land / Mixed Use).
 const PORTAL_TYPES = [
   "New Apartments", "Townhouses", "Land and Estates",
   "Commercial", "House & Land",
@@ -1506,7 +1504,11 @@ export function ListingForm({
               <label className={lbl}>Listing Type</label>
               <select value={type} onChange={(e) => setType(e.target.value)} className={inp + " cursor-pointer"}>
                 <option value="">— Select type —</option>
-                {(isPortal ? PORTAL_TYPES : TYPES).map((t) => <option key={t} value={t}>{t}</option>)}
+                {/* One canonical taxonomy everywhere. If this listing was saved
+                    with a legacy value not in the list (e.g. "Land", "Villa",
+                    "Mixed Use"), keep showing it so the value isn't silently
+                    wiped — re-selecting a proper name canonicalises it. */}
+                {(!type || PORTAL_TYPES.includes(type) ? PORTAL_TYPES : [type, ...PORTAL_TYPES]).map((t) => <option key={t} value={t}>{t}</option>)}
               </select>
             </div>
             {!isPortal && (
