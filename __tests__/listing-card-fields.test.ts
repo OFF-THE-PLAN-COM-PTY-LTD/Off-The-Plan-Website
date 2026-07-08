@@ -4,115 +4,102 @@ import {
   DEFAULT_CARD_FIELDS,
 } from "@/lib/listing-card-fields";
 
-const keys = (fields: { key: string; stocklistKey?: string }[]) => fields.map((f) => f.key);
-const stockKeys = (fields: { key: string; stocklistKey?: string }[]) =>
-  fields.map((f) => f.stocklistKey ?? f.key);
+const cardKeys = (t: string) => getCardFields(t).map((f) => f.key);
+const stockKeys = (t: string) => getStocklistFields(t).map((f) => f.stocklistKey ?? f.key);
 
-// Per dev spec v4 (PDF pages 2–7). These assertions lock in the per-category
-// Configuration Summary + Mini Stocklist field sets so a future "match legacy"
-// revert can't silently re-flatten them again.
-describe("per-category Configuration Summary (card) fields", () => {
-  test("Land and Estates → Lot No. / Land Area / Frontage / Depth", () => {
-    expect(keys(getCardFields("Land and Estates"))).toEqual([
-      "lot_number",
-      "land_area_sqm",
-      "frontage_m",
-      "depth_m",
-    ]);
-  });
+// The single source of truth for this test: dev spec v4, "Field Visibility
+// Matrix — All 6 Categories" (PDF p7) + the per-category detail (pp2–4).
+// card    = Configuration Summary (results card) field keys, in order.
+// stock   = Mini Stocklist field keys (stocklistKey), in order.
+const EXPECTED: Record<string, { card: string[]; stock: string[] }> = {
+  "New Apartments": {
+    card: ["beds", "bath", "garage", "internal_sqm"],
+    stock: ["bed", "bath", "parking", "size"],
+  },
+  Townhouses: {
+    card: ["beds", "bath", "garage", "internal_sqm"],
+    stock: ["bed", "bath", "parking", "size"],
+  },
+  "Over 55's / Retirement": {
+    card: ["beds", "bath", "garage", "internal_sqm"],
+    stock: ["bed", "bath", "parking", "size"],
+  },
+  "Land and Estates": {
+    card: ["lot_number", "land_area_sqm", "frontage_m", "depth_m"],
+    stock: ["lot_number", "land_area", "frontage", "depth"],
+  },
+  "House & Land": {
+    card: ["beds", "bath", "garage", "land_size_sqm"],
+    stock: ["bed", "bath", "parking", "house_size", "land_size", "frontage"],
+  },
+  Commercial: {
+    card: ["floor_area_sqm", "level", "garage"],
+    stock: ["unit_suite_no", "property_sub_type", "floor_area", "level", "parking"],
+  },
+};
 
-  test("House & Land → Beds / Bath / Garage / Land Size", () => {
-    expect(keys(getCardFields("House & Land"))).toEqual([
-      "beds",
-      "bath",
-      "garage",
-      "land_size_sqm",
-    ]);
-  });
-
-  test("Commercial → Floor Area / Level / Car Spaces (3 fields)", () => {
-    const card = getCardFields("Commercial");
-    expect(card).toHaveLength(3);
-    expect(keys(card)).toEqual(["floor_area_sqm", "level", "garage"]);
-  });
-
-  test("legacy admin type 'Land' maps to the Land Estates fields", () => {
-    expect(keys(getCardFields("Land"))).toEqual([
-      "lot_number",
-      "land_area_sqm",
-      "frontage_m",
-      "depth_m",
-    ]);
-  });
-
-  test("legacy alias 'Houses' maps to House & Land fields", () => {
-    expect(keys(getCardFields("Houses"))).toEqual([
-      "beds",
-      "bath",
-      "garage",
-      "land_size_sqm",
-    ]);
-  });
-
-  test("legacy residential types keep the default set", () => {
-    for (const type of ["Apartment", "Townhouse", "Villa", "Mixed Use"]) {
-      expect(getCardFields(type)).toEqual(DEFAULT_CARD_FIELDS);
-    }
-  });
-
-  test("residential categories keep the default set", () => {
-    for (const type of ["New Apartments", "Townhouses", "Over 55's / Retirement"]) {
-      expect(getCardFields(type)).toEqual(DEFAULT_CARD_FIELDS);
-    }
-  });
-
-  test("unknown / null type falls back to the default set", () => {
-    expect(getCardFields(undefined)).toEqual(DEFAULT_CARD_FIELDS);
-    expect(getCardFields("Something Else")).toEqual(DEFAULT_CARD_FIELDS);
-  });
-
-  test("card never exceeds the 4-field limit", () => {
-    for (const type of [
-      "New Apartments",
-      "Townhouses",
-      "Land and Estates",
-      "House & Land",
-      "Commercial",
-      "Over 55's / Retirement",
-    ]) {
+describe("all 6 categories match the dev-spec v4 field-visibility matrix", () => {
+  for (const [type, exp] of Object.entries(EXPECTED)) {
+    test(`${type} — Configuration Summary card fields`, () => {
+      expect(cardKeys(type)).toEqual(exp.card);
+    });
+    test(`${type} — Mini Stocklist fields`, () => {
+      expect(stockKeys(type)).toEqual(exp.stock);
+    });
+    test(`${type} — card respects the 4-field cap`, () => {
       expect(getCardFields(type).length).toBeLessThanOrEqual(4);
+    });
+  }
+});
+
+describe("REMOVE rules from the matrix are honoured", () => {
+  test("Land and Estates card has no beds/bath/garage/size", () => {
+    for (const k of ["beds", "bath", "garage", "internal_sqm"]) {
+      expect(cardKeys("Land and Estates")).not.toContain(k);
+    }
+  });
+  test("Commercial card has no beds/bath and no dwelling size", () => {
+    for (const k of ["beds", "bath", "internal_sqm"]) {
+      expect(cardKeys("Commercial")).not.toContain(k);
     }
   });
 });
 
-describe("per-category Mini Stocklist fields", () => {
-  test("House & Land stocklist adds House Size + Frontage on top of the card", () => {
-    expect(stockKeys(getStocklistFields("House & Land"))).toEqual([
-      "bed",
-      "bath",
-      "parking",
-      "house_size",
-      "land_size",
-      "frontage",
-    ]);
+describe("stocklist-only fields never leak onto the card", () => {
+  test("House & Land: House Size + Frontage are stocklist-only", () => {
+    expect(cardKeys("House & Land")).not.toContain("house_size_sqm");
+    expect(cardKeys("House & Land")).not.toContain("frontage_m");
+    expect(stockKeys("House & Land")).toEqual(
+      expect.arrayContaining(["house_size", "frontage"]),
+    );
   });
-
-  test("Commercial stocklist adds Unit/Suite No. + Property Sub-Type", () => {
-    expect(stockKeys(getStocklistFields("Commercial"))).toEqual([
-      "unit_suite_no",
-      "property_sub_type",
-      "floor_area",
-      "level",
-      "parking",
-    ]);
+  test("Commercial: Unit/Suite No. + Property Sub-Type are stocklist-only", () => {
+    expect(cardKeys("Commercial")).not.toContain("unit_suite_no");
+    expect(cardKeys("Commercial")).not.toContain("property_sub_type");
+    expect(stockKeys("Commercial")).toEqual(
+      expect.arrayContaining(["unit_suite_no", "property_sub_type"]),
+    );
   });
+});
 
-  test("Land and Estates stocklist defaults to its card fields", () => {
-    expect(stockKeys(getStocklistFields("Land and Estates"))).toEqual([
-      "lot_number",
-      "land_area",
-      "frontage",
-      "depth",
-    ]);
+describe("legacy admin taxonomy aliases resolve to the same field sets", () => {
+  test("'Land' → Land and Estates", () => {
+    expect(cardKeys("Land")).toEqual(EXPECTED["Land and Estates"].card);
+  });
+  test("'Houses' → House & Land", () => {
+    expect(cardKeys("Houses")).toEqual(EXPECTED["House & Land"].card);
+  });
+  test("legacy residential types fall back to the default set", () => {
+    for (const t of ["Apartment", "Townhouse", "Villa", "Mixed Use"]) {
+      expect(getCardFields(t)).toEqual(DEFAULT_CARD_FIELDS);
+    }
+  });
+});
+
+describe("safe fallbacks", () => {
+  test("null / undefined / unknown type → default residential set", () => {
+    expect(getCardFields(undefined)).toEqual(DEFAULT_CARD_FIELDS);
+    expect(getCardFields(null)).toEqual(DEFAULT_CARD_FIELDS);
+    expect(getCardFields("Something Else")).toEqual(DEFAULT_CARD_FIELDS);
   });
 });
