@@ -2278,10 +2278,12 @@ export function ListingForm({
             <p className="font-sans text-sm text-ink/70">
               You are about to delete the configuration:{" "}
               <strong>
-                {floorPlans[pendingDeleteIndex]?.beds || "—"} Bed,{" "}
-                {floorPlans[pendingDeleteIndex]?.bath || "—"} Bath,{" "}
-                {floorPlans[pendingDeleteIndex]?.garage || "—"} Garage
-                {floorPlans[pendingDeleteIndex]?.internal_sqm ? `, ${floorPlans[pendingDeleteIndex].internal_sqm} sqm` : ""}
+                {getCardFields(type)
+                  .map((f) => {
+                    const v = (floorPlans[pendingDeleteIndex] as unknown as Record<string, unknown>)?.[f.key];
+                    return `${v == null || v === "" ? "—" : v} ${f.label}`;
+                  })
+                  .join(", ")}
                 {floorPlans[pendingDeleteIndex]?.price_from ? `, $${Number(floorPlans[pendingDeleteIndex].price_from).toLocaleString()}` : ""}
               </strong>
               . This cannot be undone.
