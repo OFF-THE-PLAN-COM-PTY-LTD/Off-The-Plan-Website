@@ -207,29 +207,41 @@ interface CategoryConfig {
  */
 export const DEFAULT_CARD_FIELDS: CardFieldDef[] = [BEDS, BATH, GARAGE, TOTAL_SIZE];
 
-// Ched confirmed 2026-07-02 against the legacy admin: every listing category
-// (New Apartments, Townhouses, Land and Estates, House & Land, Over 55s /
-// Retirement, Commercial) uses the SAME Configuration Summary field set —
-// Beds / Bath / Garage / Total Size / Price From. Legacy does not swap in
-// Lot No. / Frontage / Depth / Floor Area / etc. per category.
+// Per-category Configuration Summary + Mini Stocklist field sets, per dev
+// spec v4 (PDF pages 2–7, "Field Visibility Matrix"). The client confirmed
+// (2026-07-08 email) that the legacy site's one-size-fits-all field set is
+// WRONG for non-residential categories — the whole reason the spec was
+// commissioned — so each category below swaps in the fields buyers actually
+// need. Categories NOT listed here (New Apartments, Townhouses, Over 55's /
+// Retirement) intentionally fall through to DEFAULT_CARD_FIELDS
+// (Beds / Bath / Garage / Total Size), which is correct per the same matrix.
 //
-// We revert to that behavior here by leaving CATEGORY_CONFIG empty — every
-// category falls back to DEFAULT_CARD_FIELDS via the helpers below.
-//
-// The per-category CardFieldDef defs above (LOT_NUMBER, LAND_AREA, FRONTAGE,
-// DEPTH, HOUSE_SIZE, LAND_SIZE, FLOOR_AREA, LEVEL, CAR_SPACES, UNIT_SUITE,
-// PROPERTY_SUB_TYPE) are intentionally retained even though nothing in
-// CATEGORY_CONFIG references them today. If Tim ever asks for per-category
-// fields ("dev spec v4" originally proposed this), the field defs are
-// ready to wire back into a category entry — no rewrite needed.
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const _UNUSED_FIELD_DEFS_KEPT_FOR_FUTURE_SCOPE = [
-  LOT_NUMBER, LAND_AREA, FRONTAGE, DEPTH,
-  HOUSE_SIZE, LAND_SIZE, FLOOR_AREA, LEVEL,
-  CAR_SPACES, UNIT_SUITE, PROPERTY_SUB_TYPE,
-];
-
-const CATEGORY_CONFIG: Record<string, CategoryConfig> = {};
+// Keys match the `type` column values on `developments` exactly (confirmed by
+// live-admin scrape in lib/category-features.ts) — mismatched strings would
+// silently fall back to the default set.
+const CATEGORY_CONFIG: Record<string, CategoryConfig> = {
+  // Land Estates — spec p2. Card + stocklist are the same four fields.
+  "Land and Estates": {
+    card: [LOT_NUMBER, LAND_AREA, FRONTAGE, DEPTH],
+  },
+  // House and Land — spec pp2–3. Card shows Land Size (the differentiator);
+  // House Size + Frontage are captured in the stocklist only (4-field card cap).
+  "House & Land": {
+    card: [BEDS, BATH, GARAGE, LAND_SIZE],
+    stocklist: [BEDS, BATH, GARAGE, HOUSE_SIZE, LAND_SIZE, FRONTAGE],
+  },
+  Houses: {
+    // Legacy alias for House & Land (see CATEGORY_FEATURES).
+    card: [BEDS, BATH, GARAGE, LAND_SIZE],
+    stocklist: [BEDS, BATH, GARAGE, HOUSE_SIZE, LAND_SIZE, FRONTAGE],
+  },
+  // Commercial — spec pp3–4. Card is 3 fields (fewer relevant summary fields);
+  // Unit/Suite No. + Property Sub-Type are stocklist-only.
+  Commercial: {
+    card: [FLOOR_AREA, LEVEL, CAR_SPACES],
+    stocklist: [UNIT_SUITE, PROPERTY_SUB_TYPE, FLOOR_AREA, LEVEL, CAR_SPACES],
+  },
+};
 
 export function getCardFields(category: string | null | undefined): CardFieldDef[] {
   if (!category) return DEFAULT_CARD_FIELDS;
