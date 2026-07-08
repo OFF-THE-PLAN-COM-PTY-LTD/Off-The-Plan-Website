@@ -25,6 +25,7 @@ const config: Config = {
         mono: ["var(--font-jetbrains-mono)", "monospace"],
         sans: ["var(--font-inter)", "system-ui", "sans-serif"],
         brand: ["var(--font-montserrat)", "system-ui", "sans-serif"],
+        bebas: ["var(--font-bebas-neue)", "Impact", "sans-serif"],
       },
       fontSize: {
         "hero-xl": ["140px", { lineHeight: "1", letterSpacing: "-0.03em", fontWeight: "300" }],

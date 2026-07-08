@@ -10,7 +10,7 @@ const navLinks = [
   { label: "Resources", href: "/resources/calculators" },
   { label: "News", href: "/news" },
   { label: "Guides", href: "/guides" },
-  // { label: "Developers", href: "/developers" }, // hidden — re-enable when client confirms
+  { label: "Developers", href: "/developers" },
   { label: "About", href: "/about" },
   { label: "Pricing", href: "/features-and-pricing" },
   { label: "Contact", href: "/contact" },

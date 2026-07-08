@@ -270,7 +270,7 @@ export default async function HomePage() {
             <p className="font-brand text-label-lg uppercase tracking-[0.3em] text-ink-light/50">
               Australia&apos;s New Home Portal
             </p>
-            <h1 className="font-brand font-normal text-ink-light leading-[0.9] tracking-tight text-[clamp(56px,9vw,148px)]">
+            <h1 className="font-bebas font-normal text-ink-light leading-[0.9] tracking-wide text-[clamp(64px,10vw,172px)]">
               Off{" "}<em className="not-italic italic text-orange">The</em>{" "}Plan<sup className="text-[0.3em] align-super ml-1 font-normal text-ink-light/70">®</sup>
             </h1>
             <p className="font-brand font-normal text-ink-light/70 text-[clamp(16px,1.8vw,22px)] tracking-wide max-w-md">

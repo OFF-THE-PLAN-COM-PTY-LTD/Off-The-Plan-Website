@@ -173,20 +173,6 @@ export function NewsForm({ id, existing }: Props) {
                   placeholder="Short subtitle…"
                 />
               </div>
-              <div>
-                <label className="block font-sans text-xs font-semibold uppercase tracking-wider text-ink/50 mb-1">Page Type *</label>
-                <select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value as "News" | "Guides")}
-                  className="w-full border border-line px-3 py-2 font-sans text-sm text-ink bg-white focus:outline-none focus:border-orange"
-                >
-                  <option value="News">News</option>
-                  <option value="Guides">Guides</option>
-                </select>
-                <p className="font-sans text-[11px] text-ink/40 mt-1">
-                  Determines whether this article appears on the News page or the Guides page.
-                </p>
-              </div>
             </div>
 
             {/* Body content */}
@@ -221,6 +207,20 @@ export function NewsForm({ id, existing }: Props) {
                     className="border border-line px-3 py-2 font-sans text-sm text-ink focus:outline-none focus:border-orange w-full"
                   />
                 </div>
+              </div>
+              <div>
+                <label className="block font-sans text-xs font-semibold uppercase tracking-wider text-ink/50 mb-1">Page Type *</label>
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value as "News" | "Guides")}
+                  className="w-full border border-line px-3 py-2 font-sans text-sm text-ink bg-white focus:outline-none focus:border-orange"
+                >
+                  <option value="News">News</option>
+                  <option value="Guides">Guides</option>
+                </select>
+                <p className="font-sans text-[11px] text-ink/40 mt-1">
+                  Determines whether this article appears on the News page or the Guides page.
+                </p>
               </div>
               <div>
                 <label className="block font-sans text-xs font-semibold uppercase tracking-wider text-ink/50 mb-1">Read Time (minutes)</label>
