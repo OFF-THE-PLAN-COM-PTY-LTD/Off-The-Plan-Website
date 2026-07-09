@@ -38,6 +38,34 @@ export default async function AdminAgenciesPage({ searchParams }: Props) {
     supabaseAdmin.from("agencies").select("id", { count: "exact", head: true }),
   ]);
 
+  // Attach interest_type ("Developer" / "Agent") to each agency by linking
+  // agencies.email → auth.users → profiles.interest_type. There's no FK
+  // between agencies and profiles (join is by email), so we do it in JS.
+  // Single listUsers call + single profiles query — fine for the current
+  // dataset (~124 rows). If the org ever exceeds 500 profiles, paginate.
+  const emailToUserId = new Map<string, string>();
+  {
+    const { data: authList } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 500 });
+    for (const u of authList?.users ?? []) {
+      if (u.email) emailToUserId.set(u.email.toLowerCase(), u.id);
+    }
+  }
+  const userIds = (rows ?? [])
+    .map((a) => (a.email ? emailToUserId.get(a.email.toLowerCase()) : undefined))
+    .filter((id): id is string => Boolean(id));
+  const userIdToInterest = new Map<string, string | null>();
+  if (userIds.length > 0) {
+    const { data: profileRows } = await supabaseAdmin
+      .from("profiles")
+      .select("id, interest_type")
+      .in("id", userIds);
+    for (const p of profileRows ?? []) userIdToInterest.set(p.id, p.interest_type ?? null);
+  }
+  const enrichedRows = (rows ?? []).map((a) => {
+    const userId = a.email ? emailToUserId.get(a.email.toLowerCase()) : undefined;
+    return { ...a, interest_type: userId ? (userIdToInterest.get(userId) ?? null) : null };
+  });
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -45,7 +73,7 @@ export default async function AdminAgenciesPage({ searchParams }: Props) {
         <p className="font-sans text-sm text-ink/40 uppercase tracking-widest">{allCount ?? 0} total</p>
       </div>
       <AgenciesTable
-        agencies={(rows ?? []) as any}
+        agencies={enrichedRows as any}
         activeStatus={status}
         counts={{
           pending: pendingCount ?? 0,

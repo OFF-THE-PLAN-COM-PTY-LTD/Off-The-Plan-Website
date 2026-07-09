@@ -12,9 +12,14 @@ type Agency = {
   total_active_listings: number;
   email_verified: boolean;
   portal_status: "active" | "inactive" | "pending";
+  // Joined from profiles.interest_type via email → auth.users → profiles in
+  // page.tsx. "Developer" / "Agent" are the two values that appear on
+  // profile rows we surface here; "Agent" is presented as "Member" in the UI.
+  interest_type?: string | null;
 };
 
 type EmailFilter = "all" | "verified" | "unverified";
+type TypeFilter = "all" | "Developer" | "Agent";
 
 /**
  * Tim's proposed migration password format (May 29 reply):
@@ -50,6 +55,7 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
 
   const [search, setSearch] = useState("");
   const [emailFilter, setEmailFilter] = useState<EmailFilter>("all");
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
 
   // Confirm modal state
   const [modal, setModal] = useState<{ agency: Agency; action: "deactivate" | "activate" | "reject" } | null>(null);
@@ -220,7 +226,9 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
       emailFilter === "all" ||
       (emailFilter === "verified" && a.email_verified) ||
       (emailFilter === "unverified" && !a.email_verified);
-    return matchesSearch && matchesEmail;
+    const matchesType =
+      typeFilter === "all" || (a.interest_type ?? "") === typeFilter;
+    return matchesSearch && matchesEmail && matchesType;
   });
 
   function openModal(agency: Agency) {
@@ -328,9 +336,22 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
             </label>
           ))}
         </div>
-        {(search || emailFilter !== "all") && (
+        <div className="flex items-center gap-2 text-sm font-sans text-ink/60">
+          <label htmlFor="typeFilter">Type</label>
+          <select
+            id="typeFilter"
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value as TypeFilter)}
+            className="border border-line px-2 py-2 text-sm font-sans text-ink bg-white focus:outline-none focus:border-navy"
+          >
+            <option value="all">All</option>
+            <option value="Developer">Developers</option>
+            <option value="Agent">Members</option>
+          </select>
+        </div>
+        {(search || emailFilter !== "all" || typeFilter !== "all") && (
           <button
-            onClick={() => { setSearch(""); setEmailFilter("all"); }}
+            onClick={() => { setSearch(""); setEmailFilter("all"); setTypeFilter("all"); }}
             className="text-sm font-sans text-blue-600 underline"
           >
             Reset
