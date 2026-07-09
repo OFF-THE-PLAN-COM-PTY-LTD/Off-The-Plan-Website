@@ -263,89 +263,65 @@ export default async function FeaturesAndPricingPage() {
 
               <div className="grid grid-cols-1 gap-0 border border-white/20 max-w-sm mx-auto w-full">
                 {PLANS.map((plan) => (
-                  <div
-                    key={plan.id}
-                    className={`flex flex-col p-7 ${
-                      plan.highlighted
-                        ? "bg-orange text-white"
-                        : "bg-white text-ink border-r border-line"
-                    }`}
-                  >
-                    {/* Plan name */}
-                    <p
-                      className={`font-mono text-[10px] uppercase tracking-[0.2em] mb-4 leading-relaxed ${
-                        plan.highlighted ? "text-white/80" : "text-ink/60"
-                      }`}
-                    >
+                  // Layout mirrors /admin/pricing: orange header stripe with
+                  // the plan name → white body with navy price + grey feature
+                  // text → orange CTA button at the bottom. The old "fully
+                  // orange" highlighted variant was hard to read (light copy
+                  // on orange); this reads cleanly at any viewport.
+                  <div key={plan.id} className="flex flex-col bg-white overflow-hidden">
+                    {/* Header stripe */}
+                    <div className="px-6 py-3 text-center font-mono text-[11px] font-bold uppercase tracking-[0.2em] bg-orange text-white">
                       {plan.name}
-                    </p>
-
-                    {/* Price */}
-                    <div className="mb-5">
-                      <span
-                        className={`font-display font-light text-[2.8rem] leading-none ${
-                          plan.highlighted ? "text-white" : "text-navy"
-                        }`}
-                      >
-                        {plan.price}
-                      </span>
-                      <span
-                        className={`font-sans text-[13px] ml-1 ${
-                          plan.highlighted ? "text-white/70" : "text-ink/50"
-                        }`}
-                      >
-                        /month
-                      </span>
                     </div>
 
-                    {/* Features */}
-                    <ul className="space-y-3 mb-8 flex-1">
-                      {plan.features.map((f) => (
-                        <li key={f} className="flex items-start gap-2.5">
-                          <svg
-                            width="15"
-                            height="15"
-                            viewBox="0 0 16 16"
-                            fill="none"
-                            className="flex-shrink-0 mt-0.5"
-                            aria-hidden="true"
-                          >
-                            <circle
-                              cx="8"
-                              cy="8"
-                              r="7.5"
-                              stroke={plan.highlighted ? "rgba(255,255,255,0.7)" : "#E07B39"}
-                            />
-                            <path
-                              d="M5 8l2 2 4-4"
-                              stroke={plan.highlighted ? "rgba(255,255,255,0.9)" : "#E07B39"}
-                              strokeWidth="1.5"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                          <span
-                            className={`font-sans text-[12px] leading-relaxed ${
-                              plan.highlighted ? "text-white/85" : "text-ink/70"
-                            }`}
-                          >
-                            {f}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
+                    {/* Body */}
+                    <div className="flex flex-col p-7 flex-1">
+                      {/* Price */}
+                      <div className="mb-5 text-center">
+                        <span className="font-display font-light text-[2.8rem] leading-none text-navy">
+                          {plan.price}
+                        </span>
+                        <span className="font-sans text-[13px] ml-1 text-ink/50">
+                          /month
+                        </span>
+                      </div>
 
-                    {/* CTA button — starts Stripe checkout for this plan */}
-                    <a
-                      href={`/api/stripe/checkout?tier=${plan.tier}`}
-                      className={`font-mono text-[10px] uppercase tracking-widest text-center py-3 border transition-colors ${
-                        plan.highlighted
-                          ? "border-white text-white hover:bg-white hover:text-orange"
-                          : "border-navy/30 text-navy hover:border-orange hover:text-orange"
-                      }`}
-                    >
-                      {plan.cta}
-                    </a>
+                      {/* Features */}
+                      <ul className="space-y-3 mb-8 flex-1">
+                        {plan.features.map((f) => (
+                          <li key={f} className="flex items-start gap-2.5">
+                            <svg
+                              width="15"
+                              height="15"
+                              viewBox="0 0 16 16"
+                              fill="none"
+                              className="flex-shrink-0 mt-0.5"
+                              aria-hidden="true"
+                            >
+                              <circle cx="8" cy="8" r="7.5" stroke="#E07B39" />
+                              <path
+                                d="M5 8l2 2 4-4"
+                                stroke="#E07B39"
+                                strokeWidth="1.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                            <span className="font-sans text-[12px] leading-relaxed text-ink/70">
+                              {f}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+
+                      {/* CTA button — starts Stripe checkout for this plan */}
+                      <a
+                        href={`/api/stripe/checkout?tier=${plan.tier}`}
+                        className="font-mono text-[10px] uppercase tracking-widest text-center py-3 border transition-colors bg-orange text-white border-orange hover:bg-orange/90"
+                      >
+                        {plan.cta}
+                      </a>
+                    </div>
                   </div>
                 ))}
               </div>
