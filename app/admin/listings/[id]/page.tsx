@@ -2,6 +2,13 @@ import { notFound } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { ListingForm } from "./listing-form";
 
+// Bypass Next.js's App Router cache for this admin edit page. Without this,
+// navigating away and back within the router-cache TTL (~30s) serves the
+// stale snapshot — mini-stocklist / floor-plan edits appear to "not
+// reflect" until a hard refresh, even though the DB is already updated
+// and the public listing page shows the new values.
+export const dynamic = "force-dynamic";
+
 interface Props { params: { id: string } }
 
 export default async function AdminListingEditPage({ params }: Props) {
