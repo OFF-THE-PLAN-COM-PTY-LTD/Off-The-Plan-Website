@@ -8,7 +8,10 @@ interface Props {
 }
 
 export default async function AdminAgenciesPage({ searchParams }: Props) {
-  const VALID_STATUSES = ["pending", "active", "inactive", "all"] as const;
+  // "archived" isn't a portal_status value — it's a derived state: the
+  // agencies row exists but no matching Supabase Auth user does (the
+  // login was deleted or was never linked). Handled in JS below.
+  const VALID_STATUSES = ["pending", "active", "inactive", "archived", "all"] as const;
   type StatusKey = typeof VALID_STATUSES[number];
 
   const rawStatus = searchParams.status ?? "all";
@@ -16,41 +19,25 @@ export default async function AdminAgenciesPage({ searchParams }: Props) {
     ? (rawStatus as StatusKey)
     : "all";
 
-  let q = supabaseAdmin
-    .from("agencies")
-    .select("id, name, email, org_name, mobile, total_active_listings, email_verified, portal_status")
-    .order("name", { ascending: true });
-  if (status !== "all") {
-    q = q.eq("portal_status", status);
-  }
-
-  const [
-    { data: rows },
-    { count: pendingCount },
-    { count: activeCount },
-    { count: inactiveCount },
-    { count: allCount },
-  ] = await Promise.all([
-    q,
-    supabaseAdmin.from("agencies").select("id", { count: "exact", head: true }).eq("portal_status", "pending"),
-    supabaseAdmin.from("agencies").select("id", { count: "exact", head: true }).eq("portal_status", "active"),
-    supabaseAdmin.from("agencies").select("id", { count: "exact", head: true }).eq("portal_status", "inactive"),
-    supabaseAdmin.from("agencies").select("id", { count: "exact", head: true }),
+  // Always fetch the full agencies list — we need it to compute the archived
+  // count (agencies with no linked auth user), which the tab strip shows
+  // regardless of which tab is active. At current scale (~124 rows) the
+  // extra bandwidth vs a status-filtered fetch is negligible.
+  const [{ data: allAgencies }, { data: authList }] = await Promise.all([
+    supabaseAdmin
+      .from("agencies")
+      .select("id, name, email, org_name, mobile, total_active_listings, email_verified, portal_status")
+      .order("name", { ascending: true }),
+    supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 500 }),
   ]);
 
-  // Attach interest_type ("Developer" / "Agent") to each agency by linking
-  // agencies.email → auth.users → profiles.interest_type. There's no FK
-  // between agencies and profiles (join is by email), so we do it in JS.
-  // Single listUsers call + single profiles query — fine for the current
-  // dataset (~124 rows). If the org ever exceeds 500 profiles, paginate.
   const emailToUserId = new Map<string, string>();
-  {
-    const { data: authList } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 500 });
-    for (const u of authList?.users ?? []) {
-      if (u.email) emailToUserId.set(u.email.toLowerCase(), u.id);
-    }
+  for (const u of authList?.users ?? []) {
+    if (u.email) emailToUserId.set(u.email.toLowerCase(), u.id);
   }
-  const userIds = (rows ?? [])
+
+  // Attach interest_type via profiles for rows that DO have an auth user.
+  const userIds = (allAgencies ?? [])
     .map((a) => (a.email ? emailToUserId.get(a.email.toLowerCase()) : undefined))
     .filter((id): id is string => Boolean(id));
   const userIdToInterest = new Map<string, string | null>();
@@ -61,26 +48,42 @@ export default async function AdminAgenciesPage({ searchParams }: Props) {
       .in("id", userIds);
     for (const p of profileRows ?? []) userIdToInterest.set(p.id, p.interest_type ?? null);
   }
-  const enrichedRows = (rows ?? []).map((a) => {
+
+  const enrichedAll = (allAgencies ?? []).map((a) => {
     const userId = a.email ? emailToUserId.get(a.email.toLowerCase()) : undefined;
-    return { ...a, interest_type: userId ? (userIdToInterest.get(userId) ?? null) : null };
+    return {
+      ...a,
+      interest_type: userId ? (userIdToInterest.get(userId) ?? null) : null,
+      is_archived: !userId,
+    };
   });
+
+  const counts = {
+    pending: enrichedAll.filter((r) => r.portal_status === "pending").length,
+    active: enrichedAll.filter((r) => r.portal_status === "active").length,
+    inactive: enrichedAll.filter((r) => r.portal_status === "inactive").length,
+    archived: enrichedAll.filter((r) => r.is_archived).length,
+    all: enrichedAll.length,
+  };
+
+  // Filter the visible rows for the current tab.
+  const rowsForTab =
+    status === "archived"
+      ? enrichedAll.filter((r) => r.is_archived)
+      : status === "all"
+        ? enrichedAll
+        : enrichedAll.filter((r) => r.portal_status === status);
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-display font-light text-navy text-section-lg">All Profiles</h1>
-        <p className="font-sans text-sm font-semibold text-ink uppercase tracking-widest">{allCount ?? 0} total</p>
+        <p className="font-sans text-sm font-semibold text-ink uppercase tracking-widest">{counts.all} total</p>
       </div>
       <AgenciesTable
-        agencies={enrichedRows as any}
+        agencies={rowsForTab as any}
         activeStatus={status}
-        counts={{
-          pending: pendingCount ?? 0,
-          active: activeCount ?? 0,
-          inactive: inactiveCount ?? 0,
-          all: allCount ?? 0,
-        }}
+        counts={counts}
       />
     </div>
   );

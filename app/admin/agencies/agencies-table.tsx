@@ -16,6 +16,9 @@ type Agency = {
   // page.tsx. "Developer" / "Agent" are the two values that appear on
   // profile rows we surface here; "Agent" is presented as "Member" in the UI.
   interest_type?: string | null;
+  // Derived in page.tsx — true when agencies.email doesn't match any
+  // Supabase Auth user (login deleted, or the row was never linked).
+  is_archived?: boolean;
 };
 
 type EmailFilter = "all" | "verified" | "unverified";
@@ -41,7 +44,7 @@ function suggestedPassword(name: string | null | undefined): string {
   return `${mm}_${transformed || "user"}_${yy}`;
 }
 
-type StatusKey = "pending" | "active" | "inactive" | "all";
+type StatusKey = "pending" | "active" | "inactive" | "archived" | "all";
 
 interface Props {
   agencies: Agency[];
@@ -326,7 +329,7 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
           still works if we ever need it (or manually park an account). Re-add
           "pending" to the array below to bring the chip back. */}
       <div className="flex items-center gap-1 border-b border-line mb-4">
-        {(["active", "inactive", "all"] as StatusKey[]).map((key) => {
+        {(["active", "inactive", "archived", "all"] as StatusKey[]).map((key) => {
           const label = key === "all" ? "All" : key.charAt(0).toUpperCase() + key.slice(1);
           const href = key === "all" ? "/admin/agencies" : `/admin/agencies?status=${key}`;
           const isActive = activeStatus === key;
