@@ -2,9 +2,12 @@
 
 import { useEffect, useState } from "react";
 
-// sessionStorage key — cleared automatically when the tab closes.
-// We also re-show on hard refresh by checking performance.navigation.type.
-const SESSION_KEY = "otp_popup_shown";
+// localStorage key — persists across tabs, browser restarts, and hard
+// refreshes. The popup fires ONCE per browser profile per device; once
+// this flag is set, the visitor never sees it again on this device
+// unless they clear their site data (or use a different browser/device).
+// Ched's ask 2026-07-09.
+const STORAGE_KEY = "otp_popup_shown";
 const POPUP_DELAY_MS = 5000;
 
 const interestOptions = [
@@ -28,25 +31,20 @@ export function CirclePopup() {
 
   useEffect(() => {
     try {
-      // Check whether this is a hard reload (F5 / Ctrl+R) or a fresh navigation.
-      // Either way show the popup — UNLESS it was already shown during this
-      // same in-page session (i.e. the user navigated around the site).
-      const isReload =
-        (window.performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined)
-          ?.type === "reload";
+      // Shown before on this browser? Never show again.
+      if (localStorage.getItem(STORAGE_KEY) === "1") return;
 
-      const alreadyShownThisSession = sessionStorage.getItem(SESSION_KEY) === "1";
-
-      // Show if: fresh tab/first-visit OR hard refresh
-      if (isReload || !alreadyShownThisSession) {
-        const timer = setTimeout(() => {
-          setVisible(true);
-          sessionStorage.setItem(SESSION_KEY, "1");
-        }, POPUP_DELAY_MS);
-        return () => clearTimeout(timer);
-      }
+      const timer = setTimeout(() => {
+        setVisible(true);
+        // Stamp the flag as soon as we render — whether the visitor
+        // submits, closes, or ignores, we've done our one appearance.
+        try { localStorage.setItem(STORAGE_KEY, "1"); } catch {}
+      }, POPUP_DELAY_MS);
+      return () => clearTimeout(timer);
     } catch {
-      // SSR / private-browsing guard — fail silently
+      // SSR / private-browsing guard — fail silently. Private mode users
+      // will just see the popup on each visit; nothing we can do about
+      // that without a server-side identifier.
     }
   }, []);
 
