@@ -57,6 +57,38 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
   const [emailFilter, setEmailFilter] = useState<EmailFilter>("all");
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
 
+  // Per-row role dropdown state. Server load populates the initial map from
+  // the joined profiles.interest_type; user edits update it optimistically
+  // and hit the API, reverting on failure. Keyed by agency.id.
+  const [interestByAgency, setInterestByAgency] = useState<Record<string, string | null>>(
+    () => Object.fromEntries(agencies.map((a) => [a.id, a.interest_type ?? null])),
+  );
+  const [savingInterestId, setSavingInterestId] = useState<string | null>(null);
+
+  async function handleInterestChange(agencyId: string, newValue: string) {
+    const prev = interestByAgency[agencyId] ?? null;
+    const next = newValue === "" ? null : newValue;
+    setInterestByAgency((m) => ({ ...m, [agencyId]: next }));
+    setSavingInterestId(agencyId);
+    try {
+      const res = await fetch("/api/admin/agencies/interest-type", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ agencyId, interestType: next }),
+      });
+      if (!res.ok) {
+        const { error } = await res.json().catch(() => ({ error: "Failed to save" }));
+        setInterestByAgency((m) => ({ ...m, [agencyId]: prev }));
+        alert(error || "Failed to save role.");
+      }
+    } catch {
+      setInterestByAgency((m) => ({ ...m, [agencyId]: prev }));
+      alert("Network error — role not saved.");
+    } finally {
+      setSavingInterestId(null);
+    }
+  }
+
   // Confirm modal state
   const [modal, setModal] = useState<{ agency: Agency; action: "deactivate" | "activate" | "reject" } | null>(null);
   const [confirmText, setConfirmText] = useState("");
@@ -226,8 +258,12 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
       emailFilter === "all" ||
       (emailFilter === "verified" && a.email_verified) ||
       (emailFilter === "unverified" && !a.email_verified);
+    // Filter reads from the live local map so a role change reflects in the
+    // active filter immediately (e.g. change "—" to Developer while
+    // Developers filter is on, row disappears without a page reload).
+    const currentInterest = interestByAgency[a.id] ?? null;
     const matchesType =
-      typeFilter === "all" || (a.interest_type ?? "") === typeFilter;
+      typeFilter === "all" || (currentInterest ?? "") === typeFilter;
     return matchesSearch && matchesEmail && matchesType;
   });
 
@@ -375,6 +411,7 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
             <tr className="border-b border-line">
               <th className="font-sans text-xs font-semibold text-ink/50 uppercase tracking-wider px-4 py-3 w-10">#</th>
               <th className="font-sans text-xs font-semibold text-ink/50 uppercase tracking-wider px-4 py-3">Details</th>
+              <th className="font-sans text-xs font-semibold text-ink/50 uppercase tracking-wider px-4 py-3 text-center">Type</th>
               <th className="font-sans text-xs font-semibold text-ink/50 uppercase tracking-wider px-4 py-3 text-center">Active Listings</th>
               <th className="font-sans text-xs font-semibold text-ink/50 uppercase tracking-wider px-4 py-3 text-center">Email Verified</th>
               <th className="font-sans text-xs font-semibold text-ink/50 uppercase tracking-wider px-4 py-3 text-center">Portal Status</th>
@@ -407,6 +444,22 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
                       </p>
                     )}
                   </div>
+                </td>
+                <td className="px-4 py-4 text-center">
+                  <select
+                    value={interestByAgency[a.id] ?? ""}
+                    onChange={(e) => handleInterestChange(a.id, e.target.value)}
+                    disabled={savingInterestId === a.id}
+                    aria-label="Profile role"
+                    className="border border-line px-2 py-1 text-xs font-sans text-ink bg-white focus:outline-none focus:border-navy disabled:opacity-50"
+                  >
+                    <option value="">— Select —</option>
+                    <option value="Developer">Developer</option>
+                    <option value="Agent">Member</option>
+                  </select>
+                  {savingInterestId === a.id && (
+                    <p className="mt-1 font-mono text-[9px] uppercase tracking-widest text-ink/40">Saving…</p>
+                  )}
                 </td>
                 <td className="px-4 py-4 text-center font-sans text-sm text-ink/60">
                   {a.total_active_listings}
