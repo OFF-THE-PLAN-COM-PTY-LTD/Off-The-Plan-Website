@@ -70,7 +70,7 @@ export default async function AdminAgenciesPage({ searchParams }: Props) {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-display font-light text-navy text-section-lg">All Profiles</h1>
-        <p className="font-sans text-sm text-ink/40 uppercase tracking-widest">{allCount ?? 0} total</p>
+        <p className="font-sans text-sm font-semibold text-ink uppercase tracking-widest">{allCount ?? 0} total</p>
       </div>
       <AgenciesTable
         agencies={enrichedRows as any}

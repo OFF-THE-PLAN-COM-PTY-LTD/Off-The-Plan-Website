@@ -365,7 +365,7 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
         >
           {bulkSending ? "Sending…" : "Email Set-Password Link to All"}
         </button>
-        <span className="text-sm font-sans text-ink/40">{filtered.length} agencies</span>
+        <span className="text-sm font-sans font-semibold text-ink">{filtered.length} {filtered.length === 1 ? "profile" : "profiles"}</span>
       </div>
 
       {/* Table */}
