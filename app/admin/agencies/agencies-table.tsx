@@ -18,11 +18,10 @@ type Agency = {
   interest_type?: string | null;
   // agencies.archived — admin's manual soft-archive flag.
   archived?: boolean;
-  // Derived in page.tsx — archived flag OR no linked auth user (orphan).
+  // Derived in page.tsx — mirrors `archived`. Legacy orphans (no linked
+  // auth user) live in Active/Inactive; the bulk set-password endpoint
+  // creates a login for them on the fly on send.
   is_archived?: boolean;
-  // Derived in page.tsx — true when there's no linked auth user. Used to
-  // gate the Unarchive button (orphans can't come back until re-linked).
-  is_orphan?: boolean;
 };
 
 type EmailFilter = "all" | "verified" | "unverified";
@@ -190,26 +189,14 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
 
   const BULK_CONFIRM_PHRASE = "SEND TO ALL";
 
-  // Bulk mode: "active" is the launch-blast to every agency with a login;
-  // "archived" is the legacy-migration invite to Archived rows (both admin-
-  // flagged and orphaned). Modal + confirm phrase are shared so we only
-  // maintain one modal component; the mode picks which endpoint is called.
-  const [bulkMode, setBulkMode] = useState<"active" | "archived">("active");
-
   async function handleBulkEmail() {
     if (bulkConfirmText !== BULK_CONFIRM_PHRASE) return;
     setBulkSending(true);
     try {
-      const url =
-        bulkMode === "archived"
-          ? "/api/admin/agencies/send-invite-to-archived"
-          : "/api/admin/users/send-set-password";
-      const body =
-        bulkMode === "archived" ? {} : { scope: "all-members" };
-      const res = await fetch(url, {
+      const res = await fetch("/api/admin/users/send-set-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: JSON.stringify({ scope: "all-members" }),
       });
       const json = await res.json();
       if (!res.ok) {
@@ -219,8 +206,8 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
       setBulkModalOpen(false);
       setBulkConfirmText("");
       const createdSuffix =
-        bulkMode === "archived" && typeof json.created === "number"
-          ? ` ${json.created} new login${json.created === 1 ? "" : "s"} created.`
+        typeof json.created === "number" && json.created > 0
+          ? ` ${json.created} new login${json.created === 1 ? "" : "s"} created for legacy profiles.`
           : "";
       alert(
         `Done. Sent ${json.sent} of ${json.total} link${json.total === 1 ? "" : "s"}.` +
@@ -436,22 +423,12 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
         )}
         {activeStatus !== "archived" && (
           <button
-            onClick={() => { setBulkMode("active"); setBulkConfirmText(""); setBulkModalOpen(true); }}
+            onClick={() => { setBulkConfirmText(""); setBulkModalOpen(true); }}
             disabled={bulkSending}
-            title="Email every agency with an email on file a link to set their own password"
+            title="Email every agency with an email on file a link to set their own password (creates a login on the fly for legacy profiles that don't have one yet)"
             className="ml-auto font-mono text-[10px] uppercase tracking-widest px-3 py-2 bg-black text-white font-semibold hover:bg-ink/80 transition-colors disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
           >
             {bulkSending ? "Sending…" : "Email Set-Password Link to All"}
-          </button>
-        )}
-        {activeStatus === "archived" && counts.archived > 0 && (
-          <button
-            onClick={() => { setBulkMode("archived"); setBulkConfirmText(""); setBulkModalOpen(true); }}
-            disabled={bulkSending}
-            title="Create logins for orphaned rows and email everyone in Archived a set-password link"
-            className="ml-auto font-mono text-[10px] uppercase tracking-widest px-3 py-2 bg-black text-white font-semibold hover:bg-ink/80 transition-colors disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
-          >
-            {bulkSending ? "Sending…" : "Send Invite Link to All"}
           </button>
         )}
         <span className={`text-sm font-sans font-semibold text-ink ${activeStatus === "archived" ? "ml-auto" : ""}`}>
@@ -643,18 +620,12 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
                 </>)}
                 {activeStatus === "archived" && (
                   <td className="px-4 py-4 text-right">
-                    {a.archived === true && !a.is_orphan ? (
-                      <button
-                        onClick={() => setModal({ agency: a, action: "unarchive" })}
-                        className="font-mono text-[10px] uppercase tracking-widest px-3 py-1.5 border border-green-600 text-green-800 hover:bg-green-600 hover:text-white transition-colors whitespace-nowrap"
-                      >
-                        Unarchive
-                      </button>
-                    ) : (
-                      <span className="font-mono text-[10px] uppercase tracking-widest text-ink/40">
-                        {a.is_orphan ? "no login" : ""}
-                      </span>
-                    )}
+                    <button
+                      onClick={() => setModal({ agency: a, action: "unarchive" })}
+                      className="font-mono text-[10px] uppercase tracking-widest px-3 py-1.5 border border-green-600 text-green-800 hover:bg-green-600 hover:text-white transition-colors whitespace-nowrap"
+                    >
+                      Unarchive
+                    </button>
                   </td>
                 )}
               </tr>
@@ -806,19 +777,9 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
       {bulkModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={bulkSending ? undefined : () => setBulkModalOpen(false)}>
           <div className="bg-white border border-line w-full max-w-md p-6 shadow-lg" onClick={(e) => e.stopPropagation()}>
-            <h2 className="font-display font-semibold text-navy text-lg mb-1">
-              {bulkMode === "archived" ? "Send invite link to all archived" : "Email set-password link to all"}
-            </h2>
+            <h2 className="font-display font-semibold text-navy text-lg mb-1">Email set-password link to all</h2>
             <p className="font-sans text-sm text-ink/60 mb-4">
-              {bulkMode === "archived" ? (
-                <>
-                  This creates a Supabase login for every archived row that doesn&rsquo;t have one yet, then emails all {counts.archived} of them a link to set their password. Once they click and set a password, they&rsquo;ll move out of Archived into Active. This is the legacy-migration flow — do it once, not repeatedly.
-                </>
-              ) : (
-                <>
-                  This emails a &ldquo;set your own password&rdquo; link to <span className="font-semibold text-ink">every agency with an email on file</span> ({agencies.length} total). Each person clicks it once to choose their password. Only do this at launch or when you intend to reset everyone.
-                </>
-              )}
+              This emails a &ldquo;set your own password&rdquo; link to <span className="font-semibold text-ink">every non-archived agency with an email on file</span>. For legacy profiles that don&rsquo;t have a login yet, a Supabase login will be created on the fly so they can activate. Each person clicks the link once to pick their password. Only do this at launch or when you intend to reset everyone.
             </p>
             <p className="font-sans text-sm text-ink mb-2">
               Type <span className="font-mono font-bold">{BULK_CONFIRM_PHRASE}</span> to confirm:

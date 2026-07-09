@@ -51,17 +51,13 @@ export default async function AdminAgenciesPage({ searchParams }: Props) {
 
   const enrichedAll = (allAgencies ?? []).map((a) => {
     const userId = a.email ? emailToUserId.get(a.email.toLowerCase()) : undefined;
-    // Archived = admin manually flagged it OR there's no linked auth user
-    // (legacy orphan). Both bucket into the same tab so Tim only has one
-    // place to look for profiles that aren't in active rotation.
-    // is_orphan is exposed separately so the client can gate the Unarchive
-    // button — un-archiving an orphan just flips the flag but the row
-    // stays in Archived (still orphaned), so we don't offer that action.
+    // Archived = admin-flagged only. Legacy orphans (rows with no linked
+    // auth user) now stay in Active/Inactive; the admin's "Email Set-
+    // Password Link" flow creates a login for them on the fly.
     return {
       ...a,
       interest_type: userId ? (userIdToInterest.get(userId) ?? null) : null,
-      is_archived: a.archived === true || !userId,
-      is_orphan: !userId,
+      is_archived: a.archived === true,
     };
   });
 
