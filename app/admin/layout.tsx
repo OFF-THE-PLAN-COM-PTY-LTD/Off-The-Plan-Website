@@ -24,9 +24,9 @@ import {
 const navItems = [
   { label: "Dashboard",         href: "/admin",                  icon: LayoutDashboard },
   { label: "Listing",           href: "/admin/listings",         icon: ListChecks },
-  { label: "All Agencies",      href: "/admin/agencies",         icon: Building2 },
+  { label: "All Profiles",      href: "/admin/agencies",         icon: Building2 },
   // { label: "Developers",        href: "/admin/developers",       icon: Building }, // hidden — re-enable when client confirms
-  // { label: "Members",           href: "/admin/members",          icon: Users }, // hidden — consolidated into All Agencies (2026-06-30); page still works via direct URL as fallback
+  // { label: "Members",           href: "/admin/members",          icon: Users }, // hidden — consolidated into All Profiles (2026-06-30); page still works via direct URL as fallback
   { label: "Reports",           href: "/admin/reports",          icon: BarChart2 },
   { label: "Upgrade Requests",  href: "/admin/upgrade-requests", icon: ArrowUpCircle },
   { label: "Pricing",           href: "/admin/pricing",          icon: Tag },
