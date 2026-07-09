@@ -329,7 +329,7 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
           still works if we ever need it (or manually park an account). Re-add
           "pending" to the array below to bring the chip back. */}
       <div className="flex items-center gap-1 border-b border-line mb-4">
-        {(["active", "inactive", "archived", "all"] as StatusKey[]).map((key) => {
+        {(["active", "inactive", "all", "archived"] as StatusKey[]).map((key) => {
           const label = key === "all" ? "All" : key.charAt(0).toUpperCase() + key.slice(1);
           const href = key === "all" ? "/admin/agencies" : `/admin/agencies?status=${key}`;
           const isActive = activeStatus === key;
@@ -351,7 +351,10 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
           );
         })}
       </div>
-      {/* Filter bar */}
+      {/* Filter bar. On the Archived tab we strip out filters and bulk actions
+          that require an auth user (Email Verified, Type, Email Set-Password
+          Link to All) — they're all no-ops on orphaned rows. Search stays so
+          Tim can jump to a specific archived name/email. */}
       <div className="flex flex-wrap items-center gap-4 mb-6">
         <input
           type="text"
@@ -360,35 +363,39 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
           onChange={(e) => setSearch(e.target.value)}
           className="border border-line px-3 py-2 text-sm font-sans text-ink w-80 focus:outline-none focus:border-navy"
         />
-        <div className="flex items-center gap-3 text-sm font-sans text-ink/60">
-          <span>Email Verified?</span>
-          {(["all", "verified", "unverified"] as const).map((v) => (
-            <label key={v} className="flex items-center gap-1 cursor-pointer">
-              <input
-                type="radio"
-                name="emailFilter"
-                checked={emailFilter === v}
-                onChange={() => setEmailFilter(v)}
-                className="accent-navy"
-              />
-              <span className="capitalize">{v === "all" ? "All" : v === "verified" ? "Yes" : "No"}</span>
-            </label>
-          ))}
-        </div>
-        <div className="flex items-center gap-2 text-sm font-sans text-ink/60">
-          <label htmlFor="typeFilter">Type</label>
-          <select
-            id="typeFilter"
-            value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value as TypeFilter)}
-            className="border border-line px-2 py-2 text-sm font-sans text-ink bg-white focus:outline-none focus:border-navy"
-          >
-            <option value="all">All</option>
-            <option value="Developer">Developers</option>
-            <option value="Agent">Members</option>
-          </select>
-        </div>
-        {(search || emailFilter !== "all" || typeFilter !== "all") && (
+        {activeStatus !== "archived" && (
+          <>
+            <div className="flex items-center gap-3 text-sm font-sans text-ink/60">
+              <span>Email Verified?</span>
+              {(["all", "verified", "unverified"] as const).map((v) => (
+                <label key={v} className="flex items-center gap-1 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="emailFilter"
+                    checked={emailFilter === v}
+                    onChange={() => setEmailFilter(v)}
+                    className="accent-navy"
+                  />
+                  <span className="capitalize">{v === "all" ? "All" : v === "verified" ? "Yes" : "No"}</span>
+                </label>
+              ))}
+            </div>
+            <div className="flex items-center gap-2 text-sm font-sans text-ink/60">
+              <label htmlFor="typeFilter">Type</label>
+              <select
+                id="typeFilter"
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value as TypeFilter)}
+                className="border border-line px-2 py-2 text-sm font-sans text-ink bg-white focus:outline-none focus:border-navy"
+              >
+                <option value="all">All</option>
+                <option value="Developer">Developers</option>
+                <option value="Agent">Members</option>
+              </select>
+            </div>
+          </>
+        )}
+        {(search || (activeStatus !== "archived" && (emailFilter !== "all" || typeFilter !== "all"))) && (
           <button
             onClick={() => { setSearch(""); setEmailFilter("all"); setTypeFilter("all"); }}
             className="text-sm font-sans text-blue-600 underline"
@@ -396,29 +403,41 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
             Reset
           </button>
         )}
-        <button
-          onClick={() => { setBulkConfirmText(""); setBulkModalOpen(true); }}
-          disabled={bulkSending}
-          title="Email every agency with an email on file a link to set their own password"
-          className="ml-auto font-mono text-[10px] uppercase tracking-widest px-3 py-2 bg-black text-white font-semibold hover:bg-ink/80 transition-colors disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
-        >
-          {bulkSending ? "Sending…" : "Email Set-Password Link to All"}
-        </button>
-        <span className="text-sm font-sans font-semibold text-ink">{filtered.length} {filtered.length === 1 ? "profile" : "profiles"}</span>
+        {activeStatus !== "archived" && (
+          <button
+            onClick={() => { setBulkConfirmText(""); setBulkModalOpen(true); }}
+            disabled={bulkSending}
+            title="Email every agency with an email on file a link to set their own password"
+            className="ml-auto font-mono text-[10px] uppercase tracking-widest px-3 py-2 bg-black text-white font-semibold hover:bg-ink/80 transition-colors disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+          >
+            {bulkSending ? "Sending…" : "Email Set-Password Link to All"}
+          </button>
+        )}
+        <span className={`text-sm font-sans font-semibold text-ink ${activeStatus === "archived" ? "ml-auto" : ""}`}>
+          {filtered.length} {filtered.length === 1 ? "profile" : "profiles"}
+        </span>
       </div>
 
-      {/* Table */}
+      {/* Table. On Archived we drop everything except # and Details — Type,
+          Active Listings, Email Verified, Portal Status and the entire Action
+          column all rely on an auth user that no longer exists for these
+          rows. Keeping the outer <table> so search/filter counts and layout
+          stay consistent with the other tabs. */}
       <div className="bg-white border border-line overflow-x-auto">
         <table className="w-full text-left">
           <thead>
             <tr className="border-b border-line">
               <th className="font-sans text-xs font-semibold text-ink/50 uppercase tracking-wider px-4 py-3 w-10">#</th>
               <th className="font-sans text-xs font-semibold text-ink/50 uppercase tracking-wider px-4 py-3">Details</th>
-              <th className="font-sans text-xs font-semibold text-ink/50 uppercase tracking-wider px-4 py-3 text-center">Type</th>
-              <th className="font-sans text-xs font-semibold text-ink/50 uppercase tracking-wider px-4 py-3 text-center">Active Listings</th>
-              <th className="font-sans text-xs font-semibold text-ink/50 uppercase tracking-wider px-4 py-3 text-center">Email Verified</th>
-              <th className="font-sans text-xs font-semibold text-ink/50 uppercase tracking-wider px-4 py-3 text-center">Portal Status</th>
-              <th className="font-sans text-xs font-semibold text-ink/50 uppercase tracking-wider px-4 py-3">Action</th>
+              {activeStatus !== "archived" && (
+                <>
+                  <th className="font-sans text-xs font-semibold text-ink/50 uppercase tracking-wider px-4 py-3 text-center">Type</th>
+                  <th className="font-sans text-xs font-semibold text-ink/50 uppercase tracking-wider px-4 py-3 text-center">Active Listings</th>
+                  <th className="font-sans text-xs font-semibold text-ink/50 uppercase tracking-wider px-4 py-3 text-center">Email Verified</th>
+                  <th className="font-sans text-xs font-semibold text-ink/50 uppercase tracking-wider px-4 py-3 text-center">Portal Status</th>
+                  <th className="font-sans text-xs font-semibold text-ink/50 uppercase tracking-wider px-4 py-3">Action</th>
+                </>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -438,7 +457,11 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
                     {a.org_name && (
                       <p className="font-sans text-xs text-ink/70">
                         <span className="font-semibold">Org. Name:</span>{" "}
-                        <a href={`/admin/agencies/${a.id}`} className="text-blue-600 hover:underline">{a.org_name}</a>
+                        {activeStatus === "archived" ? (
+                          <span className="text-ink/70">{a.org_name}</span>
+                        ) : (
+                          <a href={`/admin/agencies/${a.id}`} className="text-blue-600 hover:underline">{a.org_name}</a>
+                        )}
                       </p>
                     )}
                     {a.mobile && (
@@ -448,6 +471,7 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
                     )}
                   </div>
                 </td>
+                {activeStatus !== "archived" && (<>
                 <td className="px-4 py-4 text-center">
                   <select
                     value={interestByAgency[a.id] ?? ""}
@@ -564,13 +588,16 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
                     )}
                   </div>
                 </td>
+                </>)}
               </tr>
             ))}
           </tbody>
         </table>
 
         {filtered.length === 0 && (
-          <p className="text-center font-sans text-sm text-ink/40 py-12">No agencies match your filter.</p>
+          <p className="text-center font-sans text-sm text-ink/40 py-12">
+            {activeStatus === "archived" ? "No archived profiles." : "No agencies match your filter."}
+          </p>
         )}
       </div>
 
