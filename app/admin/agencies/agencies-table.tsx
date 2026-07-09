@@ -16,9 +16,13 @@ type Agency = {
   // page.tsx. "Developer" / "Agent" are the two values that appear on
   // profile rows we surface here; "Agent" is presented as "Member" in the UI.
   interest_type?: string | null;
-  // Derived in page.tsx — true when agencies.email doesn't match any
-  // Supabase Auth user (login deleted, or the row was never linked).
+  // agencies.archived — admin's manual soft-archive flag.
+  archived?: boolean;
+  // Derived in page.tsx — archived flag OR no linked auth user (orphan).
   is_archived?: boolean;
+  // Derived in page.tsx — true when there's no linked auth user. Used to
+  // gate the Unarchive button (orphans can't come back until re-linked).
+  is_orphan?: boolean;
 };
 
 type EmailFilter = "all" | "verified" | "unverified";
@@ -93,7 +97,7 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
   }
 
   // Confirm modal state
-  const [modal, setModal] = useState<{ agency: Agency; action: "deactivate" | "activate" | "reject" } | null>(null);
+  const [modal, setModal] = useState<{ agency: Agency; action: "deactivate" | "activate" | "reject" | "archive" | "unarchive" } | null>(null);
   const [confirmText, setConfirmText] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -290,20 +294,28 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
     const expected =
       modal.action === "deactivate" ? "DEACTIVATE"
       : modal.action === "activate" ? "ACTIVATE"
-      : "REJECT";
+      : modal.action === "reject" ? "REJECT"
+      : modal.action === "archive" ? "ARCHIVE"
+      : modal.action === "unarchive" ? "UNARCHIVE"
+      : "";
     if (confirmText !== expected) return;
 
     setSaving(true);
     try {
-      const targetStatus =
-        modal.action === "deactivate" || modal.action === "reject" ? "inactive" : "active";
+      // Body varies by action: activate/deactivate/reject flip portal_status;
+      // archive/unarchive flip the agencies.archived flag (added in
+      // migration 042). Both routes go through the same PATCH endpoint.
+      const body: Record<string, unknown> = { id: modal.agency.id };
+      if (modal.action === "archive" || modal.action === "unarchive") {
+        body.archived = modal.action === "archive";
+      } else {
+        body.portal_status =
+          modal.action === "deactivate" || modal.action === "reject" ? "inactive" : "active";
+      }
       const res = await fetch("/api/admin/agencies", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: modal.agency.id,
-          portal_status: targetStatus,
-        }),
+        body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error("Failed");
       closeModal();
@@ -319,6 +331,8 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
     modal?.action === "deactivate" ? "DEACTIVATE"
     : modal?.action === "activate" ? "ACTIVATE"
     : modal?.action === "reject" ? "REJECT"
+    : modal?.action === "archive" ? "ARCHIVE"
+    : modal?.action === "unarchive" ? "UNARCHIVE"
     : "";
 
   return (
@@ -429,6 +443,9 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
             <tr className="border-b border-line">
               <th className="font-sans text-xs font-semibold text-ink/50 uppercase tracking-wider px-4 py-3 w-10">#</th>
               <th className="font-sans text-xs font-semibold text-ink/50 uppercase tracking-wider px-4 py-3">Details</th>
+              {activeStatus === "archived" && (
+                <th className="font-sans text-xs font-semibold text-ink/50 uppercase tracking-wider px-4 py-3 text-right">Action</th>
+              )}
               {activeStatus !== "archived" && (
                 <>
                   <th className="font-sans text-xs font-semibold text-ink/50 uppercase tracking-wider px-4 py-3 text-center">Type</th>
@@ -586,9 +603,33 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
                         {a.portal_status === "active" ? "Deactivate Portal" : "Activate Portal"}
                       </button>
                     )}
+                    {/* Archive Profile — soft-deletes to the Archived tab.
+                        Non-destructive: sets agencies.archived=true. */}
+                    <button
+                      onClick={() => setModal({ agency: a, action: "archive" })}
+                      className="w-full font-mono text-[10px] uppercase tracking-widest px-2 py-1.5 border border-ink/60 text-ink/70 hover:bg-ink hover:text-white hover:border-ink transition-colors"
+                    >
+                      Archive Profile
+                    </button>
                   </div>
                 </td>
                 </>)}
+                {activeStatus === "archived" && (
+                  <td className="px-4 py-4 text-right">
+                    {a.archived === true && !a.is_orphan ? (
+                      <button
+                        onClick={() => setModal({ agency: a, action: "unarchive" })}
+                        className="font-mono text-[10px] uppercase tracking-widest px-3 py-1.5 border border-green-600 text-green-800 hover:bg-green-600 hover:text-white transition-colors whitespace-nowrap"
+                      >
+                        Unarchive
+                      </button>
+                    ) : (
+                      <span className="font-mono text-[10px] uppercase tracking-widest text-ink/40">
+                        {a.is_orphan ? "no login" : ""}
+                      </span>
+                    )}
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
@@ -608,6 +649,8 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
             <h2 className="font-display font-semibold text-navy text-lg mb-1">
               {modal.action === "deactivate" ? "Deactivate Portal"
                 : modal.action === "activate" ? "Activate Portal"
+                : modal.action === "archive" ? "Archive Profile"
+                : modal.action === "unarchive" ? "Unarchive Profile"
                 : "Reject Application"}
             </h2>
             <p className="font-sans text-sm text-ink/60 mb-4">
@@ -615,6 +658,10 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
                 ? `This will deactivate the portal for ${modal.agency.name ?? modal.agency.email}. They will lose access until reactivated.`
                 : modal.action === "activate"
                 ? `This will reactivate the portal for ${modal.agency.name ?? modal.agency.email}.`
+                : modal.action === "archive"
+                ? `This will move ${modal.agency.name ?? modal.agency.email} to the Archived tab. Their portal status doesn't change — the profile is just hidden from Active/Inactive views. You can unarchive them any time.`
+                : modal.action === "unarchive"
+                ? `This will restore ${modal.agency.name ?? modal.agency.email} to the Active or Inactive tab depending on their current portal status.`
                 : `This will reject ${modal.agency.name ?? modal.agency.email}'s application. They will receive a decline email and will not be able to sign in.`}
             </p>
             <p className="font-sans text-sm text-ink mb-2">
@@ -641,7 +688,12 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
                 disabled={confirmText !== expected || saving}
                 className="font-sans text-sm px-4 py-2 bg-black text-white font-semibold disabled:opacity-40 hover:bg-ink/80 transition-colors"
               >
-                {saving ? "Saving..." : modal.action === "deactivate" ? "Deactivate" : modal.action === "activate" ? "Activate" : "Reject"}
+                {saving ? "Saving..."
+                  : modal.action === "deactivate" ? "Deactivate"
+                  : modal.action === "activate" ? "Activate"
+                  : modal.action === "archive" ? "Archive"
+                  : modal.action === "unarchive" ? "Unarchive"
+                  : "Reject"}
               </button>
             </div>
           </div>

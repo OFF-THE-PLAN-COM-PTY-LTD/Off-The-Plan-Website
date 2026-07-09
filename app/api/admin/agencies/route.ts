@@ -79,7 +79,7 @@ export async function PATCH(req: Request) {
     }
 
     const allowed = [
-      "portal_status",
+      "portal_status", "archived",
       "first_name", "last_name", "email", "mobile",
       "personal_street_address", "personal_country", "personal_state", "personal_city", "personal_postcode",
       "org_name", "about", "org_email", "org_phone",

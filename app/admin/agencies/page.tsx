@@ -26,7 +26,7 @@ export default async function AdminAgenciesPage({ searchParams }: Props) {
   const [{ data: allAgencies }, { data: authList }] = await Promise.all([
     supabaseAdmin
       .from("agencies")
-      .select("id, name, email, org_name, mobile, total_active_listings, email_verified, portal_status")
+      .select("id, name, email, org_name, mobile, total_active_listings, email_verified, portal_status, archived")
       .order("name", { ascending: true }),
     supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 500 }),
   ]);
@@ -51,10 +51,17 @@ export default async function AdminAgenciesPage({ searchParams }: Props) {
 
   const enrichedAll = (allAgencies ?? []).map((a) => {
     const userId = a.email ? emailToUserId.get(a.email.toLowerCase()) : undefined;
+    // Archived = admin manually flagged it OR there's no linked auth user
+    // (legacy orphan). Both bucket into the same tab so Tim only has one
+    // place to look for profiles that aren't in active rotation.
+    // is_orphan is exposed separately so the client can gate the Unarchive
+    // button — un-archiving an orphan just flips the flag but the row
+    // stays in Archived (still orphaned), so we don't offer that action.
     return {
       ...a,
       interest_type: userId ? (userIdToInterest.get(userId) ?? null) : null,
-      is_archived: !userId,
+      is_archived: a.archived === true || !userId,
+      is_orphan: !userId,
     };
   });
 
