@@ -65,21 +65,26 @@ export default async function AdminAgenciesPage({ searchParams }: Props) {
     };
   });
 
+  // Archived is exclusive: a row that's archived does NOT show up under
+  // Active/Inactive/All. That keeps the counts consistent (Active + Inactive
+  // = All) and matches the user expectation that "moving" a row to Archived
+  // removes it from the other tabs.
   const counts = {
-    pending: enrichedAll.filter((r) => r.portal_status === "pending").length,
-    active: enrichedAll.filter((r) => r.portal_status === "active").length,
-    inactive: enrichedAll.filter((r) => r.portal_status === "inactive").length,
+    pending: enrichedAll.filter((r) => !r.is_archived && r.portal_status === "pending").length,
+    active: enrichedAll.filter((r) => !r.is_archived && r.portal_status === "active").length,
+    inactive: enrichedAll.filter((r) => !r.is_archived && r.portal_status === "inactive").length,
     archived: enrichedAll.filter((r) => r.is_archived).length,
-    all: enrichedAll.length,
+    all: enrichedAll.filter((r) => !r.is_archived).length,
   };
 
-  // Filter the visible rows for the current tab.
+  // Filter the visible rows for the current tab. Non-archived tabs exclude
+  // archived rows entirely; the Archived tab is the only place they appear.
   const rowsForTab =
     status === "archived"
       ? enrichedAll.filter((r) => r.is_archived)
       : status === "all"
-        ? enrichedAll
-        : enrichedAll.filter((r) => r.portal_status === status);
+        ? enrichedAll.filter((r) => !r.is_archived)
+        : enrichedAll.filter((r) => !r.is_archived && r.portal_status === status);
 
   return (
     <div>
