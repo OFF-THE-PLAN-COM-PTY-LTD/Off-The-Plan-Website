@@ -1051,7 +1051,8 @@ export function ListingForm({
 
   // Category
   const [type, setType] = useState(existing?.type ?? "");
-  const [tag, setTag] = useState(existing?.tag ?? "");
+  // Tag field removed from the edit form 2026-07-09. Existing values in the
+  // DB stay untouched and still render on property cards; no new writes.
   const [tier, setTier] = useState(existing?.tier ?? "");
 
   // Project Overview – identity
@@ -1257,7 +1258,6 @@ export function ListingForm({
       id: isNew ? undefined : id,
       // Category
       type: type || null,
-      tag: tag || null,
       tier: tier || null,
       // Project Overview
       name,
@@ -1511,12 +1511,6 @@ export function ListingForm({
                 {(!type || PORTAL_TYPES.includes(type) ? PORTAL_TYPES : [type, ...PORTAL_TYPES]).map((t) => <option key={t} value={t}>{t}</option>)}
               </select>
             </div>
-            {!isPortal && (
-              <div>
-                <label className={lbl}>Tag</label>
-                <input type="text" value={tag} onChange={(e) => setTag(e.target.value)} placeholder="e.g. New Release" className={inp} />
-              </div>
-            )}
             {!isPortal && (
               <div>
                 <label className={lbl}>Tier</label>
