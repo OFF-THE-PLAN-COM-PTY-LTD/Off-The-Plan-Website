@@ -41,7 +41,14 @@ export default function HomepageSetupPage() {
   const [developments, setDevelopments] = useState<DevelopmentOption[]>([]);
   const [saving, setSaving] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
-  const [uploading, setUploading] = useState<{ id: string; field: "desktop" | "mobile" | "video" } | null>(null);
+  const [uploading, setUploading] = useState<{
+    id: string;
+    field: "desktop" | "mobile" | "video";
+    fileName: string;
+    loaded: number;
+    total: number;
+    startedAt: number;
+  } | null>(null);
   const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
 
   // drafts keyed by banner id (or "new-N" for unsaved)
@@ -81,20 +88,56 @@ export default function HomepageSetupPage() {
 
   // Upload an image or video to storage, return public URL.
   // Targets the `homepage-banners` bucket which accepts both images and video.
-  const uploadFile = async (key: string, field: "desktop" | "mobile" | "video", file: File) => {
-    setUploading({ id: key, field });
+  // Uses XMLHttpRequest instead of fetch so we can surface upload progress
+  // (fetch has no upload progress event). Large hero videos (up to 100 MB)
+  // otherwise look like a hung "Uploading…" state — Ched flagged this.
+  const uploadFile = (key: string, field: "desktop" | "mobile" | "video", file: File) => {
     const fd = new FormData();
     fd.append("file", file);
     fd.append("bucket", "homepage-banners");
-    const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
-    const json = await res.json();
-    setUploading(null);
-    if (!res.ok) { showToast(json.error ?? "Upload failed", "error"); return; }
-    const dbField: keyof BannerDraft =
-      field === "desktop" ? "desktop_image_url" :
-      field === "mobile" ? "mobile_image_url" :
-      "video_url";
-    setField(key, dbField, json.url);
+
+    setUploading({
+      id: key,
+      field,
+      fileName: file.name,
+      loaded: 0,
+      total: file.size,
+      startedAt: Date.now(),
+    });
+
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "/api/admin/upload");
+
+    xhr.upload.onprogress = (evt) => {
+      if (!evt.lengthComputable) return;
+      setUploading((prev) =>
+        prev && prev.id === key && prev.field === field
+          ? { ...prev, loaded: evt.loaded, total: evt.total }
+          : prev,
+      );
+    };
+
+    xhr.onload = () => {
+      let json: { url?: string; error?: string } = {};
+      try { json = JSON.parse(xhr.responseText); } catch {}
+      setUploading(null);
+      if (xhr.status < 200 || xhr.status >= 300 || !json.url) {
+        showToast(json.error ?? "Upload failed", "error");
+        return;
+      }
+      const dbField: keyof BannerDraft =
+        field === "desktop" ? "desktop_image_url" :
+        field === "mobile" ? "mobile_image_url" :
+        "video_url";
+      setField(key, dbField, json.url);
+    };
+
+    xhr.onerror = () => {
+      setUploading(null);
+      showToast("Upload failed — network error", "error");
+    };
+
+    xhr.send(fd);
   };
 
   // Save (create or update)
@@ -295,7 +338,7 @@ export default function HomepageSetupPage() {
                     label="Hero Video (mp4 / webm):"
                     hint="(Max 100 MB. Plays muted on autoloop. Optional.)"
                     currentUrl={draft.video_url}
-                    isUploading={uploading?.id === key && uploading.field === "video"}
+                    upload={uploading?.id === key && uploading.field === "video" ? uploading : null}
                     onFile={(file) => uploadFile(key, "video", file)}
                     onClear={() => setField(key, "video_url", "")}
                     accept="video/mp4,video/webm,video/quicktime"
@@ -305,7 +348,7 @@ export default function HomepageSetupPage() {
                     label="Desktop Image:"
                     hint="(1920×1080. Used as poster + fallback when no video.)"
                     currentUrl={draft.desktop_image_url}
-                    isUploading={uploading?.id === key && uploading.field === "desktop"}
+                    upload={uploading?.id === key && uploading.field === "desktop" ? uploading : null}
                     onFile={(file) => uploadFile(key, "desktop", file)}
                     onClear={() => setField(key, "desktop_image_url", "")}
                     accept="image/*"
@@ -314,7 +357,7 @@ export default function HomepageSetupPage() {
                     label="Mobile Image:"
                     hint="(500×500. Shown on small screens.)"
                     currentUrl={draft.mobile_image_url}
-                    isUploading={uploading?.id === key && uploading.field === "mobile"}
+                    upload={uploading?.id === key && uploading.field === "mobile" ? uploading : null}
                     onFile={(file) => uploadFile(key, "mobile", file)}
                     onClear={() => setField(key, "mobile_image_url", "")}
                     accept="image/*"
@@ -342,22 +385,54 @@ export default function HomepageSetupPage() {
 
 // ── Sub-component ──────────────────────────────────────────────────────────────
 
+interface UploadState {
+  fileName: string;
+  loaded: number;
+  total: number;
+  startedAt: number;
+}
+
 interface ImageUploadFieldProps {
   label: string;
   hint: string;
   currentUrl: string;
-  isUploading: boolean;
+  upload: UploadState | null;
   onFile: (file: File) => void;
   onClear: () => void;
   accept?: string;
   isVideo?: boolean;
 }
 
+// Pull just the filename from a Supabase storage URL for the link label.
+function fileNameFromUrl(url: string): string {
+  try {
+    const path = new URL(url).pathname;
+    return decodeURIComponent(path.slice(path.lastIndexOf("/") + 1)) || url;
+  } catch {
+    return url.slice(url.lastIndexOf("/") + 1) || url;
+  }
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  if (bytes >= 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${bytes} B`;
+}
+
+function formatEta(seconds: number): string {
+  if (!isFinite(seconds) || seconds < 0) return "—";
+  if (seconds < 1) return "<1 s remaining";
+  if (seconds < 60) return `~${Math.round(seconds)} s remaining`;
+  const m = Math.floor(seconds / 60);
+  const s = Math.round(seconds % 60);
+  return `~${m}m ${s}s remaining`;
+}
+
 function ImageUploadField({
   label,
   hint,
   currentUrl,
-  isUploading,
+  upload,
   onFile,
   onClear,
   accept = "image/*",
@@ -365,13 +440,73 @@ function ImageUploadField({
 }: ImageUploadFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [hovered, setHovered] = useState(false);
+  // Ticks every 300ms while uploading so the ETA re-renders smoothly even
+  // when the browser batches XHR progress events sparsely.
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    if (!upload) return;
+    const id = setInterval(() => setTick((n) => n + 1), 300);
+    return () => clearInterval(id);
+  }, [upload]);
+
+  const isUploading = !!upload;
+  const percent = upload && upload.total > 0 ? Math.min(100, Math.round((upload.loaded / upload.total) * 100)) : 0;
+  const elapsedSec = upload ? (Date.now() - upload.startedAt) / 1000 : 0;
+  const remainingBytes = upload ? Math.max(0, upload.total - upload.loaded) : 0;
+  const rate = upload && elapsedSec > 0.2 ? upload.loaded / elapsedSec : 0;
+  const etaSec = upload && rate > 0 ? remainingBytes / rate : Infinity;
 
   return (
     <div>
       <p className="text-xs font-medium text-gray-600 mb-2">{label}</p>
 
-      {currentUrl ? (
+      {/* ── Upload in progress ──────────────────────────────────────── */}
+      {isUploading && upload && (
+        <div className="mb-3 rounded border border-gray-200 bg-white p-3">
+          <div className="flex items-center justify-between gap-3 mb-2">
+            <p className="text-xs font-medium text-gray-700 truncate" title={upload.fileName}>
+              Uploading {upload.fileName}
+            </p>
+            <span className="text-xs font-mono text-gray-500 flex-shrink-0">{percent}%</span>
+          </div>
+          <div className="h-2 rounded-full bg-gray-200 overflow-hidden">
+            <div
+              className="h-full transition-[width] duration-200 ease-out"
+              style={{ width: `${percent}%`, background: "#e85d26" }}
+            />
+          </div>
+          <p className="mt-1.5 text-[11px] text-gray-500 tabular-nums">
+            {formatBytes(upload.loaded)} / {formatBytes(upload.total)} · {formatEta(etaSec)}
+          </p>
+        </div>
+      )}
+
+      {/* ── Existing file (link + preview) ──────────────────────────── */}
+      {currentUrl && !isUploading ? (
         <div className="mb-2">
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <a
+              href={currentUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs font-medium truncate hover:underline"
+              style={{ color: "#e85d26" }}
+              title={fileNameFromUrl(currentUrl)}
+            >
+              {fileNameFromUrl(currentUrl)}
+            </a>
+            <button
+              type="button"
+              onClick={onClear}
+              aria-label={`Remove ${isVideo ? "video" : "image"}`}
+              title={`Remove ${isVideo ? "video" : "image"}`}
+              className="text-gray-400 hover:text-red-500 transition-colors flex-shrink-0"
+            >
+              <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
+                <path d="M6 6l8 8M14 6l-8 8" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+              </svg>
+            </button>
+          </div>
           {isVideo ? (
             <video
               src={currentUrl}
@@ -390,30 +525,26 @@ function ImageUploadField({
               style={{ maxHeight: 120 }}
             />
           )}
-          <button
-            onClick={onClear}
-            className="mt-1 text-xs text-red-500 hover:underline"
-          >
-            Remove {isVideo ? "video" : "image"}
-          </button>
         </div>
       ) : null}
 
+      {/* ── File picker button ──────────────────────────────────────── */}
       <div className="flex items-center gap-3 flex-wrap">
         <button
+          type="button"
           onClick={() => inputRef.current?.click()}
           disabled={isUploading}
           onMouseEnter={() => setHovered(true)}
           onMouseLeave={() => setHovered(false)}
-          className="px-3 py-1.5 text-xs font-semibold rounded border transition-all duration-200 disabled:opacity-50"
+          className="px-3 py-1.5 text-xs font-semibold rounded border transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           style={{
-            background: hovered ? "#e85d26" : "transparent",
-            borderColor: hovered ? "#e85d26" : "#9ca3af",
-            color: hovered ? "#fff" : "#4b5563",
-            transform: hovered ? "scale(1.03)" : "scale(1)",
+            background: hovered && !isUploading ? "#e85d26" : "transparent",
+            borderColor: hovered && !isUploading ? "#e85d26" : "#9ca3af",
+            color: hovered && !isUploading ? "#fff" : "#4b5563",
+            transform: hovered && !isUploading ? "scale(1.03)" : "scale(1)",
           }}
         >
-          {isUploading ? "Uploading…" : "Select File"}
+          {isUploading ? "Uploading…" : currentUrl ? "Select Another File" : "Select File"}
         </button>
         {!currentUrl && !isUploading && (
           <span className="text-xs text-gray-400">No file chosen</span>
