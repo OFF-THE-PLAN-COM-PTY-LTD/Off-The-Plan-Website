@@ -1801,7 +1801,47 @@ export function ListingForm({
           )}
         </AccordionSection>
 
-        {/* ── 3. Configuration Summary ─────────────────────────────────────── */}
+        {/* ── 3. Team ──────────────────────────────────────────────────────── */}
+        {/* Fields already existed in schema (developments.architect/interiors/
+            builder) and in state + save payload — only the input UI was
+            missing. Public listing renders these under the "Team" strip on
+            /listings/[slug]. */}
+        <AccordionSection title="Team">
+          <div className={`${g3} mb-4`}>
+            <div>
+              <label className={lbl}>Architect</label>
+              <input
+                type="text"
+                value={architect}
+                onChange={(e) => setArchitect(e.target.value)}
+                placeholder="e.g. CDArchitects"
+                className={inp}
+              />
+            </div>
+            <div>
+              <label className={lbl}>Interiors</label>
+              <input
+                type="text"
+                value={interiors}
+                onChange={(e) => setInteriors(e.target.value)}
+                placeholder="e.g. Richards Stanisich"
+                className={inp}
+              />
+            </div>
+            <div>
+              <label className={lbl}>Builder</label>
+              <input
+                type="text"
+                value={builder}
+                onChange={(e) => setBuilder(e.target.value)}
+                placeholder="e.g. Multiplex"
+                className={inp}
+              />
+            </div>
+          </div>
+        </AccordionSection>
+
+        {/* ── 4. Configuration Summary ─────────────────────────────────────── */}
         <AccordionSection title="Configuration Summary">
           {isNew ? (
             <p className="font-sans text-sm text-ink/40 italic">Save the listing first to add unit configurations.</p>
