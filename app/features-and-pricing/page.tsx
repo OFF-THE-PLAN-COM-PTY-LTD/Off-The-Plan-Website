@@ -46,34 +46,23 @@ const FEATURES = [
 ];
 
 // ── Pricing plans ──────────────────────────────────────────────────────────────
+// Builders Package was retired 2026-07-09 — see note in
+// app/admin/pricing/page.tsx. Only Developer and Agency Listing is
+// offered now, and it inherits the orange (highlighted) styling that
+// previously distinguished the second card.
 const PLANS = [
   {
     id: "developer",
     name: "Developer and Agency Listing",
     price: "$299",
     tier: "agency_listing",
-    highlighted: false,
+    highlighted: true,
     cta: "List Now",
     features: [
       "1 low fixed rate per listing per month",
       "Ideal for New Apartments, Townhouses, Land and Estates, Commercial",
       "Easy to use dashboard – upload and sell your projects, includes basic analytics and lead capture",
       "6 or 12 month term, with 30-day cancellation policy",
-      "List today, simply register, upload your project and begin your subscription with a credit card, (or) contact us for other payment options",
-    ],
-  },
-  {
-    id: "builders",
-    name: "Builders Package",
-    price: "$399",
-    tier: "builders_package",
-    highlighted: true,
-    cta: "List Today",
-    features: [
-      "1 low fixed rate per listing per month",
-      "Ideal for: House and Land, Over 55's / Retirement",
-      "Easy to use dashboard – upload and sell your projects, includes basic analytics and lead capture",
-      "Over 12-month terms, with 30-day cancellation policy",
       "List today, simply register, upload your project and begin your subscription with a credit card, (or) contact us for other payment options",
     ],
   },
@@ -272,7 +261,7 @@ export default async function FeaturesAndPricingPage() {
                 <sup className="text-[10px]">®</sup>
               </h2>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-0 border border-white/20">
+              <div className="grid grid-cols-1 gap-0 border border-white/20 max-w-sm mx-auto w-full">
                 {PLANS.map((plan) => (
                   <div
                     key={plan.id}

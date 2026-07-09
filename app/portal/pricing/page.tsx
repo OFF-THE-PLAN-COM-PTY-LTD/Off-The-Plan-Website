@@ -6,28 +6,18 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import UpgradeCards from "@/components/admin/upgrade-cards";
 import { UPGRADE_TIERS } from "@/lib/upgrade-tiers";
 
+// Builders Package was retired 2026-07-09 — see note in
+// app/admin/pricing/page.tsx. The 'builders_package' Stripe tier stays
+// wired in lib/stripe/server.ts so existing subscriptions keep billing.
 const plans = [
   {
     name: "Developer and Agency Listing",
     price: 299,
     tier: "agency_listing",
-    highlighted: false,
-    features: [
-      "Low fixed rate per listing per month",
-      "Ideal For: New Apartments, Townhouses, Land and Estates, Commercial",
-      "Easy to use dashboard — upload and edit your projects, includes basic analytics and lead capture",
-      "6 or 12 month term, with 21 day cancellation policy",
-      "List today, simply register, upload your project and begin your subscription with a credit card. [or] contact us for other payment options",
-    ],
-  },
-  {
-    name: "Builders Package",
-    price: 399,
-    tier: "builders_package",
     highlighted: true,
     features: [
       "Low fixed rate per listing per month",
-      "Ideal For: House and Land, Over 55's / Retirement",
+      "Ideal For: New Apartments, Townhouses, Land and Estates, Commercial",
       "Easy to use dashboard — upload and edit your projects, includes basic analytics and lead capture",
       "6 or 12 month term, with 21 day cancellation policy",
       "List today, simply register, upload your project and begin your subscription with a credit card. [or] contact us for other payment options",
@@ -89,7 +79,7 @@ export default async function PortalPricing() {
 
           {/* Right — plan cards */}
           <div className="p-6 flex flex-col gap-4 justify-center">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 max-w-sm mx-auto w-full">
               {plans.map((plan) => (
                 <div key={plan.name} className="rounded-lg overflow-hidden flex flex-col bg-white">
                   <div
