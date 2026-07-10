@@ -55,6 +55,13 @@ export default function HomepageSetupPage() {
   const [drafts, setDrafts] = useState<Record<string, BannerDraft>>({});
   const nextNewId = useRef(0);
 
+  // Guards the "+ Add Banner" button from flashing before the initial fetch
+  // resolves. banners/drafts both start empty on mount, so allKeys.length
+  // === 0 is briefly true even when a banner already exists — Ched saw
+  // this as the Add Banner button appearing for ~1-3s before the real
+  // banner form replaced it.
+  const [bannersLoaded, setBannersLoaded] = useState(false);
+
   useEffect(() => {
     fetch("/api/admin/homepage-banners")
       .then((r) => r.json())
@@ -69,6 +76,7 @@ export default function HomepageSetupPage() {
         const initial: Record<string, BannerDraft> = {};
         normalised.forEach((b) => { initial[b.id] = { ...b }; });
         setDrafts(initial);
+        setBannersLoaded(true);
       });
 
     fetch("/api/admin/homepage-banners/developments")
@@ -354,6 +362,9 @@ export default function HomepageSetupPage() {
       </div>
 
       {/* Banners */}
+      {!bannersLoaded ? (
+        <div className="px-6 py-12 text-center text-sm text-gray-400">Loading…</div>
+      ) : (
       <div className="flex flex-col gap-6">
         {allKeys.map((key, idx) => {
           const draft = drafts[key];
@@ -486,13 +497,16 @@ export default function HomepageSetupPage() {
           );
         })}
       </div>
+      )}
 
       {/* Only ever one banner in practice: the homepage query
           (app/page.tsx) fetches a single row ordered by sort_order —
           "Add Banner" used to let Tim create rows 2, 3, etc. that could
           never appear anywhere. Kept as a recovery path for the (unlikely)
-          case where the sole banner gets deleted and none exist yet. */}
-      {allKeys.length === 0 && (
+          case where the sole banner gets deleted and none exist yet.
+          Gated on bannersLoaded too so it can't flash before the fetch
+          resolves. */}
+      {bannersLoaded && allKeys.length === 0 && (
         <div className="mt-6">
           <button
             onClick={addBanner}
