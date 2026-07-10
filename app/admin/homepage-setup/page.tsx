@@ -270,43 +270,34 @@ export default function HomepageSetupPage() {
                     </p>
                   </div>
 
-                  {/* Title + Link (overrides — used when no linked project) */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs text-gray-500 mb-1 font-medium">
-                        Title <span className="text-gray-400">(override)</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={draft.title}
-                        onChange={(e) => setField(key, "title", e.target.value)}
-                        className="w-full border border-gray-300 rounded px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-blue-400"
-                        placeholder="e.g. FLORIAN"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-500 mb-1 font-medium">
-                        Link <span className="text-gray-400">(used only when no linked project)</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={draft.link}
-                        onChange={(e) => setField(key, "link", e.target.value)}
-                        className="w-full border border-gray-300 rounded px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-blue-400"
-                        placeholder="https://offtheplan.com.au/new-apartments/..."
-                      />
-                    </div>
+                  {/* Link — Title (override) removed 2026-07-10: the Linked
+                      Project already supplies the badge label, so the field
+                      was redundant and confusing. Existing title values in
+                      the DB stay untouched (still used as a fallback in
+                      app/page.tsx if a linked project ever has no name). */}
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1 font-medium">
+                      Link <span className="text-gray-400">(used only when no linked project)</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={draft.link}
+                      onChange={(e) => setField(key, "link", e.target.value)}
+                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-blue-400"
+                      placeholder="https://offtheplan.com.au/new-apartments/..."
+                    />
                   </div>
 
-                  {/* Description */}
+                  {/* Description — shown under the FEATURE PROJECT badge on
+                      the homepage hero. Keep it short: 2–4 sentences. */}
                   <div className="flex-1">
-                    <label className="block text-xs text-gray-500 mb-1 font-medium">Description (optional)</label>
+                    <label className="block text-xs text-gray-500 mb-1 font-medium">Description</label>
                     <textarea
                       rows={3}
                       value={draft.description}
                       onChange={(e) => setField(key, "description", e.target.value)}
                       className="w-full border border-gray-300 rounded px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-blue-400 resize-none"
-                      placeholder="Short tagline shown under the hero overlay (optional)…"
+                      placeholder="2–4 sentences shown under the Feature Project badge on the homepage hero."
                     />
                   </div>
 

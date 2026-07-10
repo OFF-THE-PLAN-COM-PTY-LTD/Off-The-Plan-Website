@@ -95,7 +95,7 @@ export default async function HomePage() {
   ] = await Promise.all([
     supabase
       .from("homepage_banners")
-      .select("title, link, video_url, desktop_image_url, mobile_image_url, linked_development:developments!linked_development_id(name, slug, suburb, state, developer:developers(name))")
+      .select("title, description, link, video_url, desktop_image_url, mobile_image_url, linked_development:developments!linked_development_id(name, slug, suburb, state, developer:developers(name))")
       .order("sort_order", { ascending: true })
       .limit(1)
       .maybeSingle(),
@@ -203,6 +203,7 @@ export default async function HomePage() {
   // when no banner is configured, so the page still works on a fresh DB.
   const heroBanner = heroBannerData as unknown as {
     title: string | null;
+    description: string | null;
     link: string | null;
     video_url: string | null;
     desktop_image_url: string | null;
@@ -231,6 +232,7 @@ export default async function HomePage() {
   const heroVideoSrc = heroBanner?.video_url || null;
   const heroDesktopImage = heroBanner?.desktop_image_url || null;
   const heroMobileImage = heroBanner?.mobile_image_url || null;
+  const heroDescription = heroBanner?.description?.trim() || null;
   const linkedDev = heroBanner?.linked_development ?? null;
   const heroHref = linkedDev?.slug ? `/listings/${linkedDev.slug}` : heroBanner?.link || null;
   const heroOverlay = linkedDev
@@ -310,7 +312,10 @@ export default async function HomePage() {
             hyperlinked to the actual listing — kept deliberately simple).
             Auto-populated from the admin-linked development in Homepage Setup. */}
         {heroOverlay?.project && (
-          <div className="relative z-20 px-6 md:px-10 pb-3 pointer-events-none">
+          // Pull the badge up (mb-6) so the description sits between it and
+          // the search bar section below with breathing room, per Ched's
+          // fourth screenshot on 2026-07-10.
+          <div className="relative z-20 px-6 md:px-10 pb-3 mb-6 pointer-events-none">
             <div className="container-padded">
               {heroHref ? (
                 <Link
@@ -334,6 +339,11 @@ export default async function HomePage() {
                   <span className="font-mono text-[9px] md:text-[10px] font-semibold bg-orange text-white px-2 py-1 mr-2">Feature Project</span>
                   <span className="text-white font-semibold">{heroOverlay.project}</span>
                   {heroOverlay.location && <span className="text-white/50"> — {heroOverlay.location}</span>}
+                </p>
+              )}
+              {heroDescription && (
+                <p className="mt-4 max-w-2xl font-sans text-sm md:text-[15px] leading-relaxed text-white/80">
+                  {heroDescription}
                 </p>
               )}
             </div>
