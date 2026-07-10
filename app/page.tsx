@@ -342,7 +342,11 @@ export default async function HomePage() {
                 </p>
               )}
               {heroDescription && (
-                <p className="mt-4 max-w-2xl font-sans text-sm md:text-[15px] leading-relaxed text-white/80">
+                // max-w-xl ≈ 576px so the paragraph wraps at roughly the
+                // Feature Project badge's width on desktop — matches the
+                // legacy layout Ched shared (long copy stacks below rather
+                // than stretching across the hero).
+                <p className="mt-4 max-w-xl font-sans text-sm md:text-[15px] leading-relaxed text-white/80">
                   {heroDescription}
                 </p>
               )}
