@@ -92,6 +92,25 @@ export default function HomepageSetupPage() {
   // (fetch has no upload progress event). Large hero videos (up to 100 MB)
   // otherwise look like a hung "Uploading…" state — Ched flagged this.
   const uploadFile = (key: string, field: "desktop" | "mobile" | "video", file: File) => {
+    // Mutual-exclusion guard: the homepage hero renders video OR image pair,
+    // never both (see app/page.tsx priority rule). Reject the upload up
+    // front rather than storing an asset that would immediately be masked
+    // by the other type. Ched's ask 2026-07-10.
+    const draft = drafts[key];
+    if (draft) {
+      const hasVideo = !!draft.video_url;
+      const hasDesktop = !!draft.desktop_image_url;
+      const hasMobile = !!draft.mobile_image_url;
+      if (field === "video" && (hasDesktop || hasMobile)) {
+        showToast("Remove desktop/mobile image first to upload a hero video.", "error");
+        return;
+      }
+      if (field !== "video" && hasVideo) {
+        showToast(`Remove hero video first to upload a ${field} image.`, "error");
+        return;
+      }
+    }
+
     const fd = new FormData();
     fd.append("file", file);
     fd.append("bucket", "homepage-banners");
