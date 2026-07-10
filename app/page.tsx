@@ -261,22 +261,30 @@ export default async function HomePage() {
             <source src={heroVideoSrc} type="video/mp4" />
           </video>
         ) : (heroDesktopImage || heroMobileImage) ? (
-          <picture>
-            {/* Mobile image up to 767px; fall through to desktop above.
-                Falling through means uploading only one still works — a
-                single image (mobile or desktop) will show at every
-                viewport rather than breaking. */}
-            {heroMobileImage && (
-              <source media="(max-width: 767px)" srcSet={heroMobileImage} />
+          // Desktop image renders ONLY at ≥ md (768px+); mobile image ONLY
+          // below md. No cross-fallback — if one is missing, that viewport
+          // shows blank, per Ched's ask 2026-07-10 (previously the missing
+          // one fell through to whichever asset was uploaded).
+          <>
+            {heroDesktopImage && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={heroDesktopImage}
+                alt=""
+                className="hidden md:block absolute inset-0 w-full h-full object-cover"
+                aria-hidden="true"
+              />
             )}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={heroDesktopImage || heroMobileImage || ""}
-              alt=""
-              className="absolute inset-0 w-full h-full object-cover"
-              aria-hidden="true"
-            />
-          </picture>
+            {heroMobileImage && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={heroMobileImage}
+                alt=""
+                className="block md:hidden absolute inset-0 w-full h-full object-cover"
+                aria-hidden="true"
+              />
+            )}
+          </>
         ) : null}
         <div className="absolute inset-0 bg-navy/60" />
 
