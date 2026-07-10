@@ -234,6 +234,22 @@ export default function HomepageSetupPage() {
       }
     }
 
+    // Enforce the size limits the UI advertises (50 MB video / 10 MB
+    // image). Video cap matches the Supabase project's actual global
+    // storage file-size ceiling — confirmed 2026-07-10 by testing bucket
+    // limits directly against the project (50MB succeeds, everything above
+    // it including 100MB is rejected by Supabase itself regardless of what
+    // any bucket or our code says). The homepage-banners bucket's own
+    // file_size_limit is also set to 50MB to match, so this check mostly
+    // gives a clean client-side error instead of a raw Storage API failure.
+    const isVideoField = field === "video";
+    const maxBytes = isVideoField ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
+    if (file.size > maxBytes) {
+      const limitLabel = isVideoField ? "50 MB" : "10 MB";
+      showToast(`File too large. Maximum size is ${limitLabel}.`, "error");
+      return;
+    }
+
     setUploading({
       id: key,
       field,
@@ -437,7 +453,7 @@ export default function HomepageSetupPage() {
 
                   <ImageUploadField
                     label="Hero Video (mp4 / webm):"
-                    hint="(Max 100 MB. Plays muted on autoloop. Optional.)"
+                    hint="(Max 50 MB. Always plays muted on the live site, regardless of the file's own audio or this preview player. Optional.)"
                     currentUrl={draft.video_url}
                     upload={uploading?.id === key && uploading.field === "video" ? uploading : null}
                     onFile={(file) => uploadFile(key, "video", file)}
@@ -471,15 +487,21 @@ export default function HomepageSetupPage() {
         })}
       </div>
 
-      {/* Add Banner */}
-      <div className="mt-6">
-        <button
-          onClick={addBanner}
-          className="px-6 py-2.5 text-xs font-bold uppercase tracking-widest border-2 border-gray-400 text-gray-600 rounded hover:border-gray-600 hover:text-gray-800 transition-colors"
-        >
-          + Add Banner
-        </button>
-      </div>
+      {/* Only ever one banner in practice: the homepage query
+          (app/page.tsx) fetches a single row ordered by sort_order —
+          "Add Banner" used to let Tim create rows 2, 3, etc. that could
+          never appear anywhere. Kept as a recovery path for the (unlikely)
+          case where the sole banner gets deleted and none exist yet. */}
+      {allKeys.length === 0 && (
+        <div className="mt-6">
+          <button
+            onClick={addBanner}
+            className="px-6 py-2.5 text-xs font-bold uppercase tracking-widest border-2 border-gray-400 text-gray-600 rounded hover:border-gray-600 hover:text-gray-800 transition-colors"
+          >
+            + Add Banner
+          </button>
+        </div>
+      )}
     </div>
   );
 }

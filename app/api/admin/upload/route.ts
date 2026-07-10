@@ -62,11 +62,18 @@ export async function POST(request: Request) {
     );
   }
 
-  // Image / PDF files capped at 10 MB; videos can be substantially larger.
+  // Image/PDF capped at 10 MB. Video capped at 50 MB — matches the Supabase
+  // project's actual global storage file-size ceiling (confirmed by testing
+  // directly against the project 2026-07-10; anything above 50MB is
+  // rejected by Supabase itself, not just this app). Video only reaches
+  // this path via the homepage-banners bucket and only when under the
+  // client's 4MB direct-upload threshold — most videos go through
+  // /api/admin/upload/sign instead, which relies on the bucket's own
+  // file_size_limit (also set to 50MB) for enforcement.
   const isVideo = VIDEO_MIMES.has(mime);
-  const maxBytes = isVideo ? 100 * 1024 * 1024 : 10 * 1024 * 1024;
+  const maxBytes = isVideo ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
   if (file.size > maxBytes) {
-    const limit = isVideo ? "100 MB" : "10 MB";
+    const limit = isVideo ? "50 MB" : "10 MB";
     return NextResponse.json({ error: `File too large. Maximum size is ${limit}.` }, { status: 400 });
   }
 
