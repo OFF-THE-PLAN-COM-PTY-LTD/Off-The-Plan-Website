@@ -250,7 +250,7 @@ export default function HomepageSetupPage() {
                   {/* Linked development — drives overlay text + link target */}
                   <div>
                     <label className="block text-xs text-gray-500 mb-1 font-medium">
-                      Linked Project
+                      Linked Project / Feature Project
                     </label>
                     <select
                       value={draft.linked_development_id}
