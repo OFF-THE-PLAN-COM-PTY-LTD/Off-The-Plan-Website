@@ -25,10 +25,9 @@ interface Upgrade {
 interface UpgradeCardsProps {
   upgrades: Upgrade[];
   projects: Project[];
-  promoFlagHref?: string;
 }
 
-export default function UpgradeCards({ upgrades, projects, promoFlagHref = "/admin/listings" }: UpgradeCardsProps) {
+export default function UpgradeCards({ upgrades, projects }: UpgradeCardsProps) {
   const [activeModal, setActiveModal] = useState<string | null>(null);
 
   return (
@@ -74,25 +73,15 @@ export default function UpgradeCards({ upgrades, projects, promoFlagHref = "/adm
               ))}
             </div>
 
-            {/* CTA */}
+            {/* CTA — every tier (incl. Promo Flag) opens the request modal */}
             <div className="px-4 pb-4 mt-auto">
-              {u.isPromoFlag ? (
-                <a
-                  href={promoFlagHref}
-                  className="block text-center py-2.5 text-xs font-bold uppercase tracking-widest text-white transition-opacity hover:opacity-80"
-                  style={{ background: "#1a2340" }}
-                >
-                  {u.cta}
-                </a>
-              ) : (
-                <button
-                  onClick={() => setActiveModal(u.name)}
-                  className="w-full text-center py-2.5 text-xs font-bold uppercase tracking-widest text-white transition-opacity hover:opacity-80"
-                  style={{ background: "#1a2340" }}
-                >
-                  {u.cta}
-                </button>
-              )}
+              <button
+                onClick={() => setActiveModal(u.name)}
+                className="w-full text-center py-2.5 text-xs font-bold uppercase tracking-widest text-white transition-opacity hover:opacity-80"
+                style={{ background: "#1a2340" }}
+              >
+                {u.cta}
+              </button>
             </div>
           </div>
         ))}

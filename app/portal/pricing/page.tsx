@@ -140,7 +140,6 @@ export default async function PortalPricing() {
       <UpgradeCards
         upgrades={upgrades}
         projects={projects}
-        promoFlagHref="/portal/listings"
       />
     </div>
   );
