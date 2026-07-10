@@ -26,15 +26,9 @@ interface UpgradeCardsProps {
   upgrades: Upgrade[];
   projects: Project[];
   promoFlagHref?: string;
-  /**
-   * When true, every card CTA links straight to Stripe checkout for that
-   * tier instead of opening the manual "request an upgrade" modal. Enabled
-   * in the member portal; left off in the admin view.
-   */
-  checkout?: boolean;
 }
 
-export default function UpgradeCards({ upgrades, projects, promoFlagHref = "/admin/listings", checkout = false }: UpgradeCardsProps) {
+export default function UpgradeCards({ upgrades, projects, promoFlagHref = "/admin/listings" }: UpgradeCardsProps) {
   const [activeModal, setActiveModal] = useState<string | null>(null);
 
   return (
@@ -82,15 +76,7 @@ export default function UpgradeCards({ upgrades, projects, promoFlagHref = "/adm
 
             {/* CTA */}
             <div className="px-4 pb-4 mt-auto">
-              {checkout ? (
-                <a
-                  href={`/api/stripe/checkout?tier=${u.tier}`}
-                  className="block text-center py-2.5 text-xs font-bold uppercase tracking-widest text-white transition-opacity hover:opacity-80"
-                  style={{ background: "#1a2340" }}
-                >
-                  {u.cta}
-                </a>
-              ) : u.isPromoFlag ? (
+              {u.isPromoFlag ? (
                 <a
                   href={promoFlagHref}
                   className="block text-center py-2.5 text-xs font-bold uppercase tracking-widest text-white transition-opacity hover:opacity-80"

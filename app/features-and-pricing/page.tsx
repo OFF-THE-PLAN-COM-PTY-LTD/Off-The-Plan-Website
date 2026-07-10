@@ -55,7 +55,6 @@ const PLANS = [
     id: "developer",
     name: "Developer and Agency Listing",
     price: "$299",
-    tier: "agency_listing",
     highlighted: true,
     cta: "List Now",
     features: [
@@ -314,13 +313,13 @@ export default async function FeaturesAndPricingPage() {
                         ))}
                       </ul>
 
-                      {/* CTA button — starts Stripe checkout for this plan */}
-                      <a
-                        href={`/api/stripe/checkout?tier=${plan.tier}`}
+                      {/* CTA button */}
+                      <Link
+                        href="/list-a-listing"
                         className="font-mono text-[10px] uppercase tracking-widest text-center py-3 border transition-colors bg-orange text-white border-orange hover:bg-orange/90"
                       >
                         {plan.cta}
-                      </a>
+                      </Link>
                     </div>
                   </div>
                 ))}

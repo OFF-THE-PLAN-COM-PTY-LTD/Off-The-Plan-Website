@@ -13,7 +13,6 @@ const plans = [
   {
     name: "Developer and Agency Listing",
     price: 299,
-    tier: "agency_listing",
     highlighted: true,
     features: [
       "Low fixed rate per listing per month",
@@ -107,7 +106,7 @@ export default async function PortalPricing() {
                   </div>
                   <div className="px-4 pb-4">
                     <a
-                      href={`/api/stripe/checkout?tier=${plan.tier}`}
+                      href="/portal/listings/new"
                       className="block text-center py-2.5 text-xs font-bold uppercase tracking-widest transition-opacity hover:opacity-80"
                       style={{
                         background: plan.highlighted ? "#e85d26" : "#e8e8e8",
@@ -142,7 +141,6 @@ export default async function PortalPricing() {
         upgrades={upgrades}
         projects={projects}
         promoFlagHref="/portal/listings"
-        checkout
       />
     </div>
   );
