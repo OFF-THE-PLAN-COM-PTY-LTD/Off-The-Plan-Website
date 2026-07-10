@@ -220,6 +220,7 @@ function ListingSection({ title, listings }: { title: string; listings: any[] })
                     isFeatured={l.is_featured}
                     status={l.status ?? null}
                     name={l.name ?? "this listing"}
+                    canActivate={Boolean(l.name && l.suburb && l.state)}
                   />
                 </td>
               </tr>

@@ -11,9 +11,11 @@ interface Props {
   isFeatured: boolean;
   status: string | null;
   name: string;
+  /** Mandatory fields (name + suburb + state) are filled, so the listing can be activated. */
+  canActivate: boolean;
 }
 
-export function PortalListingActions({ id, slug, isPublished, isFeatured, name }: Props) {
+export function PortalListingActions({ id, slug, isPublished, isFeatured, status, name, canActivate }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [showArchiveModal, setShowArchiveModal] = useState(false);
@@ -79,6 +81,27 @@ export function PortalListingActions({ id, slug, isPublished, isFeatured, name }
               Feature This Listing
             </Link>
           </>
+        )}
+
+        {/* Activate = subscribe & publish this listing. Only for drafts that
+            aren't archived; needs the mandatory fields filled first. */}
+        {isDraft && status !== "Archived" && (
+          canActivate ? (
+            <a
+              href={`/api/stripe/checkout?tier=agency_listing&project=${id}`}
+              className="font-mono text-[9px] uppercase tracking-widest px-2.5 py-1.5 bg-orange text-white border border-orange hover:bg-orange/90 transition-colors whitespace-nowrap"
+            >
+              Activate
+            </a>
+          ) : (
+            <span
+              aria-disabled="true"
+              title="Fill in Project Name, Suburb and State to activate"
+              className="font-mono text-[9px] uppercase tracking-widest px-2.5 py-1.5 border border-line text-ink/30 cursor-not-allowed whitespace-nowrap"
+            >
+              Activate
+            </span>
+          )
         )}
 
         {isDraft && (

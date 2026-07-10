@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { getStripe, PLATFORM_TAG } from "@/lib/stripe/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -45,20 +46,53 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ received: true, ignored: "not off-the-plan" });
   }
 
-  switch (event.type) {
-    case "checkout.session.completed":
-    case "customer.subscription.created":
-    case "customer.subscription.updated":
-    case "customer.subscription.deleted":
-      // eslint-disable-next-line no-console
-      console.log(`[stripe] ${event.type}`, {
-        id: object.id,
-        tier: object.metadata?.tier,
-        user_id: object.metadata?.user_id,
-      });
-      break;
-    default:
-      break;
+  // The listing (development) this subscription belongs to — set as
+  // metadata.project_id by the per-listing "Subscribe & publish" button.
+  const projectId = object.metadata?.project_id;
+
+  if (projectId) {
+    if (event.type === "checkout.session.completed") {
+      const session = event.data.object as Stripe.Checkout.Session;
+      // Payment succeeded → record the subscription and take the listing live.
+      await supabaseAdmin
+        .from("developments")
+        .update({
+          subscription_status: "active",
+          stripe_subscription_id:
+            typeof session.subscription === "string" ? session.subscription : null,
+          stripe_customer_id: typeof session.customer === "string" ? session.customer : null,
+          is_published: true,
+        })
+        .eq("id", projectId);
+    } else if (
+      event.type === "customer.subscription.created" ||
+      event.type === "customer.subscription.updated" ||
+      event.type === "customer.subscription.deleted"
+    ) {
+      const sub = event.data.object as Stripe.Subscription;
+      const periodEnd = (sub as unknown as { current_period_end?: number }).current_period_end;
+      const update: Record<string, unknown> = {
+        subscription_status: sub.status,
+        stripe_subscription_id: sub.id,
+        stripe_customer_id: typeof sub.customer === "string" ? sub.customer : null,
+        subscription_current_period_end: periodEnd
+          ? new Date(periodEnd * 1000).toISOString()
+          : null,
+      };
+      // Only force visibility on the terminal transitions, so a still-active
+      // subscription's routine update events never override an admin who has
+      // manually toggled the listing.
+      if (
+        event.type === "customer.subscription.deleted" ||
+        sub.status === "canceled" ||
+        sub.status === "unpaid"
+      ) {
+        update.is_published = false; // subscription ended → listing goes inactive
+      } else if (event.type === "customer.subscription.created" && sub.status === "active") {
+        update.is_published = true;
+      }
+      await supabaseAdmin.from("developments").update(update).eq("id", projectId);
+    }
   }
 
   return NextResponse.json({ received: true });

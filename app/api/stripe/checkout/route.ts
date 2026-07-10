@@ -65,8 +65,12 @@ export async function GET(req: NextRequest) {
       line_items: [{ price, quantity: 1 }],
       customer_email: email,
       allow_promotion_codes: true,
-      success_url: `${origin}/portal/billing?checkout=success`,
-      cancel_url: `${origin}/portal/pricing?checkout=cancel`,
+      success_url: projectId
+        ? `${origin}/portal/listings/${projectId}/edit?checkout=success`
+        : `${origin}/portal/listings?checkout=success`,
+      cancel_url: projectId
+        ? `${origin}/portal/listings/${projectId}/edit?checkout=cancel`
+        : `${origin}/portal/listings?checkout=cancel`,
       metadata,
       // Copy the tag onto the subscription too, so subscription.* webhook
       // events (which carry the subscription, not the session) can be filtered.
