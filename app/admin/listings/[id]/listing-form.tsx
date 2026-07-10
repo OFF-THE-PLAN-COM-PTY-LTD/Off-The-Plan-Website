@@ -346,7 +346,7 @@ function ExampleHint({ title, children }: { title: string; children: React.React
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} aria-hidden="true" />
-          <div className="absolute left-0 top-full mt-2 z-50 w-[440px] max-w-[90vw] bg-white border-2 border-orange shadow-xl rounded-sm p-4 text-left">
+          <div className="absolute left-0 top-full mt-2 z-50 w-[520px] max-w-[90vw] bg-white border-2 border-orange shadow-xl rounded-sm p-4 text-left">
             <div className="flex items-start justify-between gap-3 mb-3">
               <h4 className="font-sans font-semibold text-sm text-ink">{title}</h4>
               <button
@@ -1763,7 +1763,13 @@ export function ListingForm({
                 Lead In Pricing
                 <ExampleHint title="Where Lead In Pricing appears">
                   <p>This is the headline price shown on the listing card on search results. Free-text, so you can write "From $650,000", "Contact Agent", "Auction", etc.</p>
-                  <CardPreview highlight="price" />
+                  <Image
+                    src="/examples/lead-in-pricing.png"
+                    alt="Example: where Lead In Pricing appears on the listing card"
+                    width={1824}
+                    height={681}
+                    className="w-full h-auto border border-line rounded-sm"
+                  />
                 </ExampleHint>
               </label>
               <input type="text" value={priceDisplay} onChange={(e) => setPriceDisplay(e.target.value)} placeholder="e.g. From $650,000" className={inp} />
@@ -1781,7 +1787,13 @@ export function ListingForm({
               <span className="font-sans text-xs text-ink/40 font-normal">(max 25 characters)</span>
               <ExampleHint title="Where the Configuration label appears">
                 <p>A short summary chip shown beneath the category badge on the listing card. Keep it under 25 characters so it fits without wrapping.</p>
-                <CardPreview highlight="config" />
+                <Image
+                  src="/examples/configuration.png"
+                  alt="Example: where the Configuration label appears"
+                  width={1294}
+                  height={1045}
+                  className="w-full h-auto border border-line rounded-sm"
+                />
               </ExampleHint>
             </label>
             <input
