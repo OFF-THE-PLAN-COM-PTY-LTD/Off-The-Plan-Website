@@ -218,8 +218,19 @@ export default async function HomePage() {
       | null;
   } | null;
 
-  const heroVideoSrc = heroBanner?.video_url || "/hero-video.mp4";
-  const heroPoster = heroBanner?.desktop_image_url || null;
+  // Hero priority (Ched, 2026-07-10):
+  //   1. If a Hero Video is uploaded → play it (image fields ignored)
+  //   2. Otherwise, if a Desktop/Mobile Image pair is uploaded → show them
+  //      responsively via <picture> (mobile media query swaps to the
+  //      smaller asset on narrow viewports)
+  //   3. If all three fields are empty → render nothing behind the overlay
+  //      (blank navy hero). Tim always uploads at least one, so this is
+  //      the graceful-degradation case, not the default.
+  // The previous /hero-video.mp4 bundled fallback is gone — it made an
+  // empty banner still autoplay a stale video.
+  const heroVideoSrc = heroBanner?.video_url || null;
+  const heroDesktopImage = heroBanner?.desktop_image_url || null;
+  const heroMobileImage = heroBanner?.mobile_image_url || null;
   const linkedDev = heroBanner?.linked_development ?? null;
   const heroHref = linkedDev?.slug ? `/listings/${linkedDev.slug}` : heroBanner?.link || null;
   const heroOverlay = linkedDev
@@ -236,22 +247,35 @@ export default async function HomePage() {
     <>
       {/* ─── Hero ──────────────────────────────────────────────────────────── */}
       <section className="relative h-screen flex flex-col bg-navy overflow-hidden">
-        {/* Video background. Poster doubles as an image fallback when the
-            video file can't load (slow network, codec mismatch, etc.) and
-            also displays on the first paint before the video buffers. */}
-        <video
-          autoPlay muted loop playsInline
-          {...(heroPoster ? { poster: heroPoster } : {})}
-          className="absolute inset-0 w-full h-full object-cover"
-          aria-hidden="true"
-        >
-          <source src={heroVideoSrc} type="video/mp4" />
-          {/* If <video> isn't supported at all, render the poster image. */}
-          {heroPoster && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={heroPoster} alt="" className="absolute inset-0 w-full h-full object-cover" />
-          )}
-        </video>
+        {/* Hero background — video first, image pair second, blank third.
+            See heroVideoSrc / heroDesktopImage / heroMobileImage above. */}
+        {heroVideoSrc ? (
+          <video
+            autoPlay muted loop playsInline
+            {...(heroDesktopImage ? { poster: heroDesktopImage } : {})}
+            className="absolute inset-0 w-full h-full object-cover"
+            aria-hidden="true"
+          >
+            <source src={heroVideoSrc} type="video/mp4" />
+          </video>
+        ) : (heroDesktopImage || heroMobileImage) ? (
+          <picture>
+            {/* Mobile image up to 767px; fall through to desktop above.
+                Falling through means uploading only one still works — a
+                single image (mobile or desktop) will show at every
+                viewport rather than breaking. */}
+            {heroMobileImage && (
+              <source media="(max-width: 767px)" srcSet={heroMobileImage} />
+            )}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={heroDesktopImage || heroMobileImage || ""}
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover"
+              aria-hidden="true"
+            />
+          </picture>
+        ) : null}
         <div className="absolute inset-0 bg-navy/60" />
 
         {/* Whole hero is clickable when a banner has a linked project / link. */}
