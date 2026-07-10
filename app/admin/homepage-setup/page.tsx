@@ -86,43 +86,29 @@ export default function HomepageSetupPage() {
     setDrafts((prev) => ({ ...prev, [key]: { ...prev[key], [field]: value } }));
   };
 
-  // Upload an image or video to storage, return public URL.
-  // Targets the `homepage-banners` bucket which accepts both images and video.
-  // Uses XMLHttpRequest instead of fetch so we can surface upload progress
-  // (fetch has no upload progress event). Large hero videos (up to 100 MB)
-  // otherwise look like a hung "Uploading…" state — Ched flagged this.
-  const uploadFile = (key: string, field: "desktop" | "mobile" | "video", file: File) => {
-    // Mutual-exclusion guard: the homepage hero renders video OR image pair,
-    // never both (see app/page.tsx priority rule). Reject the upload up
-    // front rather than storing an asset that would immediately be masked
-    // by the other type. Ched's ask 2026-07-10.
-    const draft = drafts[key];
-    if (draft) {
-      const hasVideo = !!draft.video_url;
-      const hasDesktop = !!draft.desktop_image_url;
-      const hasMobile = !!draft.mobile_image_url;
-      if (field === "video" && (hasDesktop || hasMobile)) {
-        showToast("Remove desktop/mobile image first to upload a hero video.", "error");
-        return;
-      }
-      if (field !== "video" && hasVideo) {
-        showToast(`Remove hero video first to upload a ${field} image.`, "error");
-        return;
-      }
-    }
+  // Vercel serverless functions cap request bodies at ~4.5 MB. Any file
+  // above this must skip our own /api/admin/upload proxy and go straight to
+  // Supabase Storage via a signed upload URL instead — otherwise Vercel
+  // rejects the request before our code runs, surfacing as a generic
+  // "Upload failed" with no useful detail. Hero videos are almost always
+  // over this; images from a camera/screenshot occasionally are too, so we
+  // gate on size rather than on field name.
+  const DIRECT_UPLOAD_THRESHOLD_BYTES = 4 * 1024 * 1024;
 
+  const finishUpload = (key: string, field: "desktop" | "mobile" | "video", url: string) => {
+    const dbField: keyof BannerDraft =
+      field === "desktop" ? "desktop_image_url" :
+      field === "mobile" ? "mobile_image_url" :
+      "video_url";
+    setField(key, dbField, url);
+  };
+
+  // Small-file path: proxy through our own API (keeps existing validation
+  // + upload-progress behaviour for the common case of small images).
+  const uploadViaProxy = (key: string, field: "desktop" | "mobile" | "video", file: File) => {
     const fd = new FormData();
     fd.append("file", file);
     fd.append("bucket", "homepage-banners");
-
-    setUploading({
-      id: key,
-      field,
-      fileName: file.name,
-      loaded: 0,
-      total: file.size,
-      startedAt: Date.now(),
-    });
 
     const xhr = new XMLHttpRequest();
     xhr.open("POST", "/api/admin/upload");
@@ -144,11 +130,7 @@ export default function HomepageSetupPage() {
         showToast(json.error ?? "Upload failed", "error");
         return;
       }
-      const dbField: keyof BannerDraft =
-        field === "desktop" ? "desktop_image_url" :
-        field === "mobile" ? "mobile_image_url" :
-        "video_url";
-      setField(key, dbField, json.url);
+      finishUpload(key, field, json.url);
     };
 
     xhr.onerror = () => {
@@ -157,6 +139,115 @@ export default function HomepageSetupPage() {
     };
 
     xhr.send(fd);
+  };
+
+  // Large-file path: ask our API for a signed Supabase Storage upload URL
+  // (tiny request, no size problem), then PUT the file directly to Storage.
+  // The bytes never touch Vercel, so we're bounded by Supabase's own
+  // per-file limit (GBs) instead of the 4.5 MB serverless cap.
+  const uploadDirect = async (key: string, field: "desktop" | "mobile" | "video", file: File) => {
+    const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+
+    let signed: { signedUrl: string; token: string; path: string; publicUrl: string };
+    try {
+      const signRes = await fetch("/api/admin/upload/sign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bucket: "homepage-banners", ext }),
+      });
+      const signJson = await signRes.json();
+      if (!signRes.ok) {
+        setUploading(null);
+        showToast(signJson.error ?? "Could not start upload", "error");
+        return;
+      }
+      signed = signJson;
+    } catch {
+      setUploading(null);
+      showToast("Could not start upload — network error", "error");
+      return;
+    }
+
+    // signed.signedUrl already has the token embedded as a query param
+    // (createSignedUploadUrl builds it that way) — don't append it again.
+    //
+    // Wire format matters here: supabase-js's uploadToSignedUrl() wraps a
+    // File/Blob as multipart FormData with a `cacheControl` field and the
+    // file itself appended under an EMPTY field name — it does NOT PUT the
+    // raw bytes with a Content-Type header. Confirmed by reading the
+    // installed @supabase/storage-js source. Sending a raw body here would
+    // either be rejected or stored malformed, so we replicate that exact
+    // shape rather than inventing our own.
+    const body = new FormData();
+    body.append("cacheControl", "3600");
+    body.append("", file);
+
+    const xhr = new XMLHttpRequest();
+    xhr.open("PUT", signed.signedUrl);
+    xhr.setRequestHeader("x-upsert", "false");
+    // Do NOT set Content-Type manually — the browser must generate the
+    // multipart boundary itself when sending a FormData body.
+
+    xhr.upload.onprogress = (evt) => {
+      if (!evt.lengthComputable) return;
+      setUploading((prev) =>
+        prev && prev.id === key && prev.field === field
+          ? { ...prev, loaded: evt.loaded, total: evt.total }
+          : prev,
+      );
+    };
+
+    xhr.onload = () => {
+      setUploading(null);
+      if (xhr.status < 200 || xhr.status >= 300) {
+        showToast(`Upload failed (${xhr.status}). Try again or use a smaller file.`, "error");
+        return;
+      }
+      finishUpload(key, field, signed.publicUrl);
+    };
+
+    xhr.onerror = () => {
+      setUploading(null);
+      showToast("Upload failed — network error", "error");
+    };
+
+    xhr.send(body);
+  };
+
+  const uploadFile = (key: string, field: "desktop" | "mobile" | "video", file: File) => {
+    // Mutual-exclusion guard: the homepage hero renders video OR image pair,
+    // never both (see app/page.tsx priority rule). Reject the upload up
+    // front rather than storing an asset that would immediately be masked
+    // by the other type. Ched's ask 2026-07-10.
+    const draft = drafts[key];
+    if (draft) {
+      const hasVideo = !!draft.video_url;
+      const hasDesktop = !!draft.desktop_image_url;
+      const hasMobile = !!draft.mobile_image_url;
+      if (field === "video" && (hasDesktop || hasMobile)) {
+        showToast("Remove desktop/mobile image first to upload a hero video.", "error");
+        return;
+      }
+      if (field !== "video" && hasVideo) {
+        showToast(`Remove hero video first to upload a ${field} image.`, "error");
+        return;
+      }
+    }
+
+    setUploading({
+      id: key,
+      field,
+      fileName: file.name,
+      loaded: 0,
+      total: file.size,
+      startedAt: Date.now(),
+    });
+
+    if (file.size > DIRECT_UPLOAD_THRESHOLD_BYTES) {
+      uploadDirect(key, field, file);
+    } else {
+      uploadViaProxy(key, field, file);
+    }
   };
 
   // Save (create or update)
