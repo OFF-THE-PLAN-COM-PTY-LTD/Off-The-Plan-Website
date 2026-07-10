@@ -1725,10 +1725,12 @@ export function ListingForm({
               </label>
               <input type="text" value={priceDisplay} onChange={(e) => setPriceDisplay(e.target.value)} placeholder="e.g. From $650,000" className={inp} />
             </div>
-            <div>
-              <label className={lbl}>Promotional Banner</label>
-              <input type="text" value={promotionalBanner} onChange={(e) => setPromotionalBanner(e.target.value)} placeholder="e.g. 2 BED FI $775,000" className={inp} />
-            </div>
+            {!isPortal && (
+              <div>
+                <label className={lbl}>Promotional Banner</label>
+                <input type="text" value={promotionalBanner} onChange={(e) => setPromotionalBanner(e.target.value)} placeholder="e.g. 2 BED FI $775,000" className={inp} />
+              </div>
+            )}
           </div>
           <div className="mb-4">
             <label className={lbl}>
