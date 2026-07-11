@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 type Agency = {
   id: string;
@@ -352,9 +353,10 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
           const href = key === "all" ? "/admin/agencies" : `/admin/agencies?status=${key}`;
           const isActive = activeStatus === key;
           return (
-            <a
+            <Link
               key={key}
               href={href}
+              scroll={false}
               className={`font-mono text-[12px] uppercase tracking-widest px-4 py-2 border-b-2 transition-colors flex items-center gap-2 ${
                 isActive ? "border-orange text-ink" : "border-transparent text-ink/50 hover:text-ink"
               }`}
@@ -365,7 +367,7 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
               }`}>
                 {counts[key]}
               </span>
-            </a>
+            </Link>
           );
         })}
       </div>
