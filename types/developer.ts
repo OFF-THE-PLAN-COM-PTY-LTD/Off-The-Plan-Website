@@ -21,6 +21,9 @@ export interface Developer {
   youtube?: string | null;
   is_published: boolean;
   profile_id?: string | null;
+  /** Link to the source agency when this row was synced from a
+   *  Developer-classified agency (migration 045). */
+  agency_id?: string | null;
   created_at: string;
   development_count?: number;
 }

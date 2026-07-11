@@ -18,7 +18,10 @@ export default async function DevelopersPage() {
   // wrong-name row ever appears, Tim can hide it from /admin/developers.
   const [{ data: devsData }, { data: devsDevsData }] = await Promise.all([
     supabase.from("developers").select("*").eq("is_published", true).order("name"),
-    supabase.from("developments").select("id, developer_id").eq("is_published", true),
+    // agency_id lets us count listings for directory rows synced from a
+    // Developer-agency (migration 045) — their listings link via agency_id,
+    // not developer_id — so those cards show a real count instead of 0.
+    supabase.from("developments").select("id, developer_id, agency_id").eq("is_published", true),
   ]);
 
   const developers = (devsData ?? []) as unknown as Developer[];
@@ -36,7 +39,11 @@ export default async function DevelopersPage() {
       <div className="container-padded py-14">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {developers.map((dev) => {
-            const devCount = allDevelopments.filter((d) => d.developer_id === dev.id).length;
+            const devCount = allDevelopments.filter(
+              (d) =>
+                d.developer_id === dev.id ||
+                (dev.agency_id != null && d.agency_id === dev.agency_id),
+            ).length;
             const initials = dev.name
               .split(/\s+/)
               .map((w) => w[0])

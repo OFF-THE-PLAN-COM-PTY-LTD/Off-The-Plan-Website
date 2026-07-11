@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/supabase/auth-guards";
+import { syncDeveloperFromAgency, unpublishDeveloperForAgency } from "@/lib/developers/sync-from-agency";
 
 /**
  * PATCH /api/admin/agencies/interest-type
@@ -89,6 +90,21 @@ export async function PATCH(req: Request) {
         }
         linkedProfile = true;
       }
+    }
+
+    // Keep the public /developers directory in sync with the classification.
+    // Developer -> ensure a published directory row exists (synced from this
+    // agency's logo/about/socials); anything else -> hide it. Best-effort:
+    // a failure here (e.g. migration 045 not applied yet) must not fail the
+    // role save, which already succeeded above.
+    try {
+      if (interestType === "Developer") {
+        await syncDeveloperFromAgency(agencyId);
+      } else {
+        await unpublishDeveloperForAgency(agencyId);
+      }
+    } catch (e) {
+      console.error("developers directory sync failed for agency", agencyId, e);
     }
 
     return NextResponse.json({ ok: true, interestType, linkedProfile });
