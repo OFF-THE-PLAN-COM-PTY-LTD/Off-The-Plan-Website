@@ -3,6 +3,11 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase/public";
 import type { Developer } from "@/types/developer";
 
+// Render on every request so admin changes (publishing a developer, syncing
+// a Developer-agency, unpublishing one) show up immediately instead of being
+// frozen into a static build. Matches the homepage convention (app/page.tsx).
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Developers",
   description: "Browse residential developers listing off-the-plan properties across Australia.",

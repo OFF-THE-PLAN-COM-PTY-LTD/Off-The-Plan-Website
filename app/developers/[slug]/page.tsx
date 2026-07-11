@@ -9,6 +9,11 @@ import type { Development } from "@/types/development";
 
 interface Props { params: { slug: string } }
 
+// Render on every request so admin publish/unpublish and agency-sync changes
+// reflect immediately instead of being frozen into a static build. Matches
+// the homepage convention (app/page.tsx).
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { data: dev } = await supabase
     .from("developers")
