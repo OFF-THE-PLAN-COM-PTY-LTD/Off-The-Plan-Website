@@ -95,7 +95,7 @@ export async function syncDeveloperFromAgency(agencyId: string): Promise<SyncOut
     .from("agencies")
     .select(
       "id, name, org_name, email, mobile, about, profile_pic, org_logo_url, dev_logo_url, " +
-        "org_email, org_phone, website_url, org_state, org_city, archived, " +
+        "org_email, org_phone, website_url, org_state, org_city, archived, portal_status, " +
         "facebook_url, instagram_url, linkedin_url, pinterest_url, youtube_url",
     )
     .eq("id", agencyId)
@@ -103,11 +103,16 @@ export async function syncDeveloperFromAgency(agencyId: string): Promise<SyncOut
   if (error || !agency) return { action: "skipped", reason: "agency not found" };
   const a = agency as Record<string, any>;
 
-  // Archived (soft-deleted) agencies must never surface publicly. If one is
-  // somehow still marked Developer, hide any card it already produced.
+  // Only active, non-archived agencies belong on the public directory. If the
+  // agency is archived or deactivated, hide any card it already produced —
+  // this keeps /developers a 1:1 of active Developer agencies.
   if (a.archived === true) {
     await unpublishDeveloperForAgency(agencyId);
     return { action: "skipped", reason: "agency is archived" };
+  }
+  if (a.portal_status !== "active") {
+    await unpublishDeveloperForAgency(agencyId);
+    return { action: "skipped", reason: "agency not active" };
   }
 
   const mapped = mapAgencyToDeveloper(a);

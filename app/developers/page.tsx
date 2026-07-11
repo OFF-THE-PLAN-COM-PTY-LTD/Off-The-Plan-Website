@@ -21,8 +21,13 @@ export default async function DevelopersPage() {
   // we show every published row here — admin's "Published" toggle is the
   // single source of truth, and the public page mirrors it exactly. If a
   // wrong-name row ever appears, Tim can hide it from /admin/developers.
+  // The public directory is a 1:1 mirror of active Developer agencies: show
+  // only rows linked to an agency (agency_id not null). Publish state is kept
+  // in sync with the agency being active + Developer + non-archived by the
+  // admin endpoints, so is_published=true here means "active Developer". Rows
+  // with no agency (legacy/orphan directory entries) are intentionally hidden.
   const [{ data: devsData }, { data: devsDevsData }] = await Promise.all([
-    supabase.from("developers").select("*").eq("is_published", true).order("name"),
+    supabase.from("developers").select("*").eq("is_published", true).not("agency_id", "is", null).order("name"),
     // agency_id lets us count listings for directory rows synced from a
     // Developer-agency (migration 045) — their listings link via agency_id,
     // not developer_id — so those cards show a real count instead of 0.

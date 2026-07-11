@@ -132,6 +132,18 @@ export async function PATCH(req: Request) {
     if ("portal_status" in fields) {
       try {
         await syncProfileStatusForAgency(id, fields.portal_status);
+        // Mirror onto the public /developers directory: an active Developer
+        // shows; deactivating hides its card. Keeps the page a 1:1 of active
+        // Developer agencies.
+        if (fields.portal_status === "active") {
+          const { data: a } = await supabaseAdmin
+            .from("agencies").select("interest_type, archived").eq("id", id).single();
+          if (a?.interest_type === "Developer" && a.archived !== true) {
+            await syncDeveloperFromAgency(id);
+          }
+        } else if (fields.portal_status === "inactive") {
+          await unpublishDeveloperForAgency(id);
+        }
       } catch (e) {
         console.error("Profile sync / approval email (non-fatal):", e);
       }
