@@ -46,7 +46,8 @@ function mapAgencyToDeveloper(a: Record<string, any>) {
     state: a.org_state || null,
     suburb: a.org_city || null,
     company_email: a.org_email || a.email || null,
-    phone: a.org_phone || a.mobile || null,
+    // NOTE: `developers` has no phone column — do not add one here or inserts
+    // fail. Contact phone lives on the linked profile, not the directory row.
     facebook: a.facebook_url || null,
     instagram: a.instagram_url || null,
     linkedin: a.linkedin_url || null,
@@ -112,7 +113,8 @@ export async function syncDeveloperFromAgency(agencyId: string): Promise<SyncOut
     .maybeSingle();
   if (linked) {
     const patch = { ...fillBlanks(linked, mapped), is_published: true };
-    await supabaseAdmin.from("developers").update(patch).eq("id", linked.id);
+    const { error: e } = await supabaseAdmin.from("developers").update(patch).eq("id", linked.id);
+    if (e) return { action: "skipped", reason: e.message };
     return { action: "updated", developerId: linked.id as string, slug: linked.slug as string };
   }
 
@@ -125,7 +127,8 @@ export async function syncDeveloperFromAgency(agencyId: string): Promise<SyncOut
     .maybeSingle();
   if (nameMatch) {
     const patch = { ...fillBlanks(nameMatch, mapped), agency_id: agencyId, is_published: true };
-    await supabaseAdmin.from("developers").update(patch).eq("id", nameMatch.id);
+    const { error: e } = await supabaseAdmin.from("developers").update(patch).eq("id", nameMatch.id);
+    if (e) return { action: "skipped", reason: e.message };
     return { action: "adopted", developerId: nameMatch.id as string, slug: nameMatch.slug as string };
   }
 

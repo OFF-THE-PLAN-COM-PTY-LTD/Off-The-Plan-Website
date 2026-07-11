@@ -65,7 +65,8 @@ function mapAgencyToDeveloper(a) {
     state: a.org_state || null,
     suburb: a.org_city || null,
     company_email: a.org_email || a.email || null,
-    phone: a.org_phone || a.mobile || null,
+    // NOTE: `developers` has no phone column — adding one here makes inserts
+    // fail. Contact phone lives on the linked profile, not the directory row.
     facebook: a.facebook_url || null,
     instagram: a.instagram_url || null,
     linkedin: a.linkedin_url || null,
@@ -104,7 +105,10 @@ async function syncOne(agency) {
     .maybeSingle();
   if (linked) {
     const patch = { ...fillBlanks(linked, mapped), is_published: true };
-    if (APPLY) await supabase.from("developers").update(patch).eq("id", linked.id);
+    if (APPLY) {
+      const { error } = await supabase.from("developers").update(patch).eq("id", linked.id);
+      if (error) return { action: "skipped", reason: error.message };
+    }
     return { action: "updated", slug: linked.slug };
   }
 
@@ -116,7 +120,10 @@ async function syncOne(agency) {
     .maybeSingle();
   if (nameMatch) {
     const patch = { ...fillBlanks(nameMatch, mapped), agency_id: agency.id, is_published: true };
-    if (APPLY) await supabase.from("developers").update(patch).eq("id", nameMatch.id);
+    if (APPLY) {
+      const { error } = await supabase.from("developers").update(patch).eq("id", nameMatch.id);
+      if (error) return { action: "skipped", reason: error.message };
+    }
     return { action: "adopted", slug: nameMatch.slug };
   }
 
