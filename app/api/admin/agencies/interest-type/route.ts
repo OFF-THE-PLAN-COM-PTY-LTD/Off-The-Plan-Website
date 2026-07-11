@@ -6,12 +6,16 @@ import { requireAdmin } from "@/lib/supabase/auth-guards";
  * PATCH /api/admin/agencies/interest-type
  * Body: { agencyId: string, interestType: "Developer" | "Agent" | null }
  *
- * Sets profiles.interest_type on the auth user linked to this agency
- * (by email). Used by the per-row Role dropdown on /admin/agencies.
+ * Sets the Developer/Agent classification for an agency. Used by the per-row
+ * Role dropdown on /admin/agencies.
  *
- * interest_type lives on `profiles`, not `agencies` — the link is by
- * email since there's no FK between the two tables. We reuse the same
- * findAuthUserIdByEmail pattern the main agencies PATCH endpoint uses.
+ * The value is written to `agencies.interest_type` — the agency row's own
+ * classification — so an admin can label ANY agency, including migrated /
+ * directory-only rows that have no login yet. When an auth user IS linked
+ * (by email — there's no FK between the tables), we also mirror the value
+ * onto `profiles.interest_type`, which is what gates the member portal
+ * (auth-guards / middleware / portal layout). No account yet just means the
+ * agency row holds the classification until they sign up.
  */
 
 const VALID_INTEREST_TYPES = new Set(["Developer", "Agent"]);
@@ -54,27 +58,40 @@ export async function PATCH(req: Request) {
       .select("email")
       .eq("id", agencyId)
       .single();
-    if (agencyErr || !agency?.email) {
-      return NextResponse.json({ error: "Agency not found or has no email on file" }, { status: 404 });
+    if (agencyErr || !agency) {
+      return NextResponse.json({ error: "Agency not found" }, { status: 404 });
     }
 
-    const authUserId = await findAuthUserIdByEmail(agency.email);
-    if (!authUserId) {
-      return NextResponse.json(
-        { error: "No auth user linked to this profile — cannot set role until they sign up." },
-        { status: 409 },
-      );
-    }
-
-    const { error: profErr } = await supabaseAdmin
-      .from("profiles")
+    // Source of truth for the directory classification. Works with or without
+    // a login, which is the whole point — this is what unblocks account-less
+    // migrated agencies.
+    const { error: agencyUpdErr } = await supabaseAdmin
+      .from("agencies")
       .update({ interest_type: interestType })
-      .eq("id", authUserId);
-    if (profErr) {
-      return NextResponse.json({ error: profErr.message }, { status: 500 });
+      .eq("id", agencyId);
+    if (agencyUpdErr) {
+      return NextResponse.json({ error: agencyUpdErr.message }, { status: 500 });
     }
 
-    return NextResponse.json({ ok: true, interestType });
+    // Mirror onto the linked profile so the member portal reflects the role.
+    // Only possible when the agency has an email AND an auth user exists for
+    // it; otherwise the agency row alone carries the classification.
+    let linkedProfile = false;
+    if (agency.email) {
+      const authUserId = await findAuthUserIdByEmail(agency.email);
+      if (authUserId) {
+        const { error: profErr } = await supabaseAdmin
+          .from("profiles")
+          .update({ interest_type: interestType })
+          .eq("id", authUserId);
+        if (profErr) {
+          return NextResponse.json({ error: profErr.message }, { status: 500 });
+        }
+        linkedProfile = true;
+      }
+    }
+
+    return NextResponse.json({ ok: true, interestType, linkedProfile });
   } catch {
     return NextResponse.json({ error: "Unexpected error." }, { status: 500 });
   }

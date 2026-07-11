@@ -26,7 +26,7 @@ export default async function AdminAgenciesPage({ searchParams }: Props) {
   const [{ data: allAgencies }, { data: authList }] = await Promise.all([
     supabaseAdmin
       .from("agencies")
-      .select("id, name, email, org_name, mobile, total_active_listings, email_verified, portal_status, archived")
+      .select("id, name, email, org_name, mobile, total_active_listings, email_verified, portal_status, archived, interest_type")
       .order("name", { ascending: true }),
     supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 500 }),
   ]);
@@ -36,7 +36,10 @@ export default async function AdminAgenciesPage({ searchParams }: Props) {
     if (u.email) emailToUserId.set(u.email.toLowerCase(), u.id);
   }
 
-  // Attach interest_type via profiles for rows that DO have an auth user.
+  // interest_type now lives on the agencies row itself (migration 044), so
+  // it's available for account-less rows too. We still read profiles as a
+  // fallback for any row where a linked profile was updated but the agency
+  // column hasn't caught up (the endpoint keeps both in sync going forward).
   const userIds = (allAgencies ?? [])
     .map((a) => (a.email ? emailToUserId.get(a.email.toLowerCase()) : undefined))
     .filter((id): id is string => Boolean(id));
@@ -56,7 +59,8 @@ export default async function AdminAgenciesPage({ searchParams }: Props) {
     // Password Link" flow creates a login for them on the fly.
     return {
       ...a,
-      interest_type: userId ? (userIdToInterest.get(userId) ?? null) : null,
+      interest_type:
+        a.interest_type ?? (userId ? (userIdToInterest.get(userId) ?? null) : null),
       is_archived: a.archived === true,
     };
   });
