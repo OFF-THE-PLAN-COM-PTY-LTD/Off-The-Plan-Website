@@ -53,7 +53,10 @@ function slugifyName(name) {
 }
 
 function mapAgencyToDeveloper(a) {
-  const name = (a.name?.trim() || a.org_name?.trim() || "");
+  // Prefer org_name (company) over name (contact person) — the public
+  // directory lists developer companies, and it lets us adopt an existing
+  // same-name developer row instead of duplicating under a person's name.
+  const name = (a.org_name?.trim() || a.name?.trim() || "");
   return {
     name,
     logo_url: a.dev_logo_url || a.org_logo_url || a.profile_pic || null,

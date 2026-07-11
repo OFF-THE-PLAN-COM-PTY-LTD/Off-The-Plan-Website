@@ -32,7 +32,12 @@ export function slugifyName(name: string): string {
 
 /** The developer-card fields we can derive from an agency row. */
 function mapAgencyToDeveloper(a: Record<string, any>) {
-  const name = (a.name?.trim() || a.org_name?.trim() || "") as string;
+  // The public directory lists developer COMPANIES, so prefer org_name (the
+  // company) over name (the contact person). Falling back to name only when
+  // there's no company on file. Using the company name also lets us adopt an
+  // existing same-name developer row (e.g. "Built Form Capital") instead of
+  // creating a duplicate under the contact's personal name.
+  const name = (a.org_name?.trim() || a.name?.trim() || "") as string;
   return {
     name,
     logo_url: a.dev_logo_url || a.org_logo_url || a.profile_pic || null,
