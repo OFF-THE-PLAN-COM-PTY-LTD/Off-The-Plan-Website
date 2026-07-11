@@ -101,15 +101,16 @@ export async function syncDeveloperFromAgency(agencyId: string): Promise<SyncOut
     .eq("id", agencyId)
     .single();
   if (error || !agency) return { action: "skipped", reason: "agency not found" };
+  const a = agency as Record<string, any>;
 
   // Archived (soft-deleted) agencies must never surface publicly. If one is
   // somehow still marked Developer, hide any card it already produced.
-  if (agency.archived === true) {
+  if (a.archived === true) {
     await unpublishDeveloperForAgency(agencyId);
     return { action: "skipped", reason: "agency is archived" };
   }
 
-  const mapped = mapAgencyToDeveloper(agency);
+  const mapped = mapAgencyToDeveloper(a);
   if (!mapped.name) return { action: "skipped", reason: "agency has no name" };
 
   // 1) Already linked → refresh blanks + ensure published.
