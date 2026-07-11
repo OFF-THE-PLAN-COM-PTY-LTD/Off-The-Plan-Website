@@ -148,6 +148,8 @@ async function main() {
         "facebook_url, instagram_url, linkedin_url, pinterest_url, youtube_url, interest_type",
     )
     .eq("interest_type", "Developer")
+    // Never publish archived (soft-deleted) agencies to the public directory.
+    .or("archived.is.null,archived.eq.false")
     .order("name");
   if (error) {
     console.error("Failed to load agencies:", error.message);
