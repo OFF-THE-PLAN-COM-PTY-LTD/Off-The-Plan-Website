@@ -83,10 +83,18 @@ export default async function DeveloperProfilePage({ params }: Props) {
     profile = (data as unknown as DeveloperProfile) ?? null;
   }
 
+  // Match listings by developer_id OR the linked agency_id. Directory rows
+  // synced from a Developer-agency (migration 045) have listings attached via
+  // developments.agency_id, not developer_id — without the agency_id branch
+  // their detail page would show "no listings" even when the agency has some.
+  // Mirrors the count logic on the /developers list page.
+  const listingFilter = rawDev.agency_id
+    ? `developer_id.eq.${rawDev.id},agency_id.eq.${rawDev.agency_id}`
+    : `developer_id.eq.${rawDev.id}`;
   const { data: devsData } = await supabase
     .from("developments")
     .select("*, developer:developers(*), images:development_images(*), floor_plans:development_floor_plans(*)")
-    .eq("developer_id", rawDev.id)
+    .or(listingFilter)
     .eq("is_published", true);
 
   const devDevelopments = (devsData ?? []) as unknown as Development[];
