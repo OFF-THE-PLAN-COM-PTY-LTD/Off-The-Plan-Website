@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/supabase/auth-guards";
 import { sendEmail } from "@/lib/email/send";
 import { accountApprovedTemplate, accountRejectedTemplate } from "@/lib/email/templates";
+import { syncDeveloperFromAgency, unpublishDeveloperForAgency } from "@/lib/developers/sync-from-agency";
 
 async function findAuthUserIdByEmail(email: string): Promise<string | null> {
   const target = email.toLowerCase();
@@ -133,6 +134,23 @@ export async function PATCH(req: Request) {
         await syncProfileStatusForAgency(id, fields.portal_status);
       } catch (e) {
         console.error("Profile sync / approval email (non-fatal):", e);
+      }
+    }
+
+    // Keep the public /developers directory consistent with archive state:
+    // archiving an agency hides its directory card (soft-delete, row kept);
+    // unarchiving republishes it only if it's still a Developer. Best-effort.
+    if ("archived" in fields) {
+      try {
+        if (fields.archived === true) {
+          await unpublishDeveloperForAgency(id);
+        } else {
+          const { data: a } = await supabaseAdmin
+            .from("agencies").select("interest_type").eq("id", id).single();
+          if (a?.interest_type === "Developer") await syncDeveloperFromAgency(id);
+        }
+      } catch (e) {
+        console.error("Developer directory sync on archive toggle (non-fatal):", e);
       }
     }
 
