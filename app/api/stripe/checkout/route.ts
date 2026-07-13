@@ -1,6 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { getStripe, PRICE_BY_TIER, isCheckoutTier, PLATFORM_TAG } from "@/lib/stripe/server";
 import { createClient } from "@/lib/supabase/server";
+
+// Shape check over the query params this route reads. searchParams.get()
+// only ever yields string | null, so this cannot reject a request — it just
+// normalizes exactly like the old inline expressions (`?? ""` / `|| undefined`).
+// Tier semantics remain with isCheckoutTier below.
+const checkoutQuerySchema = z.object({
+  tier: z
+    .string()
+    .nullable()
+    .transform((v) => v ?? ""),
+  project: z
+    .string()
+    .nullable()
+    .transform((v) => v || undefined),
+});
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,8 +32,10 @@ export const dynamic = "force-dynamic";
  * or change what the account can do — existing members keep all features.
  */
 export async function GET(req: NextRequest) {
-  const tier = req.nextUrl.searchParams.get("tier") ?? "";
-  const projectId = req.nextUrl.searchParams.get("project") || undefined;
+  const { tier, project: projectId } = checkoutQuerySchema.parse({
+    tier: req.nextUrl.searchParams.get("tier"),
+    project: req.nextUrl.searchParams.get("project"),
+  });
   const origin = req.nextUrl.origin;
 
   // Not configured yet (e.g. deployed to main before the keys are set): fall

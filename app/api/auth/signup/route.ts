@@ -1,13 +1,42 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { z } from "zod";
+
+// Permissive shape check, matching the route's historical tolerance:
+// email/password must be present strings (missing ones previously just made
+// supabase.auth.signUp fail into the same error redirect); full_name and
+// interest_type stay optional.
+const signupSchema = z.object({
+  full_name: z.string().nullable().optional(),
+  email: z.string(),
+  password: z.string(),
+  interest_type: z.string().nullable().optional(),
+});
 
 export async function POST(request: Request) {
   const formData = await request.formData();
-  const fullName = (formData.get("full_name") as string)?.trim();
-  const email = (formData.get("email") as string)?.trim();
-  const password = formData.get("password") as string;
-  const rawInterest = (formData.get("interest_type") as string) || null;
+
+  const parsed = signupSchema.safeParse({
+    full_name: formData.get("full_name"),
+    email: formData.get("email"),
+    password: formData.get("password"),
+    interest_type: formData.get("interest_type"),
+  });
+  if (!parsed.success) {
+    // Same generic redirect the signUp-error path below uses.
+    const url = new URL("/signup?error=1", request.url);
+    url.searchParams.set(
+      "message",
+      "We could not create your account. Please check your details and try again.",
+    );
+    return NextResponse.redirect(url);
+  }
+
+  const fullName = parsed.data.full_name?.trim();
+  const email = parsed.data.email.trim();
+  const password = parsed.data.password;
+  const rawInterest = parsed.data.interest_type || null;
 
   // SECURITY: never let a self-signup grant member privileges (Developer/Agent).
   // The portal layout uses interest_type to gate access; only admins can upgrade
