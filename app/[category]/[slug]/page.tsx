@@ -18,6 +18,7 @@ import { formatListingTitle } from "@/lib/utils";
 import { categorySlug, isValidCategorySlug } from "@/lib/listing-url";
 import { GalleryGrid } from "@/features/listings/components/gallery-grid";
 import { supabase } from "@/lib/supabase/public";
+import { getDevelopmentBySlug, getDevelopmentMetaBySlug } from "@/features/listings/queries";
 import type { Development, DevelopmentFloorPlan } from "@/types/development";
 
 interface Props {
@@ -27,11 +28,7 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!isValidCategorySlug(params.category)) return { title: "Not Found" };
 
-  const { data: dev } = await supabase
-    .from("developments")
-    .select("name, suburb, state, summary, hero_image_url, images:development_images(*)")
-    .eq("slug", params.slug)
-    .single();
+  const { data: dev } = await getDevelopmentMetaBySlug(supabase, params.slug);
   if (!dev) return { title: "Not Found" };
   const d = dev as unknown as Development;
   return {
@@ -51,12 +48,7 @@ export default async function DossierPage({ params }: Props) {
   // hitting the database and pretending to be listings).
   if (!isValidCategorySlug(params.category)) notFound();
 
-  const { data: rawDev } = await supabase
-    .from("developments")
-    .select("*, developer:developers(*), images:development_images(*), floor_plans:development_floor_plans(*), listing_agents:listing_agents(name, email, mobile, photo_url, sort_order)")
-    .eq("slug", params.slug)
-    .eq("is_published", true)
-    .single();
+  const { data: rawDev } = await getDevelopmentBySlug(supabase, params.slug);
 
   if (!rawDev) notFound();
   const dev = rawDev as unknown as Development;

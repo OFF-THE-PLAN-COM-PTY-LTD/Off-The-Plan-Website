@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { PropertyCard } from "@/components/property-card";
 import { AdSlot } from "@/components/ad-slot";
 import { supabase } from "@/lib/supabase/public";
+import { publishedDevelopmentCards } from "@/features/listings/queries";
 import type { Development } from "@/types/development";
 
 export const dynamic = "force-dynamic";
@@ -54,10 +55,7 @@ const PRICE_RANGES = [
 ];
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
-  let query = supabase
-    .from("developments")
-    .select("*, developer:developers(*), images:development_images(*), floor_plans:development_floor_plans(*)")
-    .eq("is_published", true);
+  let query = publishedDevelopmentCards(supabase);
 
   if (searchParams.suburb) {
     // Strip PostgREST-meaningful characters so user input can't break out of the filter.

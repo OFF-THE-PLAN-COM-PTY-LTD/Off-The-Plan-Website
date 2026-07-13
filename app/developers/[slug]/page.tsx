@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { PropertyCard } from "@/components/property-card";
 import { DeveloperContactForm } from "@/features/developers/components/developer-contact-form";
 import { supabase } from "@/lib/supabase/public";
+import { publishedDevelopmentCards } from "@/features/listings/queries";
 import type { Developer, DeveloperProfile } from "@/types/developer";
 import type { Development } from "@/types/development";
 
@@ -91,11 +92,7 @@ export default async function DeveloperProfilePage({ params }: Props) {
   const listingFilter = rawDev.agency_id
     ? `developer_id.eq.${rawDev.id},agency_id.eq.${rawDev.agency_id}`
     : `developer_id.eq.${rawDev.id}`;
-  const { data: devsData } = await supabase
-    .from("developments")
-    .select("*, developer:developers(*), images:development_images(*), floor_plans:development_floor_plans(*)")
-    .or(listingFilter)
-    .eq("is_published", true);
+  const { data: devsData } = await publishedDevelopmentCards(supabase).or(listingFilter);
 
   const devDevelopments = (devsData ?? []) as unknown as Development[];
 
