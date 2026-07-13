@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import * as XLSX from "xlsx";
+// xlsx (~450KB min) is lazy-loaded inside handleExcel so it stays out of the
+// main /admin dashboard bundle — matches the jsPDF lazy-load below and the
+// pattern in export-buttons.tsx.
 
 type FilterOption = { label: string; value: string };
 type Column = { key: string; label: string };
@@ -108,6 +110,7 @@ export default function DashboardTable({
   };
 
   const handleExcel = async () => {
+    const XLSX = await import("xlsx");
     const allRows = await fetchAll();
     const sheetData = [
       ["#", ...columns.map((c) => c.label), "Days Ago"],
