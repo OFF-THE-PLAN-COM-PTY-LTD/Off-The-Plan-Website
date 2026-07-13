@@ -204,6 +204,7 @@ async function main() {
 
   // In-memory model of the accounts we will write, keyed by legacy_agency_id.
   const usedSlugs = new Set();
+  const usedUserIds = new Set(); // one account per login (accounts_user_id_unique)
   const accountsByAgencyId = new Map();
   const worksheet = []; // genuinely-ambiguous orphans for Tim
   const extraAccounts = []; // directory-only developers -> their own account
@@ -217,7 +218,11 @@ async function main() {
 
   // 1) Seed from agencies.
   for (const a of agencies) {
-    const userId = a.email ? emailToUserId.get(a.email.toLowerCase()) : undefined;
+    let userId = a.email ? emailToUserId.get(a.email.toLowerCase()) : undefined;
+    // Duplicate agency emails would map two accounts to one login — only the
+    // first account keeps the link; the rest go account-less (user_id null).
+    if (userId && usedUserIds.has(userId)) userId = undefined;
+    if (userId) usedUserIds.add(userId);
     const row = mapAgencyToAccount(a, userId);
     row.slug = ensureUniqueSlug(slugifyName(row.name));
     // Derive directory visibility for Developer agencies.
@@ -264,7 +269,10 @@ async function main() {
     } else if (candidates.length === 0) {
       // No agency match -> a directory-only developer. Preserve it as its own
       // account (do NOT drop — that would lose the row). is_published carries.
-      const row = mapDeveloperToAccount(d, d.profile_id ?? undefined);
+      let uid = d.profile_id ?? undefined;
+      if (uid && usedUserIds.has(uid)) uid = undefined;
+      if (uid) usedUserIds.add(uid);
+      const row = mapDeveloperToAccount(d, uid);
       row.slug = ensureUniqueSlug(d.slug || slugifyName(row.name));
       extraAccounts.push(row);
       createdFromDev++;
