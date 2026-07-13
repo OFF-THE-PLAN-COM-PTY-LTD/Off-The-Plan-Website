@@ -52,6 +52,108 @@ export interface MiniStocklistEntry {
   property_sub_type?: string;
 }
 
+// Row shapes for the listing form's server-loaded dropdown data.
+export interface Developer { id: string; name: string }
+export interface Member { id: string; full_name: string | null; interest_type: string | null }
+
+// Server-loaded listing row (developments table) as consumed by the form.
+export interface ListingData {
+  id?: string;
+  // Category
+  type?: string;
+  tag?: string;
+  tier?: string | null;
+  // Project Overview
+  name?: string;
+  slug?: string;
+  developer_id?: string | null;
+  portal_developer_name?: string | null;
+  owner_user_id?: string | null;
+  developer_website?: string;
+  listing_duration?: string;
+  logo_url?: string;
+  residence_count?: number | null;
+  // Address
+  street_address?: string;
+  street_address_2?: string;
+  country?: string;
+  state?: string;
+  city?: string;
+  postcode?: string;
+  suburb?: string;
+  location_description?: string;
+  // Sale office
+  sale_office_street?: string;
+  sale_office_street_2?: string;
+  sale_office_country?: string;
+  sale_office_state?: string;
+  sale_office_city?: string;
+  sale_office_postcode?: string;
+  // Details
+  display_suite_timing?: string;
+  description?: string;
+  description_html?: string;
+  summary?: string;
+  status?: string;
+  is_published?: boolean;
+  is_featured?: boolean;
+  subscription_status?: string | null;
+  lat?: number | null;
+  lng?: number | null;
+  // Pricing / dates
+  price_from?: number | null;
+  search_price_max?: number | null;
+  price_display?: string;
+  show_price_on_search?: boolean;
+  promotional_banner?: string;
+  completion_quarter?: string;
+  configuration_label?: string;
+  // Configuration Summary
+  beds_min?: number | null;
+  beds_max?: number | null;
+  baths_min?: number | null;
+  baths_max?: number | null;
+  cars_min?: number | null;
+  cars_max?: number | null;
+  levels?: number | null;
+  internal_sqm_min?: number | null;
+  internal_sqm_max?: number | null;
+  land_size_min?: number | null;
+  land_size_max?: number | null;
+  // Features
+  lifestyle?: string[];
+  features?: string[] | null;
+  architect?: string;
+  interiors?: string;
+  landscape?: string;
+  builder?: string;
+  // Amenities
+  nearby_amenities?: string[] | null;
+  // Agent
+  agent_name?: string;
+  agent_phone?: string;
+  agent_email?: string;
+  agent_agency?: string;
+  // Uploads
+  hero_image_url?: string;
+  hero_alt_text?: string;
+  feature_image_url?: string;
+  brochure_url?: string;
+  video_url?: string;
+  agent_logo_1?: string;
+  agent_logo_2?: string;
+  virtual_tour_url?: string;
+  floor_plan_upload_url?: string;
+  additional_video_url?: string;
+  price_list_url?: string;
+  specifications_url?: string;
+  // SEO
+  seo_title?: string;
+  seo_description?: string;
+  // Mini stocklist — see MiniStocklistEntry above. Up to 20 rows.
+  mini_stocklist?: MiniStocklistEntry[] | null;
+}
+
 export interface Agent {
   id?: string;
   name: string;

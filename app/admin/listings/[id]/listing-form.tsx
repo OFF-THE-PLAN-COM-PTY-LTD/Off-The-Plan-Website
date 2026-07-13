@@ -9,9 +9,9 @@ import { RichTextEditor } from "@/features/admin/components/rich-text-editor";
 import { featuresForCategory } from "@/features/listings/category-features";
 import { getCardFields, getStocklistFields } from "@/lib/listing-card-fields";
 import { categorySlug } from "@/lib/listing-url";
-import { plainTextToHtml, htmlToPlainText } from "@/features/listings/admin-form/text-html";
-import type { Agent, GalleryImage, FloorPlan, MiniStocklistEntry } from "@/features/listings/admin-form/types";
+import type { Agent, GalleryImage, FloorPlan, MiniStocklistEntry, Developer, Member, ListingData } from "@/features/listings/admin-form/types";
 import { buildPayload } from "@/features/listings/admin-form/build-payload";
+import { useListingFormState } from "@/features/listings/admin-form/use-listing-form-state";
 import { AccordionSection } from "@/features/listings/admin-form/fields/accordion-section";
 import { SectionDivider } from "@/features/listings/admin-form/fields/section-divider";
 import { ExampleHint } from "@/features/listings/admin-form/fields/example-hint";
@@ -24,108 +24,8 @@ import { GalleryManager } from "@/features/listings/admin-form/managers/gallery-
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-interface Developer { id: string; name: string }
-interface Member { id: string; full_name: string | null; interest_type: string | null }
-
 const MAX_STOCKLIST_ROWS = 20;
 const MAX_CONFIG_SUMMARY_ROWS = 4;
-
-interface ListingData {
-  id?: string;
-  // Category
-  type?: string;
-  tag?: string;
-  tier?: string | null;
-  // Project Overview
-  name?: string;
-  slug?: string;
-  developer_id?: string | null;
-  portal_developer_name?: string | null;
-  owner_user_id?: string | null;
-  developer_website?: string;
-  listing_duration?: string;
-  logo_url?: string;
-  residence_count?: number | null;
-  // Address
-  street_address?: string;
-  street_address_2?: string;
-  country?: string;
-  state?: string;
-  city?: string;
-  postcode?: string;
-  suburb?: string;
-  location_description?: string;
-  // Sale office
-  sale_office_street?: string;
-  sale_office_street_2?: string;
-  sale_office_country?: string;
-  sale_office_state?: string;
-  sale_office_city?: string;
-  sale_office_postcode?: string;
-  // Details
-  display_suite_timing?: string;
-  description?: string;
-  description_html?: string;
-  summary?: string;
-  status?: string;
-  is_published?: boolean;
-  is_featured?: boolean;
-  subscription_status?: string | null;
-  lat?: number | null;
-  lng?: number | null;
-  // Pricing / dates
-  price_from?: number | null;
-  search_price_max?: number | null;
-  price_display?: string;
-  show_price_on_search?: boolean;
-  promotional_banner?: string;
-  completion_quarter?: string;
-  configuration_label?: string;
-  // Configuration Summary
-  beds_min?: number | null;
-  beds_max?: number | null;
-  baths_min?: number | null;
-  baths_max?: number | null;
-  cars_min?: number | null;
-  cars_max?: number | null;
-  levels?: number | null;
-  internal_sqm_min?: number | null;
-  internal_sqm_max?: number | null;
-  land_size_min?: number | null;
-  land_size_max?: number | null;
-  // Features
-  lifestyle?: string[];
-  features?: string[] | null;
-  architect?: string;
-  interiors?: string;
-  landscape?: string;
-  builder?: string;
-  // Amenities
-  nearby_amenities?: string[] | null;
-  // Agent
-  agent_name?: string;
-  agent_phone?: string;
-  agent_email?: string;
-  agent_agency?: string;
-  // Uploads
-  hero_image_url?: string;
-  hero_alt_text?: string;
-  feature_image_url?: string;
-  brochure_url?: string;
-  video_url?: string;
-  agent_logo_1?: string;
-  agent_logo_2?: string;
-  virtual_tour_url?: string;
-  floor_plan_upload_url?: string;
-  additional_video_url?: string;
-  price_list_url?: string;
-  specifications_url?: string;
-  // SEO
-  seo_title?: string;
-  seo_description?: string;
-  // Mini stocklist — see MiniStocklistEntry above. Up to 20 rows.
-  mini_stocklist?: MiniStocklistEntry[] | null;
-}
 
 interface Props {
   id: string;
@@ -172,123 +72,11 @@ export function ListingForm({
   const router = useRouter();
   const isNew = id === "new";
 
-  // Category
-  const [type, setType] = useState(existing?.type ?? "");
-  // Tag field removed from the edit form 2026-07-09. Existing values in the
-  // DB stay untouched and still render on property cards; no new writes.
-  const [tier, setTier] = useState(existing?.tier ?? "");
-
-  // Project Overview – identity
-  const [name, setName] = useState(existing?.name ?? "");
-  const [slug, setSlug] = useState(existing?.slug ?? "");
-  const [developerId, setDeveloperId] = useState(existing?.developer_id ?? "");
-  const [portalDeveloperName, setPortalDeveloperName] = useState(existing?.portal_developer_name ?? "");
-  const [ownerUserId, setOwnerUserId] = useState(existing?.owner_user_id ?? "");
-  const [developerWebsite, setDeveloperWebsite] = useState(existing?.developer_website ?? "");
-  const [listingDuration, setListingDuration] = useState(existing?.listing_duration ?? "");
-  const [logoUrl, setLogoUrl] = useState(existing?.logo_url ?? "");
-  const [residenceCount, setResidenceCount] = useState<number | "">(existing?.residence_count ?? "");
-
-  // Address
-  const [streetAddress, setStreetAddress] = useState(existing?.street_address ?? "");
-  const [streetAddress2, setStreetAddress2] = useState(existing?.street_address_2 ?? "");
-  const [country, setCountry] = useState(existing?.country ?? "Australia");
-  const [state, setState] = useState(existing?.state ?? "");
-  const [city, setCity] = useState(existing?.city ?? "");
-  const [postcode, setPostcode] = useState(existing?.postcode ?? "");
-  const [suburb, setSuburb] = useState(existing?.suburb ?? "");
-  const [locationDescription, setLocationDescription] = useState(existing?.location_description ?? "");
-
-  // Sale office address
-  const [saleOfficeStreet, setSaleOfficeStreet] = useState(existing?.sale_office_street ?? "");
-  const [saleOfficeStreet2, setSaleOfficeStreet2] = useState(existing?.sale_office_street_2 ?? "");
-  const [saleOfficeCountry, setSaleOfficeCountry] = useState(existing?.sale_office_country ?? "");
-  const [saleOfficeState, setSaleOfficeState] = useState(existing?.sale_office_state ?? "");
-  const [saleOfficeCity, setSaleOfficeCity] = useState(existing?.sale_office_city ?? "");
-  const [saleOfficePostcode, setSaleOfficePostcode] = useState(existing?.sale_office_postcode ?? "");
-
-  // Description & timing
-  const [displaySuiteTiming, setDisplaySuiteTiming] = useState(existing?.display_suite_timing ?? "");
-  const [description, setDescription] = useState(
-    existing?.description_html ?? plainTextToHtml(existing?.description ?? existing?.summary ?? ""),
-  );
-  const [status, setStatus] = useState(existing?.status ?? "Selling now");
-  const [isPublished, setIsPublished] = useState(existing?.is_published ?? false);
-  const [isFeatured, setIsFeatured] = useState(existing?.is_featured ?? false);
-  const [lat, setLat] = useState<number | "">(existing?.lat ?? "");
-  const [lng, setLng] = useState<number | "">(existing?.lng ?? "");
-
-  // Pricing & dates
-  const [priceFrom, setPriceFrom] = useState<number | "">(existing?.price_from ?? "");
-  const [searchPriceMax, setSearchPriceMax] = useState<number | "">(existing?.search_price_max ?? "");
-  const [priceDisplay, setPriceDisplay] = useState(existing?.price_display ?? "");
-  const [showPriceOnSearch, setShowPriceOnSearch] = useState(existing?.show_price_on_search ?? true);
-  const [promotionalBanner, setPromotionalBanner] = useState(existing?.promotional_banner ?? "");
-  const [completionQuarter, setCompletionQuarter] = useState(existing?.completion_quarter ?? "");
-  const [configurationLabel, setConfigurationLabel] = useState(existing?.configuration_label ?? "");
-
-  // Configuration Summary
-  const [bedsMin, setBedsMin] = useState<number | "">(existing?.beds_min ?? "");
-  const [bedsMax, setBedsMax] = useState<number | "">(existing?.beds_max ?? "");
-  const [bathsMin, setBathsMin] = useState<number | "">(existing?.baths_min ?? "");
-  const [bathsMax, setBathsMax] = useState<number | "">(existing?.baths_max ?? "");
-  const [carsMin, setCarsMin] = useState<number | "">(existing?.cars_min ?? "");
-  const [carsMax, setCarsMax] = useState<number | "">(existing?.cars_max ?? "");
-  const [levels, setLevels] = useState<number | "">(existing?.levels ?? "");
-  const [internalSqmMin, setInternalSqmMin] = useState<number | "">(existing?.internal_sqm_min ?? "");
-  const [internalSqmMax, setInternalSqmMax] = useState<number | "">(existing?.internal_sqm_max ?? "");
-  const [landSizeMin, setLandSizeMin] = useState<number | "">(existing?.land_size_min ?? "");
-  const [landSizeMax, setLandSizeMax] = useState<number | "">(existing?.land_size_max ?? "");
-
-  // Property Features
-  const [lifestyle, setLifestyle] = useState<string[]>(existing?.lifestyle ?? []);
-  const [features, setFeatures] = useState<string[]>(existing?.features ?? []);
-  const [architect, setArchitect] = useState(existing?.architect ?? "");
-  const [interiors, setInteriors] = useState(existing?.interiors ?? "");
-  const [landscape, setLandscape] = useState(existing?.landscape ?? "");
-  const [builder, setBuilder] = useState(existing?.builder ?? "");
-
-  // Nearby Amenities
-  const [nearbyAmenities, setNearbyAmenities] = useState<string[]>(existing?.nearby_amenities ?? []);
-
-  // Selling Agent
-  const [agentName, setAgentName] = useState(existing?.agent_name ?? "");
-  const [agentPhone, setAgentPhone] = useState(existing?.agent_phone ?? "");
-  const [agentEmail, setAgentEmail] = useState(existing?.agent_email ?? "");
-  const [agentAgency, setAgentAgency] = useState(existing?.agent_agency ?? "");
-
-  // Uploads
-  const [heroImageUrl, setHeroImageUrl] = useState(existing?.hero_image_url ?? "");
-  const [heroAltText, setHeroAltText] = useState(existing?.hero_alt_text ?? "");
-  const [featureImageUrl, setFeatureImageUrl] = useState(existing?.feature_image_url ?? "");
-  const [brochureUrl, setBrochureUrl] = useState(existing?.brochure_url ?? "");
-  const [videoUrl, setVideoUrl] = useState(existing?.video_url ?? "");
-  const [agentLogo1, setAgentLogo1] = useState(existing?.agent_logo_1 ?? "");
-  const [agentLogo2, setAgentLogo2] = useState(existing?.agent_logo_2 ?? "");
-
-  // Optional Uploads
-  const [virtualTourUrl, setVirtualTourUrl] = useState(existing?.virtual_tour_url ?? "");
-  const [floorPlanUploadUrl, setFloorPlanUploadUrl] = useState(existing?.floor_plan_upload_url ?? "");
-  const [additionalVideoUrl, setAdditionalVideoUrl] = useState(existing?.additional_video_url ?? "");
-  const [priceListUrl, setPriceListUrl] = useState(existing?.price_list_url ?? "");
-  const [specificationsUrl, setSpecificationsUrl] = useState(existing?.specifications_url ?? "");
-  const [gallery, setGallery] = useState<GalleryImage[]>(initialGallery);
-
-  // Mini Stocklist
-  const [floorPlans, setFloorPlans] = useState<FloorPlan[]>(initialFloorPlans);
-
-  // "Properties Available" table — separate from floor_plans. Free-text
-  // cells so an admin can enter "Contact Agent" or "Fr. $660,000" the
-  // same way Tim's existing site allows. Capped at 20 rows.
-  const [miniStocklist, setMiniStocklist] = useState<MiniStocklistEntry[]>(
-    Array.isArray(existing?.mini_stocklist)
-      ? (existing!.mini_stocklist as MiniStocklistEntry[])
-      : [],
-  );
-
-  // SEO
-  const [seoTitle, setSeoTitle] = useState(existing?.seo_title ?? "");
-  const [seoDescription, setSeoDescription] = useState(existing?.seo_description ?? "");
+  // All form field state, grouped into section slices. Collections that rely
+  // on functional updates (lifestyle, gallery, floorPlans, miniStocklist)
+  // are exposed under state.rows.* with raw setter passthroughs.
+  const { state, set, setLifestyle, setGallery, setFloorPlans, setMiniStocklist } =
+    useListingFormState(existing, initialGallery, initialFloorPlans);
 
   // Form meta
   const [saving, setSaving] = useState(false);
@@ -310,11 +98,11 @@ export function ListingForm({
     const res = await fetch("/api/admin/gallery", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ development_id: id, url, sort_order: gallery.length }),
+      body: JSON.stringify({ development_id: id, url, sort_order: state.rows.gallery.length }),
     });
     if (res.ok) {
       const json = await res.json();
-      setGallery((prev) => [...prev, { id: json.id, url, sort_order: gallery.length }]);
+      setGallery((prev) => [...prev, { id: json.id, url, sort_order: state.rows.gallery.length }]);
     }
   }
 
@@ -378,83 +166,83 @@ export function ListingForm({
   const payloadState = {
     isNew,
     id,
-    type,
-    tier,
-    name,
-    slug,
-    developerId,
-    portalDeveloperName,
-    ownerUserId,
-    developerWebsite,
-    listingDuration,
-    logoUrl,
-    residenceCount,
-    streetAddress,
-    streetAddress2,
-    country,
-    state,
-    city,
-    postcode,
-    suburb,
-    locationDescription,
-    saleOfficeStreet,
-    saleOfficeStreet2,
-    saleOfficeCountry,
-    saleOfficeState,
-    saleOfficeCity,
-    saleOfficePostcode,
-    displaySuiteTiming,
-    description,
-    status,
-    isPublished,
-    isFeatured,
-    lat,
-    lng,
-    priceFrom,
-    searchPriceMax,
-    priceDisplay,
-    showPriceOnSearch,
-    promotionalBanner,
-    completionQuarter,
-    configurationLabel,
-    bedsMin,
-    bedsMax,
-    bathsMin,
-    bathsMax,
-    carsMin,
-    carsMax,
-    levels,
-    internalSqmMin,
-    internalSqmMax,
-    landSizeMin,
-    landSizeMax,
-    lifestyle,
-    features,
-    architect,
-    interiors,
-    landscape,
-    builder,
-    nearbyAmenities,
-    agentName,
-    agentPhone,
-    agentEmail,
-    agentAgency,
-    heroImageUrl,
-    heroAltText,
-    featureImageUrl,
-    brochureUrl,
-    videoUrl,
-    agentLogo1,
-    agentLogo2,
-    virtualTourUrl,
-    floorPlanUploadUrl,
-    additionalVideoUrl,
-    priceListUrl,
-    specificationsUrl,
-    seoTitle,
-    seoDescription,
-    floorPlans,
-    miniStocklist,
+    type: state.category.type,
+    tier: state.category.tier,
+    name: state.overview.name,
+    slug: state.overview.slug,
+    developerId: state.overview.developerId,
+    portalDeveloperName: state.overview.portalDeveloperName,
+    ownerUserId: state.overview.ownerUserId,
+    developerWebsite: state.overview.developerWebsite,
+    listingDuration: state.overview.listingDuration,
+    logoUrl: state.overview.logoUrl,
+    residenceCount: state.overview.residenceCount,
+    streetAddress: state.address.streetAddress,
+    streetAddress2: state.address.streetAddress2,
+    country: state.address.country,
+    state: state.address.state,
+    city: state.address.city,
+    postcode: state.address.postcode,
+    suburb: state.address.suburb,
+    locationDescription: state.address.locationDescription,
+    saleOfficeStreet: state.saleOffice.saleOfficeStreet,
+    saleOfficeStreet2: state.saleOffice.saleOfficeStreet2,
+    saleOfficeCountry: state.saleOffice.saleOfficeCountry,
+    saleOfficeState: state.saleOffice.saleOfficeState,
+    saleOfficeCity: state.saleOffice.saleOfficeCity,
+    saleOfficePostcode: state.saleOffice.saleOfficePostcode,
+    displaySuiteTiming: state.details.displaySuiteTiming,
+    description: state.details.description,
+    status: state.details.status,
+    isPublished: state.details.isPublished,
+    isFeatured: state.details.isFeatured,
+    lat: state.details.lat,
+    lng: state.details.lng,
+    priceFrom: state.pricing.priceFrom,
+    searchPriceMax: state.pricing.searchPriceMax,
+    priceDisplay: state.pricing.priceDisplay,
+    showPriceOnSearch: state.pricing.showPriceOnSearch,
+    promotionalBanner: state.pricing.promotionalBanner,
+    completionQuarter: state.pricing.completionQuarter,
+    configurationLabel: state.pricing.configurationLabel,
+    bedsMin: state.config.bedsMin,
+    bedsMax: state.config.bedsMax,
+    bathsMin: state.config.bathsMin,
+    bathsMax: state.config.bathsMax,
+    carsMin: state.config.carsMin,
+    carsMax: state.config.carsMax,
+    levels: state.config.levels,
+    internalSqmMin: state.config.internalSqmMin,
+    internalSqmMax: state.config.internalSqmMax,
+    landSizeMin: state.config.landSizeMin,
+    landSizeMax: state.config.landSizeMax,
+    lifestyle: state.rows.lifestyle,
+    features: state.features.features,
+    architect: state.features.architect,
+    interiors: state.features.interiors,
+    landscape: state.features.landscape,
+    builder: state.features.builder,
+    nearbyAmenities: state.amenities.nearbyAmenities,
+    agentName: state.agent.agentName,
+    agentPhone: state.agent.agentPhone,
+    agentEmail: state.agent.agentEmail,
+    agentAgency: state.agent.agentAgency,
+    heroImageUrl: state.uploads.heroImageUrl,
+    heroAltText: state.uploads.heroAltText,
+    featureImageUrl: state.uploads.featureImageUrl,
+    brochureUrl: state.uploads.brochureUrl,
+    videoUrl: state.uploads.videoUrl,
+    agentLogo1: state.uploads.agentLogo1,
+    agentLogo2: state.uploads.agentLogo2,
+    virtualTourUrl: state.uploads.virtualTourUrl,
+    floorPlanUploadUrl: state.uploads.floorPlanUploadUrl,
+    additionalVideoUrl: state.uploads.additionalVideoUrl,
+    priceListUrl: state.uploads.priceListUrl,
+    specificationsUrl: state.uploads.specificationsUrl,
+    seoTitle: state.seo.seoTitle,
+    seoDescription: state.seo.seoDescription,
+    floorPlans: state.rows.floorPlans,
+    miniStocklist: state.rows.miniStocklist,
   };
 
   // ── Autosave (2026-07-02) ──────────────────────────────────────────────
@@ -615,12 +403,12 @@ export function ListingForm({
               <div>
                 <p className="text-sm font-semibold" style={{ color: "#1a2340" }}>Publish this listing</p>
                 <p className="text-xs text-gray-600 mt-0.5">
-                  {name.trim() && suburb.trim() && state.trim()
+                  {state.overview.name.trim() && state.address.suburb.trim() && state.address.state.trim()
                     ? "Subscribe to publish your listing — $299/month + GST. You can keep editing anytime."
                     : "Fill in Project Name, Suburb and State to enable publishing."}
                 </p>
               </div>
-              {name.trim() && suburb.trim() && state.trim() ? (
+              {state.overview.name.trim() && state.address.suburb.trim() && state.address.state.trim() ? (
                 <a
                   href={`/api/stripe/checkout?tier=agency_listing&project=${id}`}
                   className="shrink-0 text-center py-2.5 px-6 text-xs font-bold uppercase tracking-widest text-white rounded transition-opacity hover:opacity-80"
@@ -647,19 +435,19 @@ export function ListingForm({
           <div className={g2}>
             <div>
               <label className={lbl}>Listing Type</label>
-              <select value={type} onChange={(e) => setType(e.target.value)} className={inp + " cursor-pointer"}>
+              <select value={state.category.type} onChange={(e) => set.category({ type: e.target.value })} className={inp + " cursor-pointer"}>
                 <option value="">— Select type —</option>
                 {/* One canonical taxonomy everywhere. If this listing was saved
                     with a legacy value not in the list (e.g. "Land", "Villa",
                     "Mixed Use"), keep showing it so the value isn't silently
                     wiped — re-selecting a proper name canonicalises it. */}
-                {(!type || PORTAL_TYPES.includes(type) ? PORTAL_TYPES : [type, ...PORTAL_TYPES]).map((t) => <option key={t} value={t}>{t}</option>)}
+                {(!state.category.type || PORTAL_TYPES.includes(state.category.type) ? PORTAL_TYPES : [state.category.type, ...PORTAL_TYPES]).map((t) => <option key={t} value={t}>{t}</option>)}
               </select>
             </div>
             {!isPortal && (
               <div>
                 <label className={lbl}>Tier</label>
-                <select value={tier} onChange={(e) => setTier(e.target.value)} className={inp + " cursor-pointer"}>
+                <select value={state.category.tier} onChange={(e) => set.category({ tier: e.target.value })} className={inp + " cursor-pointer"}>
                   <option value="">— No tier —</option>
                   <option value="1st Tier">1st Tier</option>
                   <option value="2nd Tier">2nd Tier</option>
@@ -681,11 +469,11 @@ export function ListingForm({
           <div className={g2}>
             <div>
               <label className={lbl}>Project Name *</label>
-              <input type="text" value={name} onChange={(e) => setName(e.target.value)} required className={inp} />
+              <input type="text" value={state.overview.name} onChange={(e) => set.overview({ name: e.target.value })} required className={inp} />
             </div>
             <div>
               <label className={lbl}>Listing Duration</label>
-              <select value={listingDuration} onChange={(e) => setListingDuration(e.target.value)} className={inp + " cursor-pointer"}>
+              <select value={state.overview.listingDuration} onChange={(e) => set.overview({ listingDuration: e.target.value })} className={inp + " cursor-pointer"}>
                 <option value="">— Select —</option>
                 {(isPortal ? ["6 Months", "12 Months"] : LISTING_DURATIONS).map((d) => <option key={d} value={d}>{d}</option>)}
               </select>
@@ -699,13 +487,13 @@ export function ListingForm({
               {isPortal ? (
                 <input
                   type="text"
-                  value={portalDeveloperName}
-                  onChange={(e) => setPortalDeveloperName(e.target.value)}
+                  value={state.overview.portalDeveloperName}
+                  onChange={(e) => set.overview({ portalDeveloperName: e.target.value })}
                   placeholder="e.g. ABC Developers Pty Ltd"
                   className={inp}
                 />
               ) : (
-                <select value={developerId} onChange={(e) => setDeveloperId(e.target.value)} className={inp + " cursor-pointer"}>
+                <select value={state.overview.developerId} onChange={(e) => set.overview({ developerId: e.target.value })} className={inp + " cursor-pointer"}>
                   <option value="">— No developer —</option>
                   {developers.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
                 </select>
@@ -713,11 +501,11 @@ export function ListingForm({
             </div>
             <div>
               <label className={lbl}>Developer Website URL</label>
-              <input type="url" value={developerWebsite} onChange={(e) => setDeveloperWebsite(e.target.value)} placeholder="https://..." className={inp} />
+              <input type="url" value={state.overview.developerWebsite} onChange={(e) => set.overview({ developerWebsite: e.target.value })} placeholder="https://..." className={inp} />
             </div>
             <div>
-              <label className={lbl}>{type === "Townhouses" ? "Number of Homes" : "Number of Apartments / Lots"}</label>
-              <input type="number" value={residenceCount} onChange={(e) => setResidenceCount(e.target.value === "" ? "" : Number(e.target.value))} className={inp} />
+              <label className={lbl}>{state.category.type === "Townhouses" ? "Number of Homes" : "Number of Apartments / Lots"}</label>
+              <input type="number" value={state.overview.residenceCount} onChange={(e) => set.overview({ residenceCount: e.target.value === "" ? "" : Number(e.target.value) })} className={inp} />
             </div>
           </div>
 
@@ -725,7 +513,7 @@ export function ListingForm({
           {!isPortal && (
             <div className="mt-4">
               <label className={lbl}>Assign to Account <span className="normal-case font-sans text-ink/40 text-xs">(Developer or Agent account)</span></label>
-              <select value={ownerUserId} onChange={(e) => setOwnerUserId(e.target.value)} className={inp + " cursor-pointer"}>
+              <select value={state.overview.ownerUserId} onChange={(e) => set.overview({ ownerUserId: e.target.value })} className={inp + " cursor-pointer"}>
                 <option value="">— Unassigned —</option>
                 {members.map((m) => (
                   <option key={m.id} value={m.id}>
@@ -738,14 +526,14 @@ export function ListingForm({
 
           {/* Project logo */}
           <div className="mt-5">
-            <ImageUpload label="Project Logo" value={logoUrl} onChange={setLogoUrl} bucket="development-images" />
+            <ImageUpload label="Project Logo" value={state.overview.logoUrl} onChange={(v) => set.overview({ logoUrl: v })} bucket="development-images" />
           </div>
 
           {/* URL slug — admin only */}
           {!isPortal && (
             <div className="mt-4">
               <label className={lbl}>URL Slug *</label>
-              <input type="text" value={slug} onChange={(e) => setSlug(e.target.value)} required className={inp + " font-mono text-label-lg"} />
+              <input type="text" value={state.overview.slug} onChange={(e) => set.overview({ slug: e.target.value })} required className={inp + " font-mono text-label-lg"} />
             </div>
           )}
 
@@ -754,39 +542,39 @@ export function ListingForm({
           <div className={`${g4} mb-4`}>
             <div>
               <label className={lbl}>Street Address *</label>
-              <input type="text" value={streetAddress} onChange={(e) => setStreetAddress(e.target.value)} placeholder="e.g. 35" className={inp} />
+              <input type="text" value={state.address.streetAddress} onChange={(e) => set.address({ streetAddress: e.target.value })} placeholder="e.g. 35" className={inp} />
             </div>
             <div>
               <label className={lbl}>Street Address 2 *</label>
-              <input type="text" value={streetAddress2} onChange={(e) => setStreetAddress2(e.target.value)} placeholder="e.g. Northumberland Road" className={inp} />
+              <input type="text" value={state.address.streetAddress2} onChange={(e) => set.address({ streetAddress2: e.target.value })} placeholder="e.g. Northumberland Road" className={inp} />
             </div>
             <div>
               <label className={lbl}>Suburb</label>
-              <input type="text" value={suburb} onChange={(e) => setSuburb(e.target.value)} className={inp} />
+              <input type="text" value={state.address.suburb} onChange={(e) => set.address({ suburb: e.target.value })} className={inp} />
             </div>
             <div>
               <label className={lbl}>City</label>
-              <input type="text" value={city} onChange={(e) => setCity(e.target.value)} className={inp} />
+              <input type="text" value={state.address.city} onChange={(e) => set.address({ city: e.target.value })} className={inp} />
             </div>
             <div>
               <label className={lbl}>State</label>
-              <select value={state} onChange={(e) => setState(e.target.value)} className={inp + " cursor-pointer"}>
+              <select value={state.address.state} onChange={(e) => set.address({ state: e.target.value })} className={inp + " cursor-pointer"}>
                 <option value="">Select</option>
                 {AU_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
             <div>
               <label className={lbl}>PostCode</label>
-              <input type="text" value={postcode} onChange={(e) => setPostcode(e.target.value)} className={inp} />
+              <input type="text" value={state.address.postcode} onChange={(e) => set.address({ postcode: e.target.value })} className={inp} />
             </div>
             <div>
               <label className={lbl}>Country</label>
-              <input type="text" value={country} onChange={(e) => setCountry(e.target.value)} placeholder="Australia" className={inp} />
+              <input type="text" value={state.address.country} onChange={(e) => set.address({ country: e.target.value })} placeholder="Australia" className={inp} />
             </div>
           </div>
           <div>
             <label className={lbl}>Location Description</label>
-            <textarea rows={3} value={locationDescription} onChange={(e) => setLocationDescription(e.target.value)} className={inp + " resize-none"} />
+            <textarea rows={3} value={state.address.locationDescription} onChange={(e) => set.address({ locationDescription: e.target.value })} className={inp + " resize-none"} />
           </div>
 
           {/* ── Sale Office Address ── */}
@@ -794,30 +582,30 @@ export function ListingForm({
           <div className={g4}>
             <div>
               <label className={lbl}>Street Address</label>
-              <input type="text" value={saleOfficeStreet} onChange={(e) => setSaleOfficeStreet(e.target.value)} className={inp} />
+              <input type="text" value={state.saleOffice.saleOfficeStreet} onChange={(e) => set.saleOffice({ saleOfficeStreet: e.target.value })} className={inp} />
             </div>
             <div>
               <label className={lbl}>Street Address 2</label>
-              <input type="text" value={saleOfficeStreet2} onChange={(e) => setSaleOfficeStreet2(e.target.value)} className={inp} />
+              <input type="text" value={state.saleOffice.saleOfficeStreet2} onChange={(e) => set.saleOffice({ saleOfficeStreet2: e.target.value })} className={inp} />
             </div>
             <div>
               <label className={lbl}>City</label>
-              <input type="text" value={saleOfficeCity} onChange={(e) => setSaleOfficeCity(e.target.value)} className={inp} />
+              <input type="text" value={state.saleOffice.saleOfficeCity} onChange={(e) => set.saleOffice({ saleOfficeCity: e.target.value })} className={inp} />
             </div>
             <div>
               <label className={lbl}>State</label>
-              <select value={saleOfficeState} onChange={(e) => setSaleOfficeState(e.target.value)} className={inp + " cursor-pointer"}>
+              <select value={state.saleOffice.saleOfficeState} onChange={(e) => set.saleOffice({ saleOfficeState: e.target.value })} className={inp + " cursor-pointer"}>
                 <option value="">Select</option>
                 {AU_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
             <div>
               <label className={lbl}>PostCode</label>
-              <input type="text" value={saleOfficePostcode} onChange={(e) => setSaleOfficePostcode(e.target.value)} className={inp} />
+              <input type="text" value={state.saleOffice.saleOfficePostcode} onChange={(e) => set.saleOffice({ saleOfficePostcode: e.target.value })} className={inp} />
             </div>
             <div>
               <label className={lbl}>Country</label>
-              <input type="text" value={saleOfficeCountry} onChange={(e) => setSaleOfficeCountry(e.target.value)} placeholder="Australia" className={inp} />
+              <input type="text" value={state.saleOffice.saleOfficeCountry} onChange={(e) => set.saleOffice({ saleOfficeCountry: e.target.value })} placeholder="Australia" className={inp} />
             </div>
           </div>
 
@@ -827,8 +615,8 @@ export function ListingForm({
             <label className={lbl}>Display Suite Timing</label>
             <textarea
               rows={2}
-              value={displaySuiteTiming}
-              onChange={(e) => setDisplaySuiteTiming(e.target.value)}
+              value={state.details.displaySuiteTiming}
+              onChange={(e) => set.details({ displaySuiteTiming: e.target.value })}
               placeholder="e.g. Monday to Sunday 10am – 6pm"
               className={inp + " resize-none"}
             />
@@ -836,8 +624,8 @@ export function ListingForm({
           <div className="mb-4">
             <label className={lbl}>Listing Description *</label>
             <RichTextEditor
-              value={description}
-              onChange={setDescription}
+              value={state.details.description}
+              onChange={(v) => set.details({ description: v })}
               minHeight={260}
             />
             <p className="font-sans text-[11px] text-ink/40 mt-1">
@@ -850,15 +638,15 @@ export function ListingForm({
           <div className={`${g5} mb-4`}>
             <div>
               <label className={lbl}>Search Price Minimum ($) *</label>
-              <input type="number" value={priceFrom} onChange={(e) => setPriceFrom(e.target.value === "" ? "" : Number(e.target.value))} placeholder="450000" className={inp} />
+              <input type="number" value={state.pricing.priceFrom} onChange={(e) => set.pricing({ priceFrom: e.target.value === "" ? "" : Number(e.target.value) })} placeholder="450000" className={inp} />
             </div>
             <div>
               <label className={lbl}>Search Price Maximum ($) *</label>
-              <input type="number" value={searchPriceMax} onChange={(e) => setSearchPriceMax(e.target.value === "" ? "" : Number(e.target.value))} placeholder="1275000" className={inp} />
+              <input type="number" value={state.pricing.searchPriceMax} onChange={(e) => set.pricing({ searchPriceMax: e.target.value === "" ? "" : Number(e.target.value) })} placeholder="1275000" className={inp} />
             </div>
             <div>
               <label className={lbl}>Completion Date *</label>
-              <input type="text" value={completionQuarter} onChange={(e) => setCompletionQuarter(e.target.value)} placeholder="e.g. Q1 2028" className={inp} />
+              <input type="text" value={state.pricing.completionQuarter} onChange={(e) => set.pricing({ completionQuarter: e.target.value })} placeholder="e.g. Q1 2028" className={inp} />
             </div>
             <div>
               <label className={lbl}>
@@ -874,12 +662,12 @@ export function ListingForm({
                   />
                 </ExampleHint>
               </label>
-              <input type="text" value={priceDisplay} onChange={(e) => setPriceDisplay(e.target.value)} placeholder="e.g. From $650,000" className={inp} />
+              <input type="text" value={state.pricing.priceDisplay} onChange={(e) => set.pricing({ priceDisplay: e.target.value })} placeholder="e.g. From $650,000" className={inp} />
             </div>
             {!isPortal && (
               <div>
                 <label className={lbl}>Promotional Banner</label>
-                <input type="text" value={promotionalBanner} onChange={(e) => setPromotionalBanner(e.target.value)} placeholder="e.g. 2 BED FI $775,000" className={inp} />
+                <input type="text" value={state.pricing.promotionalBanner} onChange={(e) => set.pricing({ promotionalBanner: e.target.value })} placeholder="e.g. 2 BED FI $775,000" className={inp} />
               </div>
             )}
           </div>
@@ -900,18 +688,18 @@ export function ListingForm({
             </label>
             <input
               type="text"
-              value={configurationLabel}
-              onChange={(e) => setConfigurationLabel(e.target.value.slice(0, 25))}
+              value={state.pricing.configurationLabel}
+              onChange={(e) => set.pricing({ configurationLabel: e.target.value.slice(0, 25) })}
               placeholder="e.g. 1, 2 & 3 Bedrooms"
               maxLength={25}
               className={inp}
             />
             <p className="font-mono text-label-sm text-ink/30 mt-1">
-              {configurationLabel.length} / 25 chars
+              {state.pricing.configurationLabel.length} / 25 chars
             </p>
           </div>
           <label className="flex items-center gap-3 cursor-pointer mb-4">
-            <input type="checkbox" checked={showPriceOnSearch} onChange={(e) => setShowPriceOnSearch(e.target.checked)} className="w-4 h-4 accent-orange" />
+            <input type="checkbox" checked={state.pricing.showPriceOnSearch} onChange={(e) => set.pricing({ showPriceOnSearch: e.target.checked })} className="w-4 h-4 accent-orange" />
             <span className="section-label">Display price on search results</span>
           </label>
 
@@ -922,29 +710,29 @@ export function ListingForm({
               <div className={`${g2} mb-4`}>
                 <div>
                   <label className={lbl}>Status</label>
-                  <select value={status} onChange={(e) => setStatus(e.target.value)} className={inp + " cursor-pointer"}>
+                  <select value={state.details.status} onChange={(e) => set.details({ status: e.target.value })} className={inp + " cursor-pointer"}>
                     {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </div>
               </div>
               <div className="flex flex-col gap-3 mb-4">
                 <label className="flex items-center gap-3 cursor-pointer">
-                  <input type="checkbox" checked={isPublished} onChange={(e) => setIsPublished(e.target.checked)} className="w-4 h-4 accent-orange" />
+                  <input type="checkbox" checked={state.details.isPublished} onChange={(e) => set.details({ isPublished: e.target.checked })} className="w-4 h-4 accent-orange" />
                   <span className="section-label">Published (visible on site)</span>
                 </label>
                 <label className="flex items-center gap-3 cursor-pointer">
-                  <input type="checkbox" checked={isFeatured} onChange={(e) => setIsFeatured(e.target.checked)} className="w-4 h-4 accent-orange" />
+                  <input type="checkbox" checked={state.details.isFeatured} onChange={(e) => set.details({ isFeatured: e.target.checked })} className="w-4 h-4 accent-orange" />
                   <span className="section-label">Featured on homepage</span>
                 </label>
               </div>
               <div className={g2}>
                 <div>
                   <label className={lbl}>Latitude</label>
-                  <input type="number" step="any" value={lat} onChange={(e) => setLat(e.target.value === "" ? "" : Number(e.target.value))} placeholder="e.g. -33.8688" className={inp} />
+                  <input type="number" step="any" value={state.details.lat} onChange={(e) => set.details({ lat: e.target.value === "" ? "" : Number(e.target.value) })} placeholder="e.g. -33.8688" className={inp} />
                 </div>
                 <div>
                   <label className={lbl}>Longitude</label>
-                  <input type="number" step="any" value={lng} onChange={(e) => setLng(e.target.value === "" ? "" : Number(e.target.value))} placeholder="e.g. 151.2093" className={inp} />
+                  <input type="number" step="any" value={state.details.lng} onChange={(e) => set.details({ lng: e.target.value === "" ? "" : Number(e.target.value) })} placeholder="e.g. 151.2093" className={inp} />
                 </div>
               </div>
               <p className="font-sans text-xs text-ink/40 mt-2">
@@ -965,8 +753,8 @@ export function ListingForm({
               <label className={lbl}>Architect</label>
               <input
                 type="text"
-                value={architect}
-                onChange={(e) => setArchitect(e.target.value)}
+                value={state.features.architect}
+                onChange={(e) => set.features({ architect: e.target.value })}
                 placeholder="e.g. CDArchitects"
                 className={inp}
               />
@@ -975,8 +763,8 @@ export function ListingForm({
               <label className={lbl}>Interiors</label>
               <input
                 type="text"
-                value={interiors}
-                onChange={(e) => setInteriors(e.target.value)}
+                value={state.features.interiors}
+                onChange={(e) => set.features({ interiors: e.target.value })}
                 placeholder="e.g. Richards Stanisich"
                 className={inp}
               />
@@ -985,8 +773,8 @@ export function ListingForm({
               <label className={lbl}>Builder</label>
               <input
                 type="text"
-                value={builder}
-                onChange={(e) => setBuilder(e.target.value)}
+                value={state.features.builder}
+                onChange={(e) => set.features({ builder: e.target.value })}
                 placeholder="e.g. Multiplex"
                 className={inp}
               />
@@ -1010,8 +798,8 @@ export function ListingForm({
                   <CardPreview highlight="summary" />
                 </ExampleHint>
               </div>
-              {floorPlans.length > 0 && (() => {
-                const cardFields = getCardFields(type);
+              {state.rows.floorPlans.length > 0 && (() => {
+                const cardFields = getCardFields(state.category.type);
                 return (
                   <div className="overflow-x-auto mb-4">
                     <table className="w-full text-left">
@@ -1025,7 +813,7 @@ export function ListingForm({
                         </tr>
                       </thead>
                       <tbody>
-                        {floorPlans.map((fp, i) => (
+                        {state.rows.floorPlans.map((fp, i) => (
                           <tr key={i} className="border-b border-line last:border-0">
                             {cardFields.map((f) => {
                               const cellValue = (fp[f.key as keyof FloorPlan] as string) ?? "";
@@ -1084,12 +872,12 @@ export function ListingForm({
               <button
                 type="button"
                 onClick={addFloorPlan}
-                disabled={floorPlans.length >= MAX_CONFIG_SUMMARY_ROWS}
+                disabled={state.rows.floorPlans.length >= MAX_CONFIG_SUMMARY_ROWS}
                 className="font-mono text-[10px] uppercase tracking-widest px-4 py-2 border border-orange text-orange hover:bg-orange hover:text-white transition-colors mr-2 disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                + Add ({floorPlans.length}/{MAX_CONFIG_SUMMARY_ROWS})
+                + Add ({state.rows.floorPlans.length}/{MAX_CONFIG_SUMMARY_ROWS})
               </button>
-              {floorPlans.length >= MAX_CONFIG_SUMMARY_ROWS && (
+              {state.rows.floorPlans.length >= MAX_CONFIG_SUMMARY_ROWS && (
                 <p className="font-sans text-xs text-orange mt-2">
                   Maximum of {MAX_CONFIG_SUMMARY_ROWS} configurations reached. This is what shows on the public listing card.
                 </p>
@@ -1113,8 +901,8 @@ export function ListingForm({
               Restricted to {MAX_STOCKLIST_ROWS} rows. All fields accept free text —
               leave blank cells empty to show as "—" on the public table.
             </p>
-            {miniStocklist.length > 0 && (() => {
-              const stockFields = getStocklistFields(type);
+            {state.rows.miniStocklist.length > 0 && (() => {
+              const stockFields = getStocklistFields(state.category.type);
               return (
                 <div className="overflow-x-auto mb-4">
                   <table className="w-full text-left">
@@ -1128,7 +916,7 @@ export function ListingForm({
                       </tr>
                     </thead>
                     <tbody>
-                      {miniStocklist.map((r, i) => (
+                      {state.rows.miniStocklist.map((r, i) => (
                         <tr key={i} className="border-b border-line last:border-0">
                           {stockFields.map((f) => {
                             const stockKey = (f.stocklistKey ?? f.key) as keyof MiniStocklistEntry;
@@ -1181,10 +969,10 @@ export function ListingForm({
             <button
               type="button"
               onClick={addStocklistRow}
-              disabled={miniStocklist.length >= MAX_STOCKLIST_ROWS}
+              disabled={state.rows.miniStocklist.length >= MAX_STOCKLIST_ROWS}
               className="font-mono text-[10px] uppercase tracking-widest px-4 py-2 border border-orange text-orange hover:bg-orange hover:text-white transition-colors mr-2 disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              + Add row ({miniStocklist.length}/{MAX_STOCKLIST_ROWS})
+              + Add row ({state.rows.miniStocklist.length}/{MAX_STOCKLIST_ROWS})
             </button>
             <p className="font-sans text-xs text-ink/40 mt-3">
               Changes save when you click <strong>Save changes</strong> at the bottom of the form.
@@ -1203,15 +991,15 @@ export function ListingForm({
             standard list. */}
         <AccordionSection title="Property Features">
           {(() => {
-            const categoryFeatures = featuresForCategory(type);
+            const categoryFeatures = featuresForCategory(state.category.type);
             return (
               <>
                 <p className="font-sans text-sm text-ink/50 mb-4">
                   ( At least select one property feature is required ){" "}
                   <span className="text-red-500">*</span>
-                  {type && (
+                  {state.category.type && (
                     <span className="block text-xs text-ink/40 mt-1">
-                      Showing the {type} feature set. Change the Category in
+                      Showing the {state.category.type} feature set. Change the Category in
                       Section 1 to see a different list.
                     </span>
                   )}
@@ -1221,7 +1009,7 @@ export function ListingForm({
                     <label key={item} className="flex items-center gap-2 cursor-pointer">
                       <input
                         type="checkbox"
-                        checked={lifestyle.includes(item)}
+                        checked={state.rows.lifestyle.includes(item)}
                         onChange={() => toggleLifestyle(item)}
                         className="w-4 h-4 accent-orange flex-shrink-0"
                       />
@@ -1229,7 +1017,7 @@ export function ListingForm({
                     </label>
                   ))}
                 </div>
-                <AddYourOwn lifestyle={lifestyle} setLifestyle={setLifestyle} standardOptions={categoryFeatures} />
+                <AddYourOwn lifestyle={state.rows.lifestyle} setLifestyle={setLifestyle} standardOptions={categoryFeatures} />
               </>
             );
           })()}
@@ -1240,7 +1028,7 @@ export function ListingForm({
           <p className="font-sans text-xs text-ink/40 mb-3">
             Add schools, transport, shopping centres, parks — anything nearby.
           </p>
-          <TagInput value={nearbyAmenities} onChange={setNearbyAmenities} placeholder="e.g. Melbourne Central Station" />
+          <TagInput value={state.amenities.nearbyAmenities} onChange={(v) => set.amenities({ nearbyAmenities: v })} placeholder="e.g. Melbourne Central Station" />
         </AccordionSection>
 
         {/* ── 6. Selling Agent(s) / Contact Details ────────────────────────── */}
@@ -1260,18 +1048,18 @@ export function ListingForm({
           <SingleUpload
             label="Main Photo Upload *"
             hint="(File size: up to 10MB, Dimensions: 1920×1080)"
-            value={heroImageUrl}
-            onChange={setHeroImageUrl}
-            altText={heroAltText}
-            onAltTextChange={setHeroAltText}
+            value={state.uploads.heroImageUrl}
+            onChange={(v) => set.uploads({ heroImageUrl: v })}
+            altText={state.uploads.heroAltText}
+            onAltTextChange={(v) => set.uploads({ heroAltText: v })}
           />
 
           {/* Homepage Feature Image */}
           <SingleUpload
             label="Homepage Feature Image"
             hint="(File size: up to 5MB, Dimensions: 500×500) (This is applicable to premier listings only)"
-            value={featureImageUrl}
-            onChange={setFeatureImageUrl}
+            value={state.uploads.featureImageUrl}
+            onChange={(v) => set.uploads({ featureImageUrl: v })}
           />
 
           {/* Gallery */}
@@ -1281,13 +1069,13 @@ export function ListingForm({
               <p className="font-sans text-sm text-ink/40 italic">Save the listing first to add gallery images.</p>
             </div>
           ) : (
-            <GalleryManager gallery={gallery} onAdd={addGalleryImage} onRemove={removeGalleryImage} onReorder={reorderGallery} />
+            <GalleryManager gallery={state.rows.gallery} onAdd={addGalleryImage} onRemove={removeGalleryImage} onReorder={reorderGallery} />
           )}
 
           {/* Video Link */}
           <div className="mb-5">
             <label className="font-sans text-sm text-ink/70 block mb-2">Video Link:</label>
-            <input type="url" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="https://youtube.com/..." className={inp} />
+            <input type="url" value={state.uploads.videoUrl} onChange={(e) => set.uploads({ videoUrl: e.target.value })} placeholder="https://youtube.com/..." className={inp} />
           </div>
 
         </AccordionSection>
@@ -1298,8 +1086,8 @@ export function ListingForm({
           <SingleUpload
             label="Upload floor plans"
             hint="(File size: up to 10MB)"
-            value={floorPlanUploadUrl}
-            onChange={setFloorPlanUploadUrl}
+            value={state.uploads.floorPlanUploadUrl}
+            onChange={(v) => set.uploads({ floorPlanUploadUrl: v })}
             accept="image/jpeg,image/png,image/webp,application/pdf"
           />
 
@@ -1311,14 +1099,14 @@ export function ListingForm({
             <div className="flex gap-2">
               <input
                 type="url"
-                value={additionalVideoUrl}
-                onChange={(e) => setAdditionalVideoUrl(e.target.value)}
+                value={state.uploads.additionalVideoUrl}
+                onChange={(e) => set.uploads({ additionalVideoUrl: e.target.value })}
                 placeholder="https://..."
                 className={inp}
               />
               <button
                 type="button"
-                onClick={() => setAdditionalVideoUrl("")}
+                onClick={() => set.uploads({ additionalVideoUrl: "" })}
                 className="font-mono text-[10px] uppercase tracking-widest px-3 py-2 border border-orange text-orange hover:bg-orange hover:text-white transition-colors whitespace-nowrap"
               >
                 + Add
@@ -1341,14 +1129,14 @@ export function ListingForm({
             <div className="flex gap-2">
               <input
                 type="url"
-                value={virtualTourUrl}
-                onChange={(e) => setVirtualTourUrl(e.target.value)}
+                value={state.uploads.virtualTourUrl}
+                onChange={(e) => set.uploads({ virtualTourUrl: e.target.value })}
                 placeholder="https://..."
                 className={inp}
               />
               <button
                 type="button"
-                onClick={() => setVirtualTourUrl("")}
+                onClick={() => set.uploads({ virtualTourUrl: "" })}
                 className="font-mono text-[10px] uppercase tracking-widest px-3 py-2 border border-orange text-orange hover:bg-orange hover:text-white transition-colors whitespace-nowrap"
               >
                 + Add
@@ -1366,8 +1154,8 @@ export function ListingForm({
           <SingleUpload
             label="Price List"
             hint="(File size: up to 10MB)"
-            value={priceListUrl}
-            onChange={setPriceListUrl}
+            value={state.uploads.priceListUrl}
+            onChange={(v) => set.uploads({ priceListUrl: v })}
             accept="image/jpeg,image/png,image/webp,application/pdf"
           />
 
@@ -1375,8 +1163,8 @@ export function ListingForm({
           <SingleUpload
             label="Brochure"
             hint="(File size: up to 10MB)"
-            value={brochureUrl}
-            onChange={setBrochureUrl}
+            value={state.uploads.brochureUrl}
+            onChange={(v) => set.uploads({ brochureUrl: v })}
             accept="image/jpeg,image/png,image/webp,application/pdf"
           />
 
@@ -1384,8 +1172,8 @@ export function ListingForm({
           <SingleUpload
             label="Specifications"
             hint="(File size: up to 10MB)"
-            value={specificationsUrl}
-            onChange={setSpecificationsUrl}
+            value={state.uploads.specificationsUrl}
+            onChange={(v) => set.uploads({ specificationsUrl: v })}
             accept="image/jpeg,image/png,image/webp,application/pdf"
           />
         </AccordionSection>
@@ -1396,11 +1184,11 @@ export function ListingForm({
             <div className="flex flex-col gap-4">
               <div>
                 <label className="font-sans text-sm text-ink/70 block mb-1.5">Page Title:</label>
-                <input type="text" value={seoTitle} onChange={(e) => setSeoTitle(e.target.value)} placeholder="e.g. Luxury Apartments in Melbourne CBD | ProjectName" className={inp} />
+                <input type="text" value={state.seo.seoTitle} onChange={(e) => set.seo({ seoTitle: e.target.value })} placeholder="e.g. Luxury Apartments in Melbourne CBD | ProjectName" className={inp} />
               </div>
               <div>
                 <label className="font-sans text-sm text-ink/70 block mb-1.5">Meta Description:</label>
-                <textarea rows={8} value={seoDescription} onChange={(e) => setSeoDescription(e.target.value)} placeholder="150–160 character description for search engines…" className={inp + " resize-none"} />
+                <textarea rows={8} value={state.seo.seoDescription} onChange={(e) => set.seo({ seoDescription: e.target.value })} placeholder="150–160 character description for search engines…" className={inp + " resize-none"} />
               </div>
             </div>
           </AccordionSection>
@@ -1440,7 +1228,7 @@ export function ListingForm({
             )}
             {!isNew && existing?.slug && (
               <Link
-                href={`/${categorySlug(type)}/${existing.slug}`}
+                href={`/${categorySlug(state.category.type)}/${existing.slug}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-mono text-[10px] uppercase tracking-widest px-4 py-2.5 bg-orange text-white hover:bg-orange/85 transition-colors"
@@ -1471,13 +1259,13 @@ export function ListingForm({
             <p className="font-sans text-sm text-ink/70">
               You are about to delete the configuration:{" "}
               <strong>
-                {getCardFields(type)
+                {getCardFields(state.category.type)
                   .map((f) => {
-                    const v = (floorPlans[pendingDeleteIndex] as unknown as Record<string, unknown>)?.[f.key];
+                    const v = (state.rows.floorPlans[pendingDeleteIndex] as unknown as Record<string, unknown>)?.[f.key];
                     return `${v == null || v === "" ? "—" : v} ${f.label}`;
                   })
                   .join(", ")}
-                {floorPlans[pendingDeleteIndex]?.price_from ? `, $${Number(floorPlans[pendingDeleteIndex].price_from).toLocaleString()}` : ""}
+                {state.rows.floorPlans[pendingDeleteIndex]?.price_from ? `, $${Number(state.rows.floorPlans[pendingDeleteIndex].price_from).toLocaleString()}` : ""}
               </strong>
               . This cannot be undone.
             </p>
