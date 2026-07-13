@@ -10,7 +10,8 @@ import { featuresForCategory } from "@/features/listings/category-features";
 import { getCardFields, getStocklistFields } from "@/lib/listing-card-fields";
 import { categorySlug } from "@/lib/listing-url";
 import { plainTextToHtml, htmlToPlainText } from "@/features/listings/admin-form/text-html";
-import type { Agent, GalleryImage } from "@/features/listings/admin-form/types";
+import type { Agent, GalleryImage, FloorPlan, MiniStocklistEntry } from "@/features/listings/admin-form/types";
+import { buildPayload } from "@/features/listings/admin-form/build-payload";
 import { AccordionSection } from "@/features/listings/admin-form/fields/accordion-section";
 import { SectionDivider } from "@/features/listings/admin-form/fields/section-divider";
 import { ExampleHint } from "@/features/listings/admin-form/fields/example-hint";
@@ -25,54 +26,7 @@ import { GalleryManager } from "@/features/listings/admin-form/managers/gallery-
 
 interface Developer { id: string; name: string }
 interface Member { id: string; full_name: string | null; interest_type: string | null }
-interface FloorPlan {
-  id?: string;
-  beds: string;
-  bath: string;
-  garage: string;
-  internal_sqm: string;
-  price_from: string;
-  plan_type: string;
-  config: string;
-  image_url: string;
-  // Land Estates fields — empty string for categories that don't use them.
-  lot_number: string;
-  land_area_sqm: string;
-  frontage_m: string;
-  depth_m: string;
-  // House and Land fields — empty string for categories that don't use them.
-  house_size_sqm: string;
-  land_size_sqm: string;
-  // Commercial fields — empty string for non-Commercial categories.
-  floor_area_sqm: string;
-  level: string;
-  unit_suite_no: string;
-  property_sub_type: string;
-}
 
-// Mini stocklist row — every cell stays a free-text string so admins
-// can enter things like "Contact Agent" or "Fr. $660,000" verbatim,
-// matching what Tim's existing site allows.
-interface MiniStocklistEntry {
-  bed: string;
-  bath: string;
-  parking: string;
-  size: string;
-  price: string;
-  // Land Estates fields — empty string for non-LE categories.
-  lot_number?: string;
-  land_area?: string;
-  frontage?: string;
-  depth?: string;
-  // House and Land fields — empty string for non-H&L categories.
-  house_size?: string;
-  land_size?: string;
-  // Commercial fields — empty string for non-Commercial categories.
-  floor_area?: string;
-  level?: string;
-  unit_suite_no?: string;
-  property_sub_type?: string;
-}
 const MAX_STOCKLIST_ROWS = 20;
 const MAX_CONFIG_SUMMARY_ROWS = 4;
 
@@ -343,8 +297,6 @@ export function ListingForm({
 
   // ─── Helpers ─────────────────────────────────────────────────────────────
 
-  function n(v: number | ""): number | null { return v === "" ? null : v; }
-
   function toggleLifestyle(item: string) {
     setLifestyle((prev) =>
       prev.includes(item) ? prev.filter((x) => x !== item) : [...prev, item]
@@ -421,107 +373,89 @@ export function ListingForm({
 
   // ─── Submit ───────────────────────────────────────────────────────────────
 
-  function buildPayload() {
-    return {
-      _method: isNew ? "POST" : "PATCH",
-      id: isNew ? undefined : id,
-      // Category
-      type: type || null,
-      tier: tier || null,
-      // Project Overview
-      name,
-      slug,
-      developer_id: developerId || null,
-      portal_developer_name: portalDeveloperName || null,
-      owner_user_id: ownerUserId || null,
-      developer_website: developerWebsite || null,
-      listing_duration: listingDuration || null,
-      logo_url: logoUrl || null,
-      residence_count: n(residenceCount),
-      // Address
-      street_address: streetAddress || null,
-      street_address_2: streetAddress2 || null,
-      country: country || null,
-      state: state || null,
-      city: city || null,
-      postcode: postcode || null,
-      suburb: suburb || null,
-      location_description: locationDescription || null,
-      // Sale office
-      sale_office_street: saleOfficeStreet || null,
-      sale_office_street_2: saleOfficeStreet2 || null,
-      sale_office_country: saleOfficeCountry || null,
-      sale_office_state: saleOfficeState || null,
-      sale_office_city: saleOfficeCity || null,
-      sale_office_postcode: saleOfficePostcode || null,
-      // Details
-      display_suite_timing: displaySuiteTiming || null,
-      description_html: description || null,
-      description: description ? htmlToPlainText(description) || null : null,
-      summary: description ? htmlToPlainText(description) || null : null,
-      status,
-      is_published: isPublished,
-      is_featured: isFeatured,
-      lat: n(lat),
-      lng: n(lng),
-      // Pricing
-      price_from: n(priceFrom),
-      search_price_max: n(searchPriceMax),
-      price_display: priceDisplay || null,
-      show_price_on_search: showPriceOnSearch,
-      promotional_banner: promotionalBanner || null,
-      completion_quarter: completionQuarter || null,
-      configuration_label: configurationLabel || null,
-      // Configuration
-      beds_min: n(bedsMin),
-      beds_max: n(bedsMax),
-      baths_min: n(bathsMin),
-      baths_max: n(bathsMax),
-      cars_min: n(carsMin),
-      cars_max: n(carsMax),
-      levels: n(levels),
-      internal_sqm_min: n(internalSqmMin),
-      internal_sqm_max: n(internalSqmMax),
-      land_size_min: n(landSizeMin),
-      land_size_max: n(landSizeMax),
-      // Features
-      lifestyle: lifestyle.length ? lifestyle : null,
-      features: features.length ? features : null,
-      architect: architect || null,
-      interiors: interiors || null,
-      landscape: landscape || null,
-      builder: builder || null,
-      nearby_amenities: nearbyAmenities.length ? nearbyAmenities : null,
-      // Agent
-      agent_name: agentName || null,
-      agent_phone: agentPhone || null,
-      agent_email: agentEmail || null,
-      agent_agency: agentAgency || null,
-      // Uploads
-      hero_image_url: heroImageUrl || null,
-      hero_alt_text: heroAltText || null,
-      feature_image_url: featureImageUrl || null,
-      brochure_url: brochureUrl || null,
-      video_url: videoUrl || null,
-      agent_logo_1: agentLogo1 || null,
-      agent_logo_2: agentLogo2 || null,
-      virtual_tour_url: virtualTourUrl || null,
-      floor_plan_upload_url: floorPlanUploadUrl || null,
-      additional_video_url: additionalVideoUrl || null,
-      price_list_url: priceListUrl || null,
-      specifications_url: specificationsUrl || null,
-      // SEO
-      seo_title: seoTitle || null,
-      seo_description: seoDescription || null,
-      // Floor plans
-      floor_plans: floorPlans,
-      // Mini stocklist — only send rows where the user typed something
-      // so empty drafts don't leak through.
-      mini_stocklist: miniStocklist.filter(
-        (r) => r.bed || r.bath || r.parking || r.size || r.price || r.lot_number || r.land_area || r.frontage || r.depth || r.house_size || r.land_size || r.floor_area || r.level || r.unit_suite_no || r.property_sub_type,
-      ),
-    };
-  }
+  // All payload-relevant field state, assembled once per render and fed to
+  // the extracted buildPayload() (features/listings/admin-form/build-payload).
+  const payloadState = {
+    isNew,
+    id,
+    type,
+    tier,
+    name,
+    slug,
+    developerId,
+    portalDeveloperName,
+    ownerUserId,
+    developerWebsite,
+    listingDuration,
+    logoUrl,
+    residenceCount,
+    streetAddress,
+    streetAddress2,
+    country,
+    state,
+    city,
+    postcode,
+    suburb,
+    locationDescription,
+    saleOfficeStreet,
+    saleOfficeStreet2,
+    saleOfficeCountry,
+    saleOfficeState,
+    saleOfficeCity,
+    saleOfficePostcode,
+    displaySuiteTiming,
+    description,
+    status,
+    isPublished,
+    isFeatured,
+    lat,
+    lng,
+    priceFrom,
+    searchPriceMax,
+    priceDisplay,
+    showPriceOnSearch,
+    promotionalBanner,
+    completionQuarter,
+    configurationLabel,
+    bedsMin,
+    bedsMax,
+    bathsMin,
+    bathsMax,
+    carsMin,
+    carsMax,
+    levels,
+    internalSqmMin,
+    internalSqmMax,
+    landSizeMin,
+    landSizeMax,
+    lifestyle,
+    features,
+    architect,
+    interiors,
+    landscape,
+    builder,
+    nearbyAmenities,
+    agentName,
+    agentPhone,
+    agentEmail,
+    agentAgency,
+    heroImageUrl,
+    heroAltText,
+    featureImageUrl,
+    brochureUrl,
+    videoUrl,
+    agentLogo1,
+    agentLogo2,
+    virtualTourUrl,
+    floorPlanUploadUrl,
+    additionalVideoUrl,
+    priceListUrl,
+    specificationsUrl,
+    seoTitle,
+    seoDescription,
+    floorPlans,
+    miniStocklist,
+  };
 
   // ── Autosave (2026-07-02) ──────────────────────────────────────────────
   // Compute a fingerprint of the current form state on every render. Then a
@@ -535,7 +469,7 @@ export function ListingForm({
   //
   // Skipped for new listings (isNew) because there's no id to PATCH yet;
   // the draft-first flow means the edit page always has an id anyway.
-  const currentFingerprint = JSON.stringify(buildPayload());
+  const currentFingerprint = JSON.stringify(buildPayload(payloadState));
   const lastSavedFingerprintRef = useRef<string>("");
   const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   // Track the mounted-since-render timestamp so we can skip the initial
@@ -583,7 +517,7 @@ export function ListingForm({
     setSaving(true);
     setError(null);
 
-    const payload = buildPayload();
+    const payload = buildPayload(payloadState);
 
     const res = await fetch("/api/admin/listings", {
       method: "POST",
