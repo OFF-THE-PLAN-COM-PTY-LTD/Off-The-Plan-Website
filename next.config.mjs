@@ -7,9 +7,14 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   experimental: {
+    // Router Cache lifetimes (client-side). Was 0/0, which disabled the cache
+    // entirely so every back/forward or re-visit re-ran all server queries —
+    // the main reason admin screen-switching felt slow. 30s lets navigation
+    // reuse the cached view; mutation flows call router.refresh() so edits
+    // still show immediately (see listing form / row actions).
     staleTimes: {
-      dynamic: 0,
-      static: 0,
+      dynamic: 30,
+      static: 180,
     },
   },
   images: {
