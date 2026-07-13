@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -15,15 +15,18 @@ import { EnquiryButton } from "@/components/enquiry-button";
 import { VideoModal } from "@/components/video-modal";
 import { ViewTracker } from "@/components/view-tracker";
 import { formatListingTitle } from "@/lib/utils";
+import { categorySlug, isValidCategorySlug } from "@/lib/listing-url";
 import { GalleryGrid } from "@/components/gallery-grid";
 import { supabase } from "@/lib/supabase/public";
 import type { Development, DevelopmentFloorPlan } from "@/types/development";
 
 interface Props {
-  params: { slug: string };
+  params: { category: string; slug: string };
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  if (!isValidCategorySlug(params.category)) return { title: "Not Found" };
+
   const { data: dev } = await supabase
     .from("developments")
     .select("name, suburb, state, summary, hero_image_url, images:development_images(*)")
@@ -43,6 +46,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function DossierPage({ params }: Props) {
+  // The category segment lives at the site root, so guard it: anything that
+  // isn't a known category slug is a 404 (keeps random top-level paths from
+  // hitting the database and pretending to be listings).
+  if (!isValidCategorySlug(params.category)) notFound();
+
   const { data: rawDev } = await supabase
     .from("developments")
     .select("*, developer:developers(*), images:development_images(*), floor_plans:development_floor_plans(*), listing_agents:listing_agents(name, email, mobile, photo_url, sort_order)")
@@ -52,6 +60,18 @@ export default async function DossierPage({ params }: Props) {
 
   if (!rawDev) notFound();
   const dev = rawDev as unknown as Development;
+
+  // Canonicalise the URL. The slug is unique, so we resolve the listing by
+  // slug alone and then make sure the category segment matches the listing's
+  // real type. A mismatch happens when:
+  //   • an old /listings/<slug> link is followed (301 → /<category>/<slug>)
+  //   • an admin changes a listing's category (its URL moves with it)
+  //   • someone hand-edits the category in the URL
+  // A permanent redirect keeps a single canonical URL for SEO.
+  const canonicalCategory = categorySlug(dev.type);
+  if (params.category !== canonicalCategory) {
+    permanentRedirect(`/${canonicalCategory}/${dev.slug}`);
+  }
 
   const heroImageUrl =
     dev.images?.find((img) => img.is_hero)?.url ??
@@ -392,6 +412,7 @@ export default async function DossierPage({ params }: Props) {
               <div className="border border-t-0 border-line grid grid-cols-2">
                 <ShareButton
                   slug={dev.slug}
+                  category={categorySlug(dev.type)}
                   name={dev.name}
                   suburb={dev.suburb}
                   state={dev.state}

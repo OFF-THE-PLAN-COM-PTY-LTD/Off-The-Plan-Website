@@ -5,13 +5,15 @@ import { ShareModal } from "@/components/share-modal";
 
 interface ShareButtonProps {
   slug: string;
+  /** Category slug for the canonical listing URL (e.g. "townhouses"). */
+  category?: string;
   name: string;
   suburb?: string | null;
   state?: string | null;
   developmentId?: string;
 }
 
-export function ShareButton({ slug, name, suburb, state, developmentId }: ShareButtonProps) {
+export function ShareButton({ slug, category, name, suburb, state, developmentId }: ShareButtonProps) {
   const [open, setOpen] = useState(false);
 
   const handleOpen = () => {
@@ -43,6 +45,7 @@ export function ShareButton({ slug, name, suburb, state, developmentId }: ShareB
       {open && (
         <ShareModal
           slug={slug}
+          category={category}
           name={name}
           suburb={suburb}
           state={state}

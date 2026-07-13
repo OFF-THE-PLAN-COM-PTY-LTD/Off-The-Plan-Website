@@ -15,6 +15,7 @@ import {
   MailIcon,
 } from "@/components/icons";
 import { getCardFields } from "@/lib/listing-card-fields";
+import { categorySlug, listingPath } from "@/lib/listing-url";
 import type { Development } from "@/types/development";
 
 interface PropertyCardProps {
@@ -102,7 +103,7 @@ export function PropertyCard({
   if (layout === "wide") {
     return (
       <Link
-        href={`/listings/${development.slug}`}
+        href={listingPath(development)}
         className={cn("group relative flex gap-0 overflow-hidden bg-cream-alt border border-line", className)}
       >
         {/* Image side */}
@@ -202,7 +203,7 @@ export function PropertyCard({
   if (layout === "featured") {
     return (
       <Link
-        href={`/listings/${development.slug}`}
+        href={listingPath(development)}
         className={cn(
           "group relative block outline-none focus-visible:ring-2 focus-visible:ring-orange",
           className
@@ -341,7 +342,7 @@ export function PropertyCard({
 
       {/* ── Image ─────────────────────────────────────────────────────────── */}
       <Link
-        href={`/listings/${development.slug}`}
+        href={listingPath(development)}
         className={cn("relative block bg-navy/10 overflow-hidden flex-shrink-0", imageHeight ?? "h-64")}
       >
         {heroImageUrl ? (
@@ -419,7 +420,7 @@ export function PropertyCard({
           Share
         </button>
         <Link
-          href={`/listings/${development.slug}`}
+          href={listingPath(development)}
           className="flex-1 flex items-center justify-center gap-1.5 py-3 border-r border-navy bg-navy font-mono text-[10px] uppercase tracking-widest text-white hover:bg-navy/80 transition-all"
         >
           View
@@ -438,6 +439,7 @@ export function PropertyCard({
       {shareOpen && (
         <ShareModal
           slug={development.slug}
+          category={categorySlug(development.type)}
           name={development.name}
           suburb={development.suburb}
           state={development.state}

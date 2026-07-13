@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { supabase } from "@/lib/supabase/public";
+import { listingPath } from "@/lib/listing-url";
 import type { Development } from "@/types/development";
 
 export const metadata: Metadata = {
@@ -92,7 +93,7 @@ export default async function MapPage({ searchParams }: Props) {
           {developments.map((dev) => (
             <Link
               key={dev.id}
-              href={`/listings/${dev.slug}`}
+              href={listingPath(dev)}
               className="flex items-start gap-3 p-3 hover:bg-white/5 transition-colors border border-transparent hover:border-white/10 rounded"
             >
               <div className="mt-1.5 w-2 h-2 rounded-full bg-orange flex-shrink-0" />

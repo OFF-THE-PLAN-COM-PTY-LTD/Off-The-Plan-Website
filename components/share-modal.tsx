@@ -6,6 +6,12 @@ import { cn } from "@/lib/utils";
 
 interface ShareModalProps {
   slug: string;
+  /**
+   * Category slug for the canonical listing URL (e.g. "townhouses"). When
+   * omitted, the URL falls back to /listings/<slug>, which 301-redirects to
+   * the canonical category — so sharing still works, just with one hop.
+   */
+  category?: string;
   name: string;
   suburb?: string | null;
   state?: string | null;
@@ -68,15 +74,16 @@ function CloseSvg() {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export function ShareModal({ slug, name, suburb, state, onClose }: ShareModalProps) {
+export function ShareModal({ slug, category, name, suburb, state, onClose }: ShareModalProps) {
   const [copied, setCopied] = useState(false);
   const [visible, setVisible] = useState(false);
   const [mounted, setMounted] = useState(false);
 
+  const path = `/${category ?? "listings"}/${slug}`;
   const listingUrl =
     typeof window !== "undefined"
-      ? `${window.location.origin}/listings/${slug}`
-      : `https://offtheplan.com.au/listings/${slug}`;
+      ? `${window.location.origin}${path}`
+      : `https://offtheplan.com.au${path}`;
 
   // Mount portal target
   useEffect(() => {

@@ -7,6 +7,7 @@ import type { SliderItem } from "@/components/ui/image-auto-slider";
 import { ChevronRightIcon } from "@/components/icons";
 import { AdSlot } from "@/components/ad-slot";
 import { formatDate } from "@/lib/utils";
+import { categorySlug } from "@/lib/listing-url";
 import { supabase } from "@/lib/supabase/public";
 import type { Development } from "@/types/development";
 import type { JournalArticle } from "@/types/journal";
@@ -95,7 +96,7 @@ export default async function HomePage() {
   ] = await Promise.all([
     supabase
       .from("homepage_banners")
-      .select("title, description, link, video_url, desktop_image_url, mobile_image_url, linked_development:developments!linked_development_id(name, slug, suburb, state, developer:developers(name))")
+      .select("title, description, link, video_url, desktop_image_url, mobile_image_url, linked_development:developments!linked_development_id(name, slug, type, suburb, state, developer:developers(name))")
       .order("sort_order", { ascending: true })
       .limit(1)
       .maybeSingle(),
@@ -212,6 +213,7 @@ export default async function HomePage() {
       | {
           name: string | null;
           slug: string | null;
+          type: string | null;
           suburb: string | null;
           state: string | null;
           developer: { name: string | null } | null;
@@ -234,7 +236,7 @@ export default async function HomePage() {
   const heroMobileImage = heroBanner?.mobile_image_url || null;
   const heroDescription = heroBanner?.description?.trim() || null;
   const linkedDev = heroBanner?.linked_development ?? null;
-  const heroHref = linkedDev?.slug ? `/listings/${linkedDev.slug}` : heroBanner?.link || null;
+  const heroHref = linkedDev?.slug ? `/${categorySlug(linkedDev.type)}/${linkedDev.slug}` : heroBanner?.link || null;
   const heroOverlay = linkedDev
     ? {
         project: linkedDev.name ?? heroBanner?.title ?? "",

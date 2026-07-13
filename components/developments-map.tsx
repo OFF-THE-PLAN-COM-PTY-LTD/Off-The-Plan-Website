@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import Map, { Marker, Popup, NavigationControl } from "react-map-gl/mapbox";
 import Link from "next/link";
+import { listingPath } from "@/lib/listing-url";
 import type { Development } from "@/types/development";
 import "mapbox-gl/dist/mapbox-gl.css";
 
@@ -80,7 +81,7 @@ export function DevelopmentsMap({ developments }: Props) {
               <p className="font-mono text-label-sm text-orange mb-2">From {selected.price_display}</p>
             )}
             <Link
-              href={`/listings/${selected.slug}`}
+              href={listingPath(selected)}
               className="font-mono text-[10px] uppercase tracking-widest text-navy hover:text-orange transition-colors"
             >
               View listing →

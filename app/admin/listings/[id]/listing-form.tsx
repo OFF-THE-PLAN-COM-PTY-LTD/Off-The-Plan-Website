@@ -8,6 +8,7 @@ import { ImageUpload } from "@/components/admin/image-upload";
 import { RichTextEditor } from "@/components/admin/rich-text-editor";
 import { featuresForCategory } from "@/lib/category-features";
 import { getCardFields, getStocklistFields } from "@/lib/listing-card-fields";
+import { categorySlug } from "@/lib/listing-url";
 
 /**
  * Wrap plain text in <p>/<br> tags so it's safe to load into a TipTap editor
@@ -2338,7 +2339,7 @@ export function ListingForm({
             )}
             {!isNew && existing?.slug && (
               <Link
-                href={`/listings/${existing.slug}`}
+                href={`/${categorySlug(type)}/${existing.slug}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-mono text-[10px] uppercase tracking-widest px-4 py-2.5 bg-orange text-white hover:bg-orange/85 transition-colors"

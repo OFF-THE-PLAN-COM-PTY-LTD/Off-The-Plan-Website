@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { supabase } from "@/lib/supabase/public";
+import { listingPath } from "@/lib/listing-url";
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://offtheplan.com.au";
 
@@ -21,11 +22,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Published listings
   const { data: developments } = await supabase
     .from("developments")
-    .select("slug, updated_at")
+    .select("slug, type, updated_at")
     .eq("is_published", true);
 
   const listingRoutes: MetadataRoute.Sitemap = (developments ?? []).map((d) => ({
-    url: `${BASE_URL}/listings/${d.slug}`,
+    url: `${BASE_URL}${listingPath(d)}`,
     lastModified: d.updated_at ?? now,
     changeFrequency: "weekly" as const,
     priority: 0.8,

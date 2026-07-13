@@ -4,6 +4,7 @@ import { z } from "zod";
 import { sendEmail } from "@/lib/email/send";
 import { EMAIL_ADMIN_TO, EMAIL_SALES_CC } from "@/lib/email/client";
 import { enquiryNotificationTemplate, enquiryConfirmationTemplate } from "@/lib/email/templates";
+import { categorySlug } from "@/lib/listing-url";
 
 const schema = z.object({
   development_id: z.string().uuid(),
@@ -42,7 +43,7 @@ export async function POST(req: Request) {
     // CC'ing Tim + sales@. Silently no-ops when RESEND_API_KEY isn't set.
     const { data: dev } = await supabaseAdmin
       .from("developments")
-      .select("name, slug, agent_email")
+      .select("name, slug, type, agent_email")
       .eq("id", parsed.data.development_id)
       .maybeSingle();
 
@@ -54,7 +55,7 @@ export async function POST(req: Request) {
         : EMAIL_ADMIN_TO;
 
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://offtheplan.com.au";
-      const listingUrl = dev.slug ? `${baseUrl}/listings/${dev.slug}` : null;
+      const listingUrl = dev.slug ? `${baseUrl}/${categorySlug(dev.type)}/${dev.slug}` : null;
 
       const tmpl = enquiryNotificationTemplate({
         development_name: dev.name ?? "Unknown project",
