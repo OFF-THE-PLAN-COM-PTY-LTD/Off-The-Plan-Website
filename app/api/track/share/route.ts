@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { validTrackingTarget } from "@/lib/track-guard";
+import { validTrackingTarget } from "@/features/tracking/track-guard";
 
 export async function POST(req: NextRequest) {
   const { developmentId } = await req.json().catch(() => ({}));

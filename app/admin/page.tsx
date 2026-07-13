@@ -2,8 +2,8 @@ import Link from "next/link";
 import { Eye, Phone, Share2, MessageSquare, TrendingUp, Sparkles } from "lucide-react";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import DashboardTable from "@/components/admin/dashboard-table";
-import ListingsTable from "@/components/admin/listings-table";
+import DashboardTable from "@/features/admin/components/dashboard-table";
+import ListingsTable from "@/features/admin/components/listings-table";
 import { LiveDate, LiveMotivational } from "@/components/dashboard-greeting-date";
 
 const MOTIVATIONAL = [

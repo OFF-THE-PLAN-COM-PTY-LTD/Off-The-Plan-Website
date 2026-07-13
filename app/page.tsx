@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { PropertyCard } from "@/components/property-card";
-import { AnimateIn } from "@/components/animate-in";
+import { AnimateIn } from "@/features/home/components/animate-in";
 import { ImageAutoSlider } from "@/components/ui/image-auto-slider";
 import type { SliderItem } from "@/components/ui/image-auto-slider";
 import { ChevronRightIcon } from "@/components/icons";

@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { PropertyCard } from "@/components/property-card";
-import { DeveloperContactForm } from "@/components/developer-contact-form";
+import { DeveloperContactForm } from "@/features/developers/components/developer-contact-form";
 import { supabase } from "@/lib/supabase/public";
 import type { Developer, DeveloperProfile } from "@/types/developer";
 import type { Development } from "@/types/development";

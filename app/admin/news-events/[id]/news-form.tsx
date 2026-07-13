@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ImageUpload } from "@/components/admin/image-upload";
-import { RichTextEditor } from "@/components/admin/rich-text-editor";
+import { ImageUpload } from "@/features/admin/components/image-upload";
+import { RichTextEditor } from "@/features/admin/components/rich-text-editor";
 
 type Article = {
   id: string;

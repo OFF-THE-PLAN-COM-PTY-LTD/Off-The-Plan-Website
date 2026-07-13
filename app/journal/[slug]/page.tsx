@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import Image from "next/image";
 import { JournalCard } from "@/components/journal-card";
-import { ArticleShareRail } from "@/components/article-share-rail";
+import { ArticleShareRail } from "@/features/journal/components/article-share-rail";
 import { ChevronLeftIcon, ChevronRightIcon } from "@/components/icons";
 import { supabase } from "@/lib/supabase/public";
 import { formatDate } from "@/lib/utils";

@@ -3,7 +3,7 @@ import Image from "next/image";
 import type { Metadata } from "next";
 import { ImageAutoSlider } from "@/components/ui/image-auto-slider";
 import type { SliderItem } from "@/components/ui/image-auto-slider";
-import { MediaKitModal } from "@/components/media-kit-modal";
+import { MediaKitModal } from "@/features/features-and-pricing/components/media-kit-modal";
 import { supabase } from "@/lib/supabase/public";
 import { UPGRADE_TIERS } from "@/lib/upgrade-tiers";
 

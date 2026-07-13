@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/supabase/auth-guards";
-import { syncDeveloperFromAgency, unpublishDeveloperForAgency } from "@/lib/developers/sync-from-agency";
+import { syncDeveloperFromAgency, unpublishDeveloperForAgency } from "@/features/developers/sync-from-agency";
 
 /**
  * PATCH /api/admin/agencies/interest-type

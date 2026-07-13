@@ -2,12 +2,12 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
 
-import StampDutyCalculator from "@/components/calculators/stamp-duty-calculator";
-import BorrowingPowerCalculator from "@/components/calculators/borrowing-power-calculator";
-import LoanRepaymentCalculator from "@/components/calculators/loan-repayment-calculator";
-import BudgetPlanner from "@/components/calculators/budget-planner";
-import LoanComparisonCalculator from "@/components/calculators/loan-comparison-calculator";
-import MortgageSwitchingCalculator from "@/components/calculators/mortgage-switching-calculator";
+import StampDutyCalculator from "@/features/calculators/components/stamp-duty-calculator";
+import BorrowingPowerCalculator from "@/features/calculators/components/borrowing-power-calculator";
+import LoanRepaymentCalculator from "@/features/calculators/components/loan-repayment-calculator";
+import BudgetPlanner from "@/features/calculators/components/budget-planner";
+import LoanComparisonCalculator from "@/features/calculators/components/loan-comparison-calculator";
+import MortgageSwitchingCalculator from "@/features/calculators/components/mortgage-switching-calculator";
 
 interface CalculatorMeta {
   title: string;

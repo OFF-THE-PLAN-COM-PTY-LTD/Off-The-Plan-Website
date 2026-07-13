@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { JournalArticle, JournalCategory } from "@/types/journal";
-import { ImageUpload } from "@/components/admin/image-upload";
+import { ImageUpload } from "@/features/admin/components/image-upload";
 
 const CATEGORIES: JournalCategory[] = ["Editorial", "Market", "Interview", "Guide"];
 

@@ -4,9 +4,9 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { ImageUpload } from "@/components/admin/image-upload";
-import { RichTextEditor } from "@/components/admin/rich-text-editor";
-import { featuresForCategory } from "@/lib/category-features";
+import { ImageUpload } from "@/features/admin/components/image-upload";
+import { RichTextEditor } from "@/features/admin/components/rich-text-editor";
+import { featuresForCategory } from "@/features/listings/category-features";
 import { getCardFields, getStocklistFields } from "@/lib/listing-card-fields";
 import { categorySlug } from "@/lib/listing-url";
 

@@ -11,7 +11,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { ExportButtons, type ExportColumn } from "@/components/admin/export-buttons";
+import { ExportButtons, type ExportColumn } from "@/features/admin/components/export-buttons";
 
 type Development = { id: string; name: string };
 

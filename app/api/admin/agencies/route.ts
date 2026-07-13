@@ -3,7 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/supabase/auth-guards";
 import { sendEmail } from "@/lib/email/send";
 import { accountApprovedTemplate, accountRejectedTemplate } from "@/lib/email/templates";
-import { syncDeveloperFromAgency, unpublishDeveloperForAgency } from "@/lib/developers/sync-from-agency";
+import { syncDeveloperFromAgency, unpublishDeveloperForAgency } from "@/features/developers/sync-from-agency";
 
 async function findAuthUserIdByEmail(email: string): Promise<string | null> {
   const target = email.toLowerCase();
