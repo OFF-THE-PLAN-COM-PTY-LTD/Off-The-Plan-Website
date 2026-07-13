@@ -1,9 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { AboutValues } from "@/components/about-values";
-import { LogoSlider } from "@/components/logo-slider";
-import { ContactNextSteps } from "@/components/contact-next-steps";
+import { AboutValues } from "@/features/about/components/about-values";
+import { LogoSlider } from "@/features/about/components/logo-slider";
+import { ContactNextSteps } from "@/features/about/components/contact-next-steps";
 import { supabase } from "@/lib/supabase/public";
 
 export const metadata: Metadata = {

@@ -16,7 +16,7 @@
  * qualifying word) before shipping.
  *
  * Adding a new category:
- *   1. Add it to PORTAL_TYPES in app/admin/listings/[id]/listing-form.tsx.
+ *   1. Add it to PORTAL_TYPES in features/listings/admin-form/sections/category-section.tsx.
  *   2. Add a `type → slug` entry here (plural, lower-case, hyphenated).
  *   3. Run the tests — the guard confirms the slug is collision-free.
  */

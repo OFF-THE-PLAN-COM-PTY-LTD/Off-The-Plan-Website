@@ -3,8 +3,12 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { z } from "zod";
 
 /**
- * Admin-only CRUD for the developers directory. Auth is enforced by
- * the global middleware which gates /api/admin/* on profile.is_admin.
+ * CRUD for the developers directory. Auth is enforced by the global
+ * middleware, which admits admins AND Developer/Agent portal members to
+ * /api/admin/*. Unlike most admin routes there is deliberately no
+ * in-handler requireAdmin here: portal members keeping access to this
+ * route is intentional (product decision, 2026-07-14) — do not "fix"
+ * this by adding a guard without checking first.
  */
 
 const upsertSchema = z.object({

@@ -12,6 +12,13 @@ const ALLOWED_FIELDS = new Set([
   "facebook", "instagram", "linkedin", "pinterest", "youtube", "website",
 ]);
 
+// NOTE(api-standardization): intentionally NOT converted to withMemberOrAdmin.
+// This route accepts ANY logged-in user (it only checks auth.getUser()), while
+// the guard would 403 logged-in users without a Developer/Agent interest_type
+// or admin flag. ALLOWED_FIELDS also stays manual: it accepts values of any
+// type and coerces falsy ones to null ((v as string) || null), which a
+// z.string() schema would reject. Revisit only with an explicit access-rule
+// decision.
 export async function PATCH(req: Request) {
   try {
     const supabase = createClient();

@@ -1,6 +1,15 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { z } from "zod";
+
+// Permissive shape check only: presence + string type for the credentials.
+// Anything that fails here would have failed signInWithPassword anyway, so
+// the user-visible outcome (redirect to /login?error=invalid) is unchanged.
+const loginSchema = z.object({
+  email: z.string(),
+  password: z.string(),
+});
 
 /**
  * Picks a landing page based on the user's role so admins and member-
@@ -21,9 +30,18 @@ const SIGN_IN_BLOCKED_STATUSES = new Set(["pending", "rejected"]);
 
 export async function POST(request: Request) {
   const formData = await request.formData();
-  const email = (formData.get("email") as string)?.trim();
-  const password = formData.get("password") as string;
-  const explicitRedirect = (formData.get("redirect") as string) || "";
+
+  const parsed = loginSchema.safeParse({
+    email: formData.get("email"),
+    password: formData.get("password"),
+  });
+  if (!parsed.success) {
+    return NextResponse.redirect(new URL("/login?error=invalid", request.url));
+  }
+  const email = parsed.data.email.trim();
+  const password = parsed.data.password;
+  const rawRedirect = formData.get("redirect");
+  const explicitRedirect = (typeof rawRedirect === "string" ? rawRedirect : "") || "";
 
   const cookieStore = cookies();
   // Only allow same-origin relative paths. Reject protocol-relative URLs ("//...")

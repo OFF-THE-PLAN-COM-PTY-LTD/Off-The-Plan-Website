@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 // Dynamic import — mapbox-gl is browser-only
 const DevelopmentsMap = dynamic(
-  () => import("@/components/developments-map").then((m) => m.DevelopmentsMap),
+  () => import("@/features/map/components/developments-map").then((m) => m.DevelopmentsMap),
   { ssr: false, loading: () => <div className="flex-1 bg-gradient-to-br from-navy-deep to-navy-mid" /> }
 );
 

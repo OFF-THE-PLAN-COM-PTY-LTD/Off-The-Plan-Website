@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { PropertyCard } from "@/components/property-card";
-import { AnimateIn } from "@/components/animate-in";
+import { AnimateIn } from "@/features/home/components/animate-in";
 import { ImageAutoSlider } from "@/components/ui/image-auto-slider";
 import type { SliderItem } from "@/components/ui/image-auto-slider";
 import { ChevronRightIcon } from "@/components/icons";
@@ -9,6 +9,7 @@ import { AdSlot } from "@/components/ad-slot";
 import { formatDate } from "@/lib/utils";
 import { categorySlug } from "@/lib/listing-url";
 import { supabase } from "@/lib/supabase/public";
+import { getDevelopmentCardsByTier, getCategoryHeroImage } from "@/features/listings/queries";
 import type { Development } from "@/types/development";
 import type { JournalArticle } from "@/types/journal";
 
@@ -100,20 +101,8 @@ export default async function HomePage() {
       .order("sort_order", { ascending: true })
       .limit(1)
       .maybeSingle(),
-    supabase
-      .from("developments")
-      .select("*, developer:accounts!account_id(*), images:development_images(*), floor_plans:development_floor_plans(*)")
-      .eq("tier", "1st Tier")
-      .eq("is_published", true)
-      .order("updated_at", { ascending: false })
-      .limit(6),
-    supabase
-      .from("developments")
-      .select("*, developer:accounts!account_id(*), images:development_images(*), floor_plans:development_floor_plans(*)")
-      .eq("tier", "2nd Tier")
-      .eq("is_published", true)
-      .order("updated_at", { ascending: false })
-      .limit(8),
+    getDevelopmentCardsByTier(supabase, "1st Tier", 6),
+    getDevelopmentCardsByTier(supabase, "2nd Tier", 8),
     supabase
       .from("journal_articles")
       .select("*")
@@ -122,41 +111,11 @@ export default async function HomePage() {
       // Fetch a few extras so the dedupe-by-title pass (below) can still
       // surface a full 1 featured + 3 supporting if duplicates exist.
       .limit(8),
-    supabase
-      .from("developments")
-      .select("hero_image_url, images:development_images(url)")
-      .eq("type", "New Apartments")
-      .eq("is_published", true)
-      .limit(1)
-      .single(),
-    supabase
-      .from("developments")
-      .select("hero_image_url, images:development_images(url)")
-      .eq("type", "Townhouses")
-      .eq("is_published", true)
-      .limit(1)
-      .single(),
-    supabase
-      .from("developments")
-      .select("hero_image_url, images:development_images(url)")
-      .eq("type", "Land and Estates")
-      .eq("is_published", true)
-      .limit(1)
-      .single(),
-    supabase
-      .from("developments")
-      .select("hero_image_url, images:development_images(url)")
-      .eq("type", "Commercial")
-      .eq("is_published", true)
-      .limit(1)
-      .single(),
-    supabase
-      .from("developments")
-      .select("hero_image_url, images:development_images(url)")
-      .eq("type", "Houses")
-      .eq("is_published", true)
-      .limit(1)
-      .single(),
+    getCategoryHeroImage(supabase, "New Apartments"),
+    getCategoryHeroImage(supabase, "Townhouses"),
+    getCategoryHeroImage(supabase, "Land and Estates"),
+    getCategoryHeroImage(supabase, "Commercial"),
+    getCategoryHeroImage(supabase, "Houses"),
   ]);
 
   // Always use the client-supplied category images (not listing images)

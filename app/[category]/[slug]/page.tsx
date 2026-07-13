@@ -2,22 +2,23 @@ import { notFound, permanentRedirect } from "next/navigation";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { RequestInfoForm } from "@/components/request-info-form";
-import { HeroCarousel } from "@/components/hero-carousel";
-import { PropertiesTable } from "@/components/properties-table";
-import { ReadMore } from "@/components/read-more";
-import { FormattedDescription } from "@/components/formatted-description";
-import { ListingDescription } from "@/components/listing-description";
+import { RequestInfoForm } from "@/features/listings/components/request-info-form";
+import { HeroCarousel } from "@/features/listings/components/hero-carousel";
+import { PropertiesTable } from "@/features/listings/components/properties-table";
+import { ReadMore } from "@/features/listings/components/read-more";
+import { FormattedDescription } from "@/features/listings/components/formatted-description";
+import { ListingDescription } from "@/features/listings/components/listing-description";
 import { CheckIcon, MailIcon } from "@/components/icons";
-import { PhoneReveal } from "@/components/phone-reveal";
-import { ShareButton } from "@/components/share-button";
-import { EnquiryButton } from "@/components/enquiry-button";
-import { VideoModal } from "@/components/video-modal";
-import { ViewTracker } from "@/components/view-tracker";
+import { PhoneReveal } from "@/features/listings/components/phone-reveal";
+import { ShareButton } from "@/features/listings/components/share-button";
+import { EnquiryButton } from "@/features/listings/components/enquiry-button";
+import { VideoModal } from "@/features/listings/components/video-modal";
+import { ViewTracker } from "@/features/listings/components/view-tracker";
 import { formatListingTitle } from "@/lib/utils";
 import { categorySlug, isValidCategorySlug } from "@/lib/listing-url";
-import { GalleryGrid } from "@/components/gallery-grid";
+import { GalleryGrid } from "@/features/listings/components/gallery-grid";
 import { supabase } from "@/lib/supabase/public";
+import { getDevelopmentBySlug, getDevelopmentMetaBySlug } from "@/features/listings/queries";
 import type { Development, DevelopmentFloorPlan } from "@/types/development";
 
 interface Props {
@@ -27,11 +28,7 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!isValidCategorySlug(params.category)) return { title: "Not Found" };
 
-  const { data: dev } = await supabase
-    .from("developments")
-    .select("name, suburb, state, summary, hero_image_url, images:development_images(*)")
-    .eq("slug", params.slug)
-    .single();
+  const { data: dev } = await getDevelopmentMetaBySlug(supabase, params.slug);
   if (!dev) return { title: "Not Found" };
   const d = dev as unknown as Development;
   return {
@@ -51,12 +48,7 @@ export default async function DossierPage({ params }: Props) {
   // hitting the database and pretending to be listings).
   if (!isValidCategorySlug(params.category)) notFound();
 
-  const { data: rawDev } = await supabase
-    .from("developments")
-    .select("*, developer:accounts!account_id(*), images:development_images(*), floor_plans:development_floor_plans(*), listing_agents:listing_agents(name, email, mobile, photo_url, sort_order)")
-    .eq("slug", params.slug)
-    .eq("is_published", true)
-    .single();
+  const { data: rawDev } = await getDevelopmentBySlug(supabase, params.slug);
 
   if (!rawDev) notFound();
   const dev = rawDev as unknown as Development;

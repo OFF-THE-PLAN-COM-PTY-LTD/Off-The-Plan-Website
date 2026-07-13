@@ -2,8 +2,9 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { PropertyCard } from "@/components/property-card";
-import { DeveloperContactForm } from "@/components/developer-contact-form";
+import { DeveloperContactForm } from "@/features/developers/components/developer-contact-form";
 import { supabase } from "@/lib/supabase/public";
+import { publishedDevelopmentCards } from "@/features/listings/queries";
 import type { Developer } from "@/types/developer";
 import type { Development } from "@/types/development";
 
@@ -78,11 +79,10 @@ export default async function DeveloperProfilePage({ params }: Props) {
   const acc = rawAcc as Record<string, unknown>;
 
   // Listings now link via developments.account_id.
-  const { data: devsData } = await supabase
-    .from("developments")
-    .select("*, developer:accounts!account_id(*), images:development_images(*), floor_plans:development_floor_plans(*)")
-    .eq("account_id", acc.id as string)
-    .eq("is_published", true);
+  const { data: devsData } = await publishedDevelopmentCards(supabase).eq(
+    "account_id",
+    acc.id as string,
+  );
 
   const devDevelopments = (devsData ?? []) as unknown as Development[];
 

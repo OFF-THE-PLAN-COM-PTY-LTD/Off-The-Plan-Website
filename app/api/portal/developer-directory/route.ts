@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { withMemberOrAdmin } from "@/lib/api/handler";
 import { setAccountPublished } from "@/lib/accounts/sync-account";
 import { z } from "zod";
 
@@ -32,11 +32,12 @@ function slugify(input: string): string {
     .slice(0, 60);
 }
 
-export async function POST(req: Request) {
+// Guarded by withMemberOrAdmin; the Developer-only rule below stays inside the
+// handler (the guard also admits Agents/admins, who are rejected here exactly
+// as before). Body parsing stays inline to keep the "Invalid request" 400.
+export const POST = withMemberOrAdmin(async (req, { auth }) => {
   try {
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const user = auth.user;
 
     const parsed = schema.safeParse(await req.json());
     if (!parsed.success) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
@@ -119,4 +120,4 @@ export async function POST(req: Request) {
   } catch {
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
-}
+});

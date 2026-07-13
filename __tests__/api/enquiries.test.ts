@@ -3,7 +3,13 @@ import { POST } from "@/app/api/enquiries/route";
 // Mock Supabase to avoid real DB calls
 jest.mock("@supabase/supabase-js", () => ({
   createClient: () => ({
-    from: () => ({ insert: async () => ({ error: null }) }),
+    from: () => ({
+      insert: async () => ({ error: null }),
+      select: () => ({
+        eq: () => ({ maybeSingle: async () => ({ data: null }) }),
+      }),
+    }),
+    rpc: async () => ({ error: null }),
   }),
 }));
 
@@ -20,7 +26,7 @@ describe("POST /api/enquiries", () => {
     const res = await POST(makeRequest({ email: "test@example.com" }));
     expect(res.status).toBe(400);
     const body = await res.json();
-    expect(body.error).toBe("Validation failed");
+    expect(body.error).toBe("Invalid data");
   });
 
   it("returns 400 for invalid email", async () => {
@@ -32,8 +38,7 @@ describe("POST /api/enquiries", () => {
     expect(res.status).toBe(400);
   });
 
-  it("returns 201 in dev mode (placeholder URL)", async () => {
-    // .env.local has placeholder URL — dev mode returns 201 without Supabase
+  it("returns 201 for a valid enquiry (mocked Supabase)", async () => {
     const res = await POST(makeRequest({
       development_id: "00000000-0000-0000-0000-000000000000",
       full_name: "Jane Smith",

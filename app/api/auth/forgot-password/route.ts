@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { sendSetPasswordLink } from "@/lib/auth/send-set-password";
+
+// Identical accept/reject behavior to the old manual check:
+// email must be a string containing "@"; anything else (including a
+// non-object body) falls through to the same generic { ok: true }.
+const forgotPasswordSchema = z.object({
+  email: z.string().refine((e) => e.includes("@")),
+});
 
 /**
  * Public "Forgot password?" endpoint. Emails the requester a branded
@@ -17,11 +25,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true }); // don't leak parse details
   }
 
-  const email = (body as { email?: unknown })?.email;
-  if (typeof email !== "string" || !email.includes("@")) {
+  const parsed = forgotPasswordSchema.safeParse(body);
+  if (!parsed.success) {
     // Generic success regardless — no enumeration signal.
     return NextResponse.json({ ok: true });
   }
+  const email = parsed.data.email;
 
   const origin = resolveOrigin(req);
 
