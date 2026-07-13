@@ -33,10 +33,11 @@ export async function POST(req: Request) {
 
     const { slug, full_name, email, mobile, message } = parsed.data;
 
-    // Resolve the developer by slug (must be published).
+    // Resolve the developer account by slug (must be a published Developer).
     const { data: dev } = await supabaseAdmin
-      .from("developers")
-      .select("id, name, slug, profile_id, is_published, company_email")
+      .from("accounts")
+      .select("id, name, slug, user_id, is_published, company_email")
+      .eq("type", "Developer")
       .eq("slug", slug)
       .eq("is_published", true)
       .maybeSingle();
@@ -46,21 +47,21 @@ export async function POST(req: Request) {
     }
 
     // Where to deliver, in priority order:
-    //   1. Linked profile's company_email
-    //   2. Linked profile's auth user email
-    //   3. The developer row's own company_email (admin-edited)
+    //   1. Linked login's profile company_email
+    //   2. Linked login's auth user email
+    //   3. The account's own company_email (admin-edited)
     //   4. Admin fallback (so leads still reach Tim).
     let primaryTo: string = EMAIL_ADMIN_TO;
-    if (dev.profile_id) {
+    if (dev.user_id) {
       const { data: profile } = await supabaseAdmin
         .from("profiles")
         .select("company_email")
-        .eq("id", dev.profile_id)
+        .eq("id", dev.user_id)
         .maybeSingle();
       if (profile?.company_email && profile.company_email.includes("@")) {
         primaryTo = profile.company_email as string;
       } else {
-        const { data: userRow } = await supabaseAdmin.auth.admin.getUserById(dev.profile_id);
+        const { data: userRow } = await supabaseAdmin.auth.admin.getUserById(dev.user_id);
         const userEmail = userRow.user?.email;
         if (userEmail && userEmail.includes("@")) primaryTo = userEmail;
       }

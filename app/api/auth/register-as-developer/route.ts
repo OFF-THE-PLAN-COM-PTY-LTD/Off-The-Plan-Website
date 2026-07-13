@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { syncAccountFromAgency } from "@/lib/accounts/sync-account";
 import { z } from "zod";
 import { sendEmail } from "@/lib/email/send";
 import { EMAIL_ADMIN_TO, EMAIL_SALES_CC } from "@/lib/email/client";
+
+const slugify = (name: string): string =>
+  name.toLowerCase().trim().replace(/&/g, " and ").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60);
 
 /**
  * Public Developer / Agent self-registration endpoint behind /list-a-listing.
@@ -126,34 +128,36 @@ export async function POST(req: Request) {
       console.error("register-as-developer developer_leads insert (non-fatal):", leadErr);
     }
 
-    // Mirror the new signup into the agencies table so they appear in the
-    // unified /admin/agencies view immediately as Active (auto-approved).
-    // Non-fatal — admin can fix in /admin/agencies if this fails.
-    const { data: agencyRow, error: agencyErr } = await supabaseAdmin.from("agencies").insert({
-      name: fullName,
+    // Create the consolidated `accounts` row directly so the signup appears in
+    // the /admin/agencies (All Profiles) view immediately as Active (auto-
+    // approved). `type` stays null until an admin classifies the account — new
+    // signups don't auto-appear on the public directory (which requires
+    // type='Developer' + published); they're created hidden until classified.
+    // Non-fatal — admin can create/fix the profile in /admin/agencies if this
+    // fails. Retry on slug collision (23505).
+    const accountBase = {
+      user_id: userId,
+      name: company || fullName,
       first_name,
       last_name,
       email,
-      org_name: company || null,
-      mobile: phone || null,
+      company_email: email,
+      phone: phone || null,
       email_verified: true,
       portal_status: "active",
-      // interest_type stays null until an admin classifies the agency — matches
-      // current behavior (new signups don't auto-appear on the public directory;
-      // the account is created hidden and shows once classified Developer).
-    }).select("id").single();
-    if (agencyErr) {
-      console.error("register-as-developer agencies insert (non-fatal):", agencyErr);
-    }
-
-    // Dual-write: mirror the new signup into the consolidated `accounts` table
-    // so it's ready for the accounts-driven directory once classified/published.
-    if (agencyRow?.id) {
-      try {
-        await syncAccountFromAgency(agencyRow.id, { userId });
-      } catch (e) {
-        console.error("register-as-developer account sync (non-fatal):", e);
+      archived: false,
+      is_published: false,
+    };
+    const slugBase = slugify(company || fullName) || userId.slice(0, 8);
+    let accountSlug = slugBase;
+    for (let attempt = 0; attempt < 6; attempt++) {
+      const { error: accErr } = await supabaseAdmin.from("accounts").insert({ ...accountBase, slug: accountSlug });
+      if (!accErr) break;
+      if (accErr.code !== "23505") {
+        console.error("register-as-developer accounts insert (non-fatal):", accErr);
+        break;
       }
+      accountSlug = `${slugBase}-${userId.slice(0, 4 + attempt)}`;
     }
 
     // Notify admin + sales of the new registration. Reply-To = the applicant.

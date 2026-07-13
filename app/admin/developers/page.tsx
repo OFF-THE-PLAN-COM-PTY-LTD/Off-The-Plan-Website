@@ -14,20 +14,21 @@ export default async function AdminDevelopersPage() {
     { data: devCounts },
   ] = await Promise.all([
     supabaseAdmin
-      .from("developers")
-      .select("id, slug, name, logo_url, state, is_published, profile_id, created_at")
+      .from("accounts")
+      .select("id, slug, name, logo_url, state, is_published, user_id, created_at")
+      .eq("type", "Developer")
       .order("name", { ascending: true }),
     supabaseAdmin
       .from("developments")
-      .select("developer_id")
-      .not("developer_id", "is", null),
+      .select("account_id")
+      .not("account_id", "is", null),
   ]);
 
-  // Count developments per developer in JS (Supabase doesn't return group-by easily).
-  const countsByDeveloperId = new Map<string, number>();
+  // Count developments per account in JS (Supabase doesn't return group-by easily).
+  const countsByAccountId = new Map<string, number>();
   for (const row of devCounts ?? []) {
-    const id = (row as { developer_id: string }).developer_id;
-    countsByDeveloperId.set(id, (countsByDeveloperId.get(id) ?? 0) + 1);
+    const id = (row as { account_id: string }).account_id;
+    countsByAccountId.set(id, (countsByAccountId.get(id) ?? 0) + 1);
   }
 
   const developers = (devs ?? []).map((d) => ({
@@ -37,8 +38,8 @@ export default async function AdminDevelopersPage() {
     logo_url: (d.logo_url as string) ?? null,
     state: (d.state as string) ?? null,
     is_published: Boolean(d.is_published),
-    profile_id: (d.profile_id as string) ?? null,
-    listings_count: countsByDeveloperId.get(d.id as string) ?? 0,
+    profile_id: (d.user_id as string) ?? null,
+    listings_count: countsByAccountId.get(d.id as string) ?? 0,
   }));
 
   return (
