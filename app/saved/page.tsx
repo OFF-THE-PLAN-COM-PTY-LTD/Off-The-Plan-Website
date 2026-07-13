@@ -14,7 +14,7 @@ export default async function SavedPage() {
 
   const { data } = await supabase
     .from("saved_developments")
-    .select("development_id, saved_at, development:developments(*, developer:developers(*), images:development_images(*), floor_plans:development_floor_plans(*))")
+    .select("development_id, saved_at, development:developments(*, developer:accounts!account_id(*), images:development_images(*), floor_plans:development_floor_plans(*))")
     .eq("user_id", user.id)
     .order("saved_at", { ascending: false });
 

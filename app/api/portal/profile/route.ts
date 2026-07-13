@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { syncAccountFromProfile } from "@/lib/accounts/sync-account";
 
 const ALLOWED_FIELDS = new Set([
   "first_name", "last_name", "phone",
@@ -29,6 +30,10 @@ export async function PATCH(req: Request) {
 
     const { error } = await supabaseAdmin.from("profiles").update(update).eq("id", user.id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+    // Dual-write: mirror the member's company details onto their linked account
+    // so their public /developers entry updates from a single profile edit.
+    try { await syncAccountFromProfile(user.id); } catch (e) { console.error("account sync (non-fatal):", e); }
 
     return NextResponse.json({ ok: true });
   } catch {

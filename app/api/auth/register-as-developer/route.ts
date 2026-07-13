@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { syncAccountFromAgency } from "@/lib/accounts/sync-account";
 import { z } from "zod";
 import { sendEmail } from "@/lib/email/send";
 import { EMAIL_ADMIN_TO, EMAIL_SALES_CC } from "@/lib/email/client";
@@ -128,7 +129,7 @@ export async function POST(req: Request) {
     // Mirror the new signup into the agencies table so they appear in the
     // unified /admin/agencies view immediately as Active (auto-approved).
     // Non-fatal — admin can fix in /admin/agencies if this fails.
-    const { error: agencyErr } = await supabaseAdmin.from("agencies").insert({
+    const { data: agencyRow, error: agencyErr } = await supabaseAdmin.from("agencies").insert({
       name: fullName,
       first_name,
       last_name,
@@ -137,9 +138,22 @@ export async function POST(req: Request) {
       mobile: phone || null,
       email_verified: true,
       portal_status: "active",
-    });
+      // interest_type stays null until an admin classifies the agency — matches
+      // current behavior (new signups don't auto-appear on the public directory;
+      // the account is created hidden and shows once classified Developer).
+    }).select("id").single();
     if (agencyErr) {
       console.error("register-as-developer agencies insert (non-fatal):", agencyErr);
+    }
+
+    // Dual-write: mirror the new signup into the consolidated `accounts` table
+    // so it's ready for the accounts-driven directory once classified/published.
+    if (agencyRow?.id) {
+      try {
+        await syncAccountFromAgency(agencyRow.id, { userId });
+      } catch (e) {
+        console.error("register-as-developer account sync (non-fatal):", e);
+      }
     }
 
     // Notify admin + sales of the new registration. Reply-To = the applicant.

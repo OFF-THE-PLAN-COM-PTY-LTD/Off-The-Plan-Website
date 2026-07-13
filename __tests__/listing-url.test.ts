@@ -34,7 +34,8 @@ describe("listing-url category slugs", () => {
 describe("categorySlug()", () => {
   it("maps known types to their canonical slug", () => {
     expect(categorySlug("Townhouses")).toBe("townhouses");
-    expect(categorySlug("New Apartments")).toBe("apartments");
+    expect(categorySlug("New Apartments")).toBe("new-apartments");
+    expect(categorySlug("Apartments")).toBe("new-apartments"); // legacy alias
     expect(categorySlug("House & Land")).toBe("house-and-land");
     expect(categorySlug("Over 55's / Retirement")).toBe("retirement");
   });

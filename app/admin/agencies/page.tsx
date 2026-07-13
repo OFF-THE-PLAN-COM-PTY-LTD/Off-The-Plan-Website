@@ -7,10 +7,11 @@ interface Props {
   searchParams: { status?: string };
 }
 
+// "All Profiles" now reads the consolidated `accounts` table directly (one
+// row per company, Developer or Agent). The legacy `agencies` table is no
+// longer read here. Each account is mapped to the shape AgenciesTable expects
+// (org_name = company name, name = contact person, mobile = phone, etc.).
 export default async function AdminAgenciesPage({ searchParams }: Props) {
-  // "archived" isn't a portal_status value — it's a derived state: the
-  // agencies row exists but no matching Supabase Auth user does (the
-  // login was deleted or was never linked). Handled in JS below.
   const VALID_STATUSES = ["pending", "active", "inactive", "archived", "all"] as const;
   type StatusKey = typeof VALID_STATUSES[number];
 
@@ -19,56 +20,27 @@ export default async function AdminAgenciesPage({ searchParams }: Props) {
     ? (rawStatus as StatusKey)
     : "all";
 
-  // Always fetch the full agencies list — we need it to compute the archived
-  // count (agencies with no linked auth user), which the tab strip shows
-  // regardless of which tab is active. At current scale (~124 rows) the
-  // extra bandwidth vs a status-filtered fetch is negligible.
-  const [{ data: allAgencies }, { data: authList }] = await Promise.all([
-    supabaseAdmin
-      .from("agencies")
-      .select("id, name, email, org_name, mobile, total_active_listings, email_verified, portal_status, archived, interest_type")
-      .order("name", { ascending: true }),
-    supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 500 }),
-  ]);
+  const { data: accounts } = await supabaseAdmin
+    .from("accounts")
+    .select("id, name, first_name, last_name, email, phone, total_active_listings, email_verified, portal_status, archived, type")
+    .order("name", { ascending: true });
 
-  const emailToUserId = new Map<string, string>();
-  for (const u of authList?.users ?? []) {
-    if (u.email) emailToUserId.set(u.email.toLowerCase(), u.id);
-  }
+  const enrichedAll = (accounts ?? []).map((a) => ({
+    id: a.id as string,
+    // Contact person (Name) vs company (Org. Name).
+    name: [a.first_name, a.last_name].filter(Boolean).join(" ") || (a.name as string) || null,
+    email: (a.email as string) ?? null,
+    org_name: (a.name as string) ?? null,
+    mobile: (a.phone as string) ?? null,
+    total_active_listings: (a.total_active_listings as number) ?? 0,
+    email_verified: a.email_verified === true,
+    portal_status: (a.portal_status as string) ?? "active",
+    interest_type: (a.type as string) ?? null,
+    archived: a.archived === true,
+    is_archived: a.archived === true,
+  }));
 
-  // interest_type now lives on the agencies row itself (migration 044), so
-  // it's available for account-less rows too. We still read profiles as a
-  // fallback for any row where a linked profile was updated but the agency
-  // column hasn't caught up (the endpoint keeps both in sync going forward).
-  const userIds = (allAgencies ?? [])
-    .map((a) => (a.email ? emailToUserId.get(a.email.toLowerCase()) : undefined))
-    .filter((id): id is string => Boolean(id));
-  const userIdToInterest = new Map<string, string | null>();
-  if (userIds.length > 0) {
-    const { data: profileRows } = await supabaseAdmin
-      .from("profiles")
-      .select("id, interest_type")
-      .in("id", userIds);
-    for (const p of profileRows ?? []) userIdToInterest.set(p.id, p.interest_type ?? null);
-  }
-
-  const enrichedAll = (allAgencies ?? []).map((a) => {
-    const userId = a.email ? emailToUserId.get(a.email.toLowerCase()) : undefined;
-    // Archived = admin-flagged only. Legacy orphans (rows with no linked
-    // auth user) now stay in Active/Inactive; the admin's "Email Set-
-    // Password Link" flow creates a login for them on the fly.
-    return {
-      ...a,
-      interest_type:
-        a.interest_type ?? (userId ? (userIdToInterest.get(userId) ?? null) : null),
-      is_archived: a.archived === true,
-    };
-  });
-
-  // Archived is exclusive: a row that's archived does NOT show up under
-  // Active/Inactive/All. That keeps the counts consistent (Active + Inactive
-  // = All) and matches the user expectation that "moving" a row to Archived
-  // removes it from the other tabs.
+  // Archived is exclusive: an archived row does NOT show under Active/Inactive/All.
   const counts = {
     pending: enrichedAll.filter((r) => !r.is_archived && r.portal_status === "pending").length,
     active: enrichedAll.filter((r) => !r.is_archived && r.portal_status === "active").length,
@@ -77,8 +49,6 @@ export default async function AdminAgenciesPage({ searchParams }: Props) {
     all: enrichedAll.filter((r) => !r.is_archived).length,
   };
 
-  // Filter the visible rows for the current tab. Non-archived tabs exclude
-  // archived rows entirely; the Archived tab is the only place they appear.
   const rowsForTab =
     status === "archived"
       ? enrichedAll.filter((r) => r.is_archived)

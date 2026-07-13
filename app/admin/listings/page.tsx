@@ -23,7 +23,7 @@ export default async function AdminListingsPage({ searchParams }: { searchParams
 
   let listingsQuery = supabaseAdmin
     .from("developments")
-    .select("id, name, slug, suburb, state, is_published, is_featured, status, price_display, type, hero_image_url, tier, agency_id, view_count, phone_click_count, share_count, developer:developers(name)")
+    .select("id, name, slug, suburb, state, is_published, is_featured, status, price_display, type, hero_image_url, tier, agency_id, view_count, phone_click_count, share_count, developer:accounts!account_id(name)")
     .order("name");
 
   if (agencyId) {
