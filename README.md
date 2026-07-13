@@ -107,7 +107,7 @@ Tests live in `__tests__/` and cover API route logic. Run `npm run test:watch` f
 
 Deploy to the **company Vercel team account**. Do not deploy to personal Vercel accounts, Netlify, Replit, or any other host — this project handles real client and user data and must stay within company-controlled infrastructure.
 
-If you do not have access to the company Vercel team account, contact the Roar Global AI team. In the meantime, develop locally using the dummy data in `lib/mock-data.ts`.
+If you do not have access to the company Vercel team account, contact the Roar Global AI team.
 
 ---
 
