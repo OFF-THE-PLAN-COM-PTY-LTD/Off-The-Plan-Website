@@ -53,7 +53,7 @@ export default async function DossierPage({ params }: Props) {
 
   const { data: rawDev } = await supabase
     .from("developments")
-    .select("*, developer:developers(*), images:development_images(*), floor_plans:development_floor_plans(*), listing_agents:listing_agents(name, email, mobile, photo_url, sort_order)")
+    .select("*, developer:accounts!account_id(*), images:development_images(*), floor_plans:development_floor_plans(*), listing_agents:listing_agents(name, email, mobile, photo_url, sort_order)")
     .eq("slug", params.slug)
     .eq("is_published", true)
     .single();

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { setAccountPublished } from "@/lib/accounts/sync-account";
 import { z } from "zod";
 
 /**
@@ -51,6 +52,11 @@ export async function POST(req: Request) {
     if (!profile) return NextResponse.json({ error: "Profile not found" }, { status: 404 });
     if (profile.interest_type !== "Developer") {
       return NextResponse.json({ error: "Only developer-members can opt in to the directory." }, { status: 403 });
+    }
+
+    // Dual-write: reflect the opt-in/out on the member's consolidated account.
+    try { await setAccountPublished(user.id, parsed.data.show); } catch (e) {
+      console.error("account publish sync (non-fatal):", e);
     }
 
     // Find existing linked row (if any).

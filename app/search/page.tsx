@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { PropertyCard } from "@/components/property-card";
 import { AdSlot } from "@/components/ad-slot";
 import { supabase } from "@/lib/supabase/public";
+import { CATEGORY_TO_SLUG, categorySlug } from "@/lib/listing-url";
 import type { Development } from "@/types/development";
 
 export const dynamic = "force-dynamic";
@@ -56,7 +57,7 @@ const PRICE_RANGES = [
 export default async function SearchPage({ searchParams }: SearchPageProps) {
   let query = supabase
     .from("developments")
-    .select("*, developer:developers(*), images:development_images(*), floor_plans:development_floor_plans(*)")
+    .select("*, developer:accounts!account_id(*), images:development_images(*), floor_plans:development_floor_plans(*)")
     .eq("is_published", true);
 
   if (searchParams.suburb) {
@@ -65,7 +66,18 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     if (s) query = query.or(`suburb.ilike.%${s}%,state.ilike.%${s}%,name.ilike.%${s}%`);
   }
   if (searchParams.state) query = query.eq("state", searchParams.state);
-  if (searchParams.type)  query = query.eq("type", searchParams.type);
+  if (searchParams.type) {
+    // Match the category the way the URL scheme does: a category (e.g. "New
+    // Apartments") covers every `type` that maps to the same slug (e.g. the
+    // legacy "Apartments"), not just an exact string match. Keeps the filter
+    // consistent with lib/listing-url.ts so selecting a category returns all
+    // of its listings.
+    const slug = categorySlug(searchParams.type);
+    const types = Object.entries(CATEGORY_TO_SLUG)
+      .filter(([, s]) => s === slug)
+      .map(([t]) => t);
+    query = types.length > 1 ? query.in("type", types) : query.eq("type", searchParams.type);
+  }
   if (searchParams.status) query = query.eq("status", searchParams.status);
 
   // Defensive cap so a giant DB doesn't ship every row to the client.

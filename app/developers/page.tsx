@@ -26,15 +26,22 @@ export default async function DevelopersPage() {
   // in sync with the agency being active + Developer + non-archived by the
   // admin endpoints, so is_published=true here means "active Developer". Rows
   // with no agency (legacy/orphan directory entries) are intentionally hidden.
-  const [{ data: devsData }, { data: devsDevsData }] = await Promise.all([
-    supabase.from("developers").select("*").eq("is_published", true).not("agency_id", "is", null).order("name"),
-    // agency_id lets us count listings for directory rows synced from a
-    // Developer-agency (migration 045) — their listings link via agency_id,
-    // not developer_id — so those cards show a real count instead of 0.
-    supabase.from("developments").select("id, developer_id, agency_id").eq("is_published", true),
+  // The public directory now reads the consolidated `accounts` table directly
+  // (type='Developer', published, active, not archived) — no more `developers`
+  // projection / agency_id filter. Listing counts come from developments.account_id.
+  const [{ data: accData }, { data: devsDevsData }] = await Promise.all([
+    supabase
+      .from("accounts")
+      .select("*")
+      .eq("type", "Developer")
+      .eq("is_published", true)
+      .eq("archived", false)
+      .eq("portal_status", "active")
+      .order("name"),
+    supabase.from("developments").select("id, account_id").eq("is_published", true),
   ]);
 
-  const developers = (devsData ?? []) as unknown as Developer[];
+  const developers = (accData ?? []) as unknown as Developer[];
   const allDevelopments = devsDevsData ?? [];
 
   return (
@@ -50,9 +57,7 @@ export default async function DevelopersPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {developers.map((dev) => {
             const devCount = allDevelopments.filter(
-              (d) =>
-                d.developer_id === dev.id ||
-                (dev.agency_id != null && d.agency_id === dev.agency_id),
+              (d) => (d as { account_id?: string }).account_id === dev.id,
             ).length;
             const initials = dev.name
               .split(/\s+/)
