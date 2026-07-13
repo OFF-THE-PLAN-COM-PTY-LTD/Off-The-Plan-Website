@@ -11,13 +11,13 @@ import {
 describe("development select constants", () => {
   it("card select matches the original inline string", () => {
     expect(DEVELOPMENT_CARD_SELECT).toBe(
-      "*, developer:developers(*), images:development_images(*), floor_plans:development_floor_plans(*)",
+      "*, developer:accounts!account_id(*), images:development_images(*), floor_plans:development_floor_plans(*)",
     );
   });
 
   it("detail select is the card select plus listing agents", () => {
     expect(DEVELOPMENT_DETAIL_SELECT).toBe(
-      "*, developer:developers(*), images:development_images(*), floor_plans:development_floor_plans(*), listing_agents:listing_agents(name, email, mobile, photo_url, sort_order)",
+      "*, developer:accounts!account_id(*), images:development_images(*), floor_plans:development_floor_plans(*), listing_agents:listing_agents(name, email, mobile, photo_url, sort_order)",
     );
   });
 

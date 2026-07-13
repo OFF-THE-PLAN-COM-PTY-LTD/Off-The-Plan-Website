@@ -3,7 +3,6 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/supabase/auth-guards";
 import { sendEmail } from "@/lib/email/send";
 import { accountApprovedTemplate, accountRejectedTemplate } from "@/lib/email/templates";
-import { syncDeveloperFromAgency, unpublishDeveloperForAgency } from "@/features/developers/sync-from-agency";
 
 async function findAuthUserIdByEmail(email: string): Promise<string | null> {
   const target = email.toLowerCase();
@@ -25,12 +24,11 @@ async function findAuthUserIdByEmail(email: string): Promise<string | null> {
  * Best-effort: caller wraps this in try/catch — failures here must not
  * break the admin save. Returns nothing.
  */
-async function syncProfileStatusForAgency(agencyId: string, newPortalStatus: string) {
-  const { data: agency } = await supabaseAdmin
-    .from("agencies").select("email, name").eq("id", agencyId).single();
-  if (!agency?.email) return;
-
-  const authUserId = await findAuthUserIdByEmail(agency.email);
+async function syncAccountMemberStatus(
+  account: { email: string | null; user_id: string | null; name: string | null; first_name?: string | null; last_name?: string | null },
+  newPortalStatus: string,
+) {
+  const authUserId = account.user_id ?? (account.email ? await findAuthUserIdByEmail(account.email) : null);
   if (!authUserId) return;
 
   const newMemberStatus =
@@ -45,13 +43,12 @@ async function syncProfileStatusForAgency(agencyId: string, newPortalStatus: str
     .from("profiles").update({ member_status: newMemberStatus }).eq("id", authUserId);
 
   // Only email on the initial pending → approved/rejected transition.
-  // No mail on active↔inactive flips (already-approved users), and none
-  // on rejected→approved reactivation (admin chose to do that quietly).
-  if (prev?.member_status === "pending" && newMemberStatus !== "pending") {
+  if (prev?.member_status === "pending" && newMemberStatus !== "pending" && account.email) {
+    const fullName = [account.first_name, account.last_name].filter(Boolean).join(" ") || account.name || "there";
     const tmpl = newMemberStatus === "approved"
-      ? accountApprovedTemplate({ full_name: agency.name ?? "there" })
-      : accountRejectedTemplate({ full_name: agency.name ?? "there" });
-    await sendEmail({ to: agency.email, ...tmpl });
+      ? accountApprovedTemplate({ full_name: fullName })
+      : accountRejectedTemplate({ full_name: fullName });
+    await sendEmail({ to: account.email, ...tmpl });
   }
 }
 
@@ -79,90 +76,68 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: "Invalid organisation email format" }, { status: 400 });
     }
 
-    const allowed = [
-      "portal_status", "archived",
-      "first_name", "last_name", "email", "mobile",
-      "personal_street_address", "personal_country", "personal_state", "personal_city", "personal_postcode",
-      "org_name", "about", "org_email", "org_phone",
-      "org_street_address", "org_street_address_2", "org_country", "org_state", "org_city", "org_postcode",
-      "facebook_url", "twitter_url", "instagram_url", "linkedin_url", "pinterest_url", "youtube_url", "website_url",
-      "profile_pic", "org_logo_url", "dev_logo_url",
-    ];
+    // Incoming names are the legacy agency-form field names; translate them to
+    // the consolidated `accounts` columns. `id` is now the accounts.id.
+    const FIELD_MAP: Record<string, string> = {
+      portal_status: "portal_status", archived: "archived",
+      first_name: "first_name", last_name: "last_name", email: "email", mobile: "phone",
+      personal_street_address: "personal_street_address", personal_country: "personal_country",
+      personal_state: "personal_state", personal_city: "personal_city", personal_postcode: "personal_postcode",
+      org_name: "name", about: "description", org_email: "company_email", org_phone: "company_phone",
+      org_street_address: "street_address", org_street_address_2: "street_address_2",
+      org_country: "country", org_state: "state", org_city: "city", org_postcode: "postcode",
+      facebook_url: "facebook", twitter_url: "twitter", instagram_url: "instagram",
+      linkedin_url: "linkedin", pinterest_url: "pinterest", youtube_url: "youtube", website_url: "website",
+      profile_pic: "avatar_url", org_logo_url: "logo_url", dev_logo_url: "logo_url",
+    };
 
     const update: Record<string, unknown> = { updated_at: new Date().toISOString() };
-    for (const key of allowed) {
-      if (key in fields) update[key] = fields[key] ?? null;
+    for (const [k, col] of Object.entries(FIELD_MAP)) {
+      if (k in fields) update[col] = fields[k] ?? null;
     }
 
-    // Rebuild name from first/last if either changed; also sync auth email if email changed.
-    if ("first_name" in fields || "last_name" in fields || "email" in fields) {
-      const { data: current } = await supabaseAdmin
-        .from("agencies")
-        .select("first_name, last_name, email")
-        .eq("id", id)
-        .single();
-      const first = (fields.first_name ?? current?.first_name ?? "").trim();
-      const last = (fields.last_name ?? current?.last_name ?? "").trim();
-      update.name = `${first} ${last}`.trim() || null;
+    const { data: current } = await supabaseAdmin
+      .from("accounts")
+      .select("email, user_id, type, portal_status, archived, name, first_name, last_name")
+      .eq("id", id)
+      .single();
+    if (!current) return NextResponse.json({ error: "Account not found" }, { status: 404 });
 
-      // Email change: update the linked Supabase Auth user so they can still log in.
-      if ("email" in fields && current?.email && fields.email && fields.email !== current.email) {
-        const authUserId = await findAuthUserIdByEmail(current.email);
-        if (authUserId) {
-          const { error: authErr } = await supabaseAdmin.auth.admin.updateUserById(authUserId, {
-            email: fields.email,
-            email_confirm: true,
-          });
-          if (authErr) {
-            return NextResponse.json(
-              { error: `Failed to update login email: ${authErr.message}` },
-              { status: 500 },
-            );
-          }
+    // Email change → keep the linked Supabase Auth login in sync.
+    if ("email" in fields && current.email && fields.email && fields.email !== current.email) {
+      const authUserId = (current.user_id as string | null) ?? await findAuthUserIdByEmail(current.email as string);
+      if (authUserId) {
+        const { error: authErr } = await supabaseAdmin.auth.admin.updateUserById(authUserId, {
+          email: fields.email,
+          email_confirm: true,
+        });
+        if (authErr) {
+          return NextResponse.json({ error: `Failed to update login email: ${authErr.message}` }, { status: 500 });
         }
       }
     }
 
-    const { error } = await supabaseAdmin.from("agencies").update(update).eq("id", id);
+    // Re-derive directory visibility when status/archive changes (active,
+    // non-archived Developer shows; anything else is hidden).
+    if ("portal_status" in fields || "archived" in fields) {
+      const nextPortal = "portal_status" in fields ? fields.portal_status : current.portal_status;
+      const nextArchived = "archived" in fields ? fields.archived === true : current.archived === true;
+      update.is_published = current.type === "Developer" && nextPortal === "active" && !nextArchived;
+    }
+
+    const { error } = await supabaseAdmin.from("accounts").update(update).eq("id", id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-    // If portal_status changed, mirror it onto profiles.member_status and
-    // email the applicant on the initial approve/reject transition. Best-
-    // effort — failures here don't break the admin save.
+    // Mirror portal_status → profiles.member_status (the login gate) and email
+    // the applicant on the initial approve/reject transition. Best-effort.
     if ("portal_status" in fields) {
       try {
-        await syncProfileStatusForAgency(id, fields.portal_status);
-        // Mirror onto the public /developers directory: an active Developer
-        // shows; deactivating hides its card. Keeps the page a 1:1 of active
-        // Developer agencies.
-        if (fields.portal_status === "active") {
-          const { data: a } = await supabaseAdmin
-            .from("agencies").select("interest_type, archived").eq("id", id).single();
-          if (a?.interest_type === "Developer" && a.archived !== true) {
-            await syncDeveloperFromAgency(id);
-          }
-        } else if (fields.portal_status === "inactive") {
-          await unpublishDeveloperForAgency(id);
-        }
+        await syncAccountMemberStatus(
+          current as { email: string | null; user_id: string | null; name: string | null; first_name?: string | null; last_name?: string | null },
+          fields.portal_status,
+        );
       } catch (e) {
-        console.error("Profile sync / approval email (non-fatal):", e);
-      }
-    }
-
-    // Keep the public /developers directory consistent with archive state:
-    // archiving an agency hides its directory card (soft-delete, row kept);
-    // unarchiving republishes it only if it's still a Developer. Best-effort.
-    if ("archived" in fields) {
-      try {
-        if (fields.archived === true) {
-          await unpublishDeveloperForAgency(id);
-        } else {
-          const { data: a } = await supabaseAdmin
-            .from("agencies").select("interest_type").eq("id", id).single();
-          if (a?.interest_type === "Developer") await syncDeveloperFromAgency(id);
-        }
-      } catch (e) {
-        console.error("Developer directory sync on archive toggle (non-fatal):", e);
+        console.error("member_status mirror / approval email (non-fatal):", e);
       }
     }
 

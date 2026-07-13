@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/supabase/auth-guards";
-import { syncDeveloperFromAgency, unpublishDeveloperForAgency } from "@/features/developers/sync-from-agency";
 
 /**
  * PATCH /api/admin/agencies/interest-type
@@ -54,57 +53,43 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: "Invalid interestType" }, { status: 400 });
     }
 
-    const { data: agency, error: agencyErr } = await supabaseAdmin
-      .from("agencies")
-      .select("email")
+    // `agencyId` is now the accounts.id (the admin table reads accounts).
+    const { data: account, error: accErr } = await supabaseAdmin
+      .from("accounts")
+      .select("id, email, user_id, portal_status, archived")
       .eq("id", agencyId)
       .single();
-    if (agencyErr || !agency) {
-      return NextResponse.json({ error: "Agency not found" }, { status: 404 });
+    if (accErr || !account) {
+      return NextResponse.json({ error: "Account not found" }, { status: 404 });
     }
 
-    // Source of truth for the directory classification. Works with or without
-    // a login, which is the whole point — this is what unblocks account-less
-    // migrated agencies.
-    const { error: agencyUpdErr } = await supabaseAdmin
-      .from("agencies")
-      .update({ interest_type: interestType })
-      .eq("id", agencyId);
-    if (agencyUpdErr) {
-      return NextResponse.json({ error: agencyUpdErr.message }, { status: 500 });
+    // Classify the account, and re-derive directory visibility: an active,
+    // non-archived Developer shows on /developers; anything else is hidden.
+    const isPublished =
+      interestType === "Developer" && account.portal_status === "active" && account.archived !== true;
+    const { error: updErr } = await supabaseAdmin
+      .from("accounts")
+      .update({ type: interestType, is_published: isPublished })
+      .eq("id", account.id);
+    if (updErr) {
+      return NextResponse.json({ error: updErr.message }, { status: 500 });
     }
 
-    // Mirror onto the linked profile so the member portal reflects the role.
-    // Only possible when the agency has an email AND an auth user exists for
-    // it; otherwise the agency row alone carries the classification.
+    // Mirror onto the linked profile so the member portal gate reflects the
+    // role (profiles.interest_type gates auth-guards / middleware / portal).
     let linkedProfile = false;
-    if (agency.email) {
-      const authUserId = await findAuthUserIdByEmail(agency.email);
-      if (authUserId) {
-        const { error: profErr } = await supabaseAdmin
-          .from("profiles")
-          .update({ interest_type: interestType })
-          .eq("id", authUserId);
-        if (profErr) {
-          return NextResponse.json({ error: profErr.message }, { status: 500 });
-        }
-        linkedProfile = true;
+    const authUserId =
+      (account.user_id as string | null) ??
+      (account.email ? await findAuthUserIdByEmail(account.email as string) : null);
+    if (authUserId) {
+      const { error: profErr } = await supabaseAdmin
+        .from("profiles")
+        .update({ interest_type: interestType })
+        .eq("id", authUserId);
+      if (profErr) {
+        return NextResponse.json({ error: profErr.message }, { status: 500 });
       }
-    }
-
-    // Keep the public /developers directory in sync with the classification.
-    // Developer -> ensure a published directory row exists (synced from this
-    // agency's logo/about/socials); anything else -> hide it. Best-effort:
-    // a failure here (e.g. migration 045 not applied yet) must not fail the
-    // role save, which already succeeded above.
-    try {
-      if (interestType === "Developer") {
-        await syncDeveloperFromAgency(agencyId);
-      } else {
-        await unpublishDeveloperForAgency(agencyId);
-      }
-    } catch (e) {
-      console.error("developers directory sync failed for agency", agencyId, e);
+      linkedProfile = true;
     }
 
     return NextResponse.json({ ok: true, interestType, linkedProfile });

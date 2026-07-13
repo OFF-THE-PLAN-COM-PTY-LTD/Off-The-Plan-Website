@@ -97,7 +97,7 @@ export default async function HomePage() {
   ] = await Promise.all([
     supabase
       .from("homepage_banners")
-      .select("title, description, link, video_url, desktop_image_url, mobile_image_url, linked_development:developments!linked_development_id(name, slug, type, suburb, state, developer:developers(name))")
+      .select("title, description, link, video_url, desktop_image_url, mobile_image_url, linked_development:developments!linked_development_id(name, slug, type, suburb, state, developer:accounts!account_id(name))")
       .order("sort_order", { ascending: true })
       .limit(1)
       .maybeSingle(),

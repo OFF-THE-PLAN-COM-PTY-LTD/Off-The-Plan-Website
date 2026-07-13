@@ -35,6 +35,25 @@ async function getListingOwner(id: string) {
   return (data?.owner_user_id as string | null | undefined) ?? null;
 }
 
+/**
+ * Derive developments.account_id from whichever assignment field is set, so a
+ * new/edited listing links to the consolidated account that drives /developers.
+ * Priority: explicit developer → owning member → agency.
+ */
+async function resolveAccountId(fields: Record<string, unknown>): Promise<string | null> {
+  const tryLookup = async (col: string, val: unknown) => {
+    if (!val) return null;
+    const { data } = await supabaseAdmin.from("accounts").select("id").eq(col, val as string).maybeSingle();
+    return (data?.id as string | undefined) ?? null;
+  };
+  return (
+    (await tryLookup("legacy_developer_id", fields.developer_id)) ??
+    (await tryLookup("user_id", fields.owner_user_id)) ??
+    (await tryLookup("legacy_agency_id", (fields as { agency_id?: unknown }).agency_id)) ??
+    null
+  );
+}
+
 function revalidateAll() {
   revalidatePath("/");
   revalidatePath("/search");
@@ -236,6 +255,11 @@ export async function POST(req: Request) {
       }
     }
 
+    // Link to the consolidated account (drives /developers). Only set when we
+    // can resolve one, so unrelated edits never null an existing link.
+    const resolvedAccountId = await resolveAccountId(data);
+    if (resolvedAccountId) data.account_id = resolvedAccountId;
+
     if (_method === "PATCH" && id) {
       if (!auth.isAdmin) {
         const owner = await getListingOwner(id);
@@ -344,6 +368,12 @@ export async function PATCH(req: Request) {
 
     if (Object.keys(fields).length === 0) {
       return NextResponse.json({ error: "No editable fields provided" }, { status: 400 });
+    }
+
+    // Re-link to the consolidated account if the assignment changed.
+    if ("developer_id" in fields || "owner_user_id" in fields || "agency_id" in fields) {
+      const acctId = await resolveAccountId(fields);
+      if (acctId) fields.account_id = acctId;
     }
 
     const { error } = await supabaseAdmin.from("developments").update(fields).eq("id", id);

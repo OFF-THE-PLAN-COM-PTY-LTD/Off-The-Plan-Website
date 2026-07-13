@@ -5,8 +5,11 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 // and listing-detail pages — keep them identical in one place so card data
 // stays consistent everywhere.
 
+// The developer relationship resolves through the consolidated `accounts`
+// table (agencies + developers were merged into accounts); `developer:` keeps
+// the returned field name stable for consumers.
 export const DEVELOPMENT_CARD_SELECT =
-  "*, developer:developers(*), images:development_images(*), floor_plans:development_floor_plans(*)";
+  "*, developer:accounts!account_id(*), images:development_images(*), floor_plans:development_floor_plans(*)";
 
 export const DEVELOPMENT_DETAIL_SELECT =
   `${DEVELOPMENT_CARD_SELECT}, listing_agents:listing_agents(name, email, mobile, photo_url, sort_order)`;

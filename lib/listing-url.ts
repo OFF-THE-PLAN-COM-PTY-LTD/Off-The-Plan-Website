@@ -29,8 +29,8 @@
  * older rows resolve to a sensible category rather than the fallback.
  */
 export const CATEGORY_TO_SLUG: Record<string, string> = {
-  "New Apartments": "apartments",
-  Apartments: "apartments", // legacy alias of New Apartments
+  "New Apartments": "new-apartments",
+  Apartments: "new-apartments", // legacy alias → same canonical URL
   Townhouses: "townhouses",
   Houses: "houses", // legacy
   Penthouses: "penthouses", // legacy
@@ -39,6 +39,14 @@ export const CATEGORY_TO_SLUG: Record<string, string> = {
   "House & Land": "house-and-land",
   "Over 55's / Retirement": "retirement",
 };
+
+/**
+ * Slugs that used to be canonical and may still be linked / indexed
+ * (e.g. "apartments" before it became "new-apartments"). They stay VALID so
+ * the [category]/[slug] route accepts them and permanent-redirects to the
+ * current canonical slug — instead of 404ing an old inbound link.
+ */
+export const LEGACY_ACCEPTED_SLUGS = new Set<string>(["apartments"]);
 
 /**
  * Slug used when a listing has no `type` (or an unrecognised one). These
@@ -87,6 +95,7 @@ export const RESERVED_TOP_LEVEL_SEGMENTS = new Set<string>([
 /** Every slug the /[category]/[slug] route should accept. */
 export const VALID_CATEGORY_SLUGS = new Set<string>([
   ...Object.values(CATEGORY_TO_SLUG),
+  ...LEGACY_ACCEPTED_SLUGS,
   FALLBACK_CATEGORY_SLUG,
 ]);
 

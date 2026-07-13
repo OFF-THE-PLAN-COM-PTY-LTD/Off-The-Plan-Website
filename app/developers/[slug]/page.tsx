@@ -5,7 +5,7 @@ import { PropertyCard } from "@/components/property-card";
 import { DeveloperContactForm } from "@/features/developers/components/developer-contact-form";
 import { supabase } from "@/lib/supabase/public";
 import { publishedDevelopmentCards } from "@/features/listings/queries";
-import type { Developer, DeveloperProfile } from "@/types/developer";
+import type { Developer } from "@/types/developer";
 import type { Development } from "@/types/development";
 
 interface Props { params: { slug: string } }
@@ -17,10 +17,11 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { data: dev } = await supabase
-    .from("developers")
+    .from("accounts")
     .select("name, description")
     .eq("slug", params.slug)
-    .single();
+    .eq("type", "Developer")
+    .maybeSingle();
   if (!dev) return { title: "Not Found" };
   return { title: `${dev.name} — Developer`, description: dev.description ?? undefined };
 }
@@ -60,60 +61,47 @@ function SocialIcon({ name }: { name: "facebook" | "instagram" | "linkedin" | "p
 
 export default async function DeveloperProfilePage({ params }: Props) {
 
-  const { data: rawDev } = await supabase
-    .from("developers")
+  // Read the consolidated account directly. It already holds the canonical
+  // company data (merged from the old agency/developer/profile fields at
+  // backfill time), so there's no profile-overlay coalesce anymore.
+  const { data: rawAcc } = await supabase
+    .from("accounts")
     .select("*")
     .eq("slug", params.slug)
+    .eq("type", "Developer")
     .eq("is_published", true)
-    .single();
+    .eq("archived", false)
+    .eq("portal_status", "active")
+    .maybeSingle();
 
-  if (!rawDev) notFound();
-  const dev = rawDev as unknown as Developer;
+  if (!rawAcc) notFound();
+  const dev = rawAcc as unknown as Developer;
+  const acc = rawAcc as Record<string, unknown>;
 
-  // Linked-profile data (if any) takes precedence over the developer row's own
-  // admin-edited fields. This lets a Developer-member's portal-profile changes
-  // flow through automatically, while still letting Tim edit migrated rows
-  // directly from /admin/developers without a linked profile.
-  let profile: DeveloperProfile | null = null;
-  if (dev.profile_id) {
-    const { data } = await supabase
-      .from("profiles")
-      .select("business_name, about, company_email, company_phone, company_city, company_state, website, facebook, instagram, linkedin, pinterest, youtube")
-      .eq("id", dev.profile_id)
-      .maybeSingle();
-    profile = (data as unknown as DeveloperProfile) ?? null;
-  }
-
-  // Match listings by developer_id OR the linked agency_id. Directory rows
-  // synced from a Developer-agency (migration 045) have listings attached via
-  // developments.agency_id, not developer_id — without the agency_id branch
-  // their detail page would show "no listings" even when the agency has some.
-  // Mirrors the count logic on the /developers list page.
-  const listingFilter = rawDev.agency_id
-    ? `developer_id.eq.${rawDev.id},agency_id.eq.${rawDev.agency_id}`
-    : `developer_id.eq.${rawDev.id}`;
-  const { data: devsData } = await publishedDevelopmentCards(supabase).or(listingFilter);
+  // Listings now link via developments.account_id.
+  const { data: devsData } = await publishedDevelopmentCards(supabase).eq(
+    "account_id",
+    acc.id as string,
+  );
 
   const devDevelopments = (devsData ?? []) as unknown as Development[];
 
-  // Coalesce: linked profile field → developer row field → null.
-  const v = (a: string | null | undefined, b: string | null | undefined) => (a && a.trim()) || (b && b.trim()) || null;
-
-  const displayName  = v(profile?.business_name, dev.name) ?? dev.name;
-  const displayBio   = v(profile?.about, dev.description);
-  const displayCity  = v(profile?.company_city, dev.suburb);
-  const displayState = v(profile?.company_state, dev.state);
-  const displayEmail = v(profile?.company_email, dev.company_email);
-  const displayPhone = v(profile?.company_phone, dev.phone);
-  const websiteUrl   = normaliseUrl(v(profile?.website, dev.website), "website");
+  const s = (x: unknown) => (typeof x === "string" && x.trim() ? x.trim() : null);
+  const displayName  = s(acc.name) ?? dev.name;
+  const displayBio   = s(acc.description);
+  const displayCity  = s(acc.city);
+  const displayState = s(acc.state);
+  const displayEmail = s(acc.company_email);
+  const displayPhone = s(acc.company_phone) ?? s(acc.phone);
+  const websiteUrl   = normaliseUrl(s(acc.website), "website");
 
   const socials = [
-    { name: "facebook"  as const, href: normaliseUrl(v(profile?.facebook,  dev.facebook),  "facebook")  },
-    { name: "instagram" as const, href: normaliseUrl(v(profile?.instagram, dev.instagram), "instagram") },
-    { name: "linkedin"  as const, href: normaliseUrl(v(profile?.linkedin,  dev.linkedin),  "linkedin")  },
-    { name: "pinterest" as const, href: normaliseUrl(v(profile?.pinterest, dev.pinterest), "pinterest") },
-    { name: "youtube"   as const, href: normaliseUrl(v(profile?.youtube,   dev.youtube),   "youtube")   },
-  ].filter((s) => s.href);
+    { name: "facebook"  as const, href: normaliseUrl(s(acc.facebook),  "facebook")  },
+    { name: "instagram" as const, href: normaliseUrl(s(acc.instagram), "instagram") },
+    { name: "linkedin"  as const, href: normaliseUrl(s(acc.linkedin),  "linkedin")  },
+    { name: "pinterest" as const, href: normaliseUrl(s(acc.pinterest), "pinterest") },
+    { name: "youtube"   as const, href: normaliseUrl(s(acc.youtube),   "youtube")   },
+  ].filter((x) => x.href);
 
   const monogram = displayName.split(/\s+/).map((w) => w[0]).filter(Boolean).join("").slice(0, 2).toUpperCase();
 
