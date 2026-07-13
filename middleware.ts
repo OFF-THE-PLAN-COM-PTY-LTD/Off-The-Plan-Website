@@ -74,14 +74,26 @@ export async function middleware(request: NextRequest) {
   const isAdminUiPath = pathname.startsWith("/admin");
   const isAdminApiPath = pathname.startsWith("/api/admin");
   if ((isAdminUiPath || isAdminApiPath) && user) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("is_admin, interest_type")
-      .eq("id", user.id)
-      .maybeSingle();
-
-    const isAdmin = !!profile?.is_admin;
-    const interestType = (profile?.interest_type as string | null | undefined) ?? null;
+    // Fast path: read the role straight from the JWT (app_metadata), which
+    // getUser() already returned — no extra DB round-trip on every admin
+    // request / sidebar prefetch. Fall back to a profiles query only for
+    // tokens issued before the role was mirrored into app_metadata (graceful
+    // migration; see scripts/backfill-app-metadata-roles.mjs).
+    const meta = (user.app_metadata ?? {}) as { is_admin?: boolean; interest_type?: string | null };
+    let isAdmin: boolean;
+    let interestType: string | null;
+    if (typeof meta.is_admin === "boolean") {
+      isAdmin = meta.is_admin;
+      interestType = meta.interest_type ?? null;
+    } else {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("is_admin, interest_type")
+        .eq("id", user.id)
+        .maybeSingle();
+      isAdmin = !!profile?.is_admin;
+      interestType = (profile?.interest_type as string | null | undefined) ?? null;
+    }
     const isMember = !!interestType && ["Developer", "Agent"].includes(interestType);
 
     if (isAdminUiPath && !isAdmin) {
