@@ -151,7 +151,7 @@ export default function DevelopersTable({ developers }: { developers: Developer[
                   <td className="px-4 py-3 font-sans text-sm text-ink/60">{dev.listings_count}</td>
                   <td className="px-4 py-3">
                     {dev.profile_id ? (
-                      <span className="font-mono text-[10px] uppercase tracking-widest text-green-600">member</span>
+                      <span className="font-mono text-[10px] uppercase tracking-widest text-green-600">linked</span>
                     ) : (
                       <span className="font-mono text-[10px] uppercase tracking-widest text-ink/30">—</span>
                     )}

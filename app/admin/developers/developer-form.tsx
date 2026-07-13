@@ -329,7 +329,7 @@ export default function DeveloperForm({
       </div>
 
       <div className="mb-4">
-        <label className={lbl}>Linked Member Profile</label>
+        <label className={lbl}>Linked Account Profile</label>
         <select
           value={form.profile_id ?? ""}
           onChange={(e) => set("profile_id", e.target.value || null)}

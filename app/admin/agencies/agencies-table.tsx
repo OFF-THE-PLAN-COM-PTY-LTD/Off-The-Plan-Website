@@ -15,7 +15,7 @@ type Agency = {
   portal_status: "active" | "inactive" | "pending";
   // Joined from profiles.interest_type via email → auth.users → profiles in
   // page.tsx. "Developer" / "Agent" are the two values that appear on
-  // profile rows we surface here; "Agent" is presented as "Member" in the UI.
+  // profile rows we surface here; "Agent" is presented as "Agency" in the UI.
   interest_type?: string | null;
   // agencies.archived — admin's manual soft-archive flag.
   archived?: boolean;
@@ -410,7 +410,7 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
               >
                 <option value="all">All</option>
                 <option value="Developer">Developers</option>
-                <option value="Agent">Members</option>
+                <option value="Agent">Agencies</option>
               </select>
             </div>
           </>
@@ -505,7 +505,7 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
                   >
                     <option value="">— Select —</option>
                     <option value="Developer">Developer</option>
-                    <option value="Agent">Member</option>
+                    <option value="Agent">Agency</option>
                   </select>
                   {savingInterestId === a.id && (
                     <p className="mt-1 font-mono text-[9px] uppercase tracking-widest text-ink/40">Saving…</p>
@@ -558,7 +558,7 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
                       <button
                         onClick={() => handleImpersonate(a)}
                         disabled={signingInId === a.id || !a.email}
-                        title={a.email ? "Generate a one-time link and open this member's dashboard in a new tab" : "No email on file"}
+                        title={a.email ? "Generate a one-time link and open this account's dashboard in a new tab" : "No email on file"}
                         className="flex-1 font-mono text-[10px] uppercase tracking-widest px-2 py-1.5 border border-navy text-navy hover:bg-navy hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
                       >
                         {signingInId === a.id ? "…" : "Sign In As User"}
@@ -566,7 +566,7 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
                       <button
                         onClick={() => openPwModal(a)}
                         disabled={!a.email}
-                        title={a.email ? "Set or reset this member's password" : "No email on file"}
+                        title={a.email ? "Set or reset this account's password" : "No email on file"}
                         className="flex-1 font-mono text-[10px] uppercase tracking-widest px-2 py-1.5 border border-line text-ink hover:border-navy hover:text-navy transition-colors disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
                       >
                         Set Password
@@ -575,7 +575,7 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
                     <button
                       onClick={() => handleEmailLink(a)}
                       disabled={emailingId === a.id || !a.email}
-                      title={a.email ? "Email this member a link to set their own password" : "No email on file"}
+                      title={a.email ? "Email this account a link to set their own password" : "No email on file"}
                       className="w-full font-mono text-[10px] uppercase tracking-widest px-2 py-1.5 border border-line text-ink hover:border-navy hover:text-navy transition-colors disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
                     >
                       {emailingId === a.id ? "Sending…" : "Email Set-Password Link"}
@@ -713,7 +713,7 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
             {pwSuccess ? (
               <>
                 <div className="bg-green-50 border border-green-200 text-green-800 text-sm font-sans p-3 mb-4">
-                  Password updated. Share it with the member — they can change it once logged in.
+                  Password updated. Share it with the account holder — they can change it once logged in.
                 </div>
                 <p className="font-sans text-xs text-ink/50 mb-2">New password (copy now — it&apos;s not stored):</p>
                 <div className="font-mono text-sm bg-cream-alt border border-line px-3 py-2 mb-4 break-all">

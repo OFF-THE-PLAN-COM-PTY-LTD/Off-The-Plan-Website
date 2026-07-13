@@ -1619,10 +1619,10 @@ export function ListingForm({
             </div>
           </div>
 
-          {/* Row 3: assign to member — admin only */}
+          {/* Row 3: assign to account — admin only */}
           {!isPortal && (
             <div className="mt-4">
-              <label className={lbl}>Assign to Member <span className="normal-case font-sans text-ink/40 text-xs">(Developer or Agent account)</span></label>
+              <label className={lbl}>Assign to Account <span className="normal-case font-sans text-ink/40 text-xs">(Developer or Agent account)</span></label>
               <select value={ownerUserId} onChange={(e) => setOwnerUserId(e.target.value)} className={inp + " cursor-pointer"}>
                 <option value="">— Unassigned —</option>
                 {members.map((m) => (

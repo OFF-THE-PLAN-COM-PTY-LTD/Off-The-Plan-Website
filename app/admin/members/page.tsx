@@ -83,7 +83,7 @@ export default async function AdminMembersPage({ searchParams }: Props) {
     <div className="flex flex-col gap-5">
       <div className="flex items-center justify-between">
         <h1 className="font-mono text-[12px] uppercase tracking-widest text-ink font-bold">
-          Members
+          Accounts
         </h1>
       </div>
 
@@ -114,7 +114,7 @@ export default async function AdminMembersPage({ searchParams }: Props) {
 
       {profiles.length === 0 ? (
         <div className="bg-white border border-line p-12 text-center">
-          <p className="font-sans text-sm text-ink/50">No members in this view.</p>
+          <p className="font-sans text-sm text-ink/50">No accounts in this view.</p>
         </div>
       ) : (
         <div className="bg-white border border-line overflow-hidden">

@@ -112,7 +112,7 @@ export default async function UpgradeRequestsPage({ searchParams }: Props) {
                   Requested
                 </th>
                 <th className="px-4 py-3 text-left font-mono text-[10px] uppercase tracking-widest text-ink/40">
-                  Member
+                  Account
                 </th>
                 <th className="px-4 py-3 text-left font-mono text-[10px] uppercase tracking-widest text-ink/40">
                   Listing
