@@ -15,19 +15,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Password must be at least 6 characters." }, { status: 400 });
     }
 
-    // Look up the agency email to find their auth account
-    const { data: agency } = await supabaseAdmin
-      .from("agencies")
+    // Look up the account email to find their auth login. `id` is an accounts.id
+    // (the admin "All Profiles" list is accounts-driven).
+    const { data: account } = await supabaseAdmin
+      .from("accounts")
       .select("email")
       .eq("id", id)
       .single();
 
-    if (!agency?.email) {
-      return NextResponse.json({ error: "Agency has no email on record." }, { status: 404 });
+    if (!account?.email) {
+      return NextResponse.json({ error: "Account has no email on record." }, { status: 404 });
     }
 
     // Find the auth user by email — paginate so we don't silently miss past page 1.
-    const target = agency.email.toLowerCase();
+    const target = account.email.toLowerCase();
     let authUser: { id: string } | null = null;
     for (let page = 1; page <= 50; page++) {
       const { data, error: listError } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 200 });
@@ -37,7 +38,7 @@ export async function POST(req: Request) {
       if (data.users.length < 200) break;
     }
     if (!authUser) {
-      return NextResponse.json({ error: "No portal account found for this agency's email." }, { status: 404 });
+      return NextResponse.json({ error: "No portal login found for this account's email." }, { status: 404 });
     }
 
     const { error } = await supabaseAdmin.auth.admin.updateUserById(authUser.id, { password });

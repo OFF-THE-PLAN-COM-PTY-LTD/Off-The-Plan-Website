@@ -81,7 +81,15 @@ export async function getListingEditData(
 
   const [developersResult, membersResult, devResult, galleryResult, floorPlanResult, agentsResult] =
     await Promise.all([
-      supabaseAdmin.from("developers").select("id, name").order("name"),
+      // Developer options come from the consolidated `accounts` table but keep
+      // returning the legacy developers.id (accounts.legacy_developer_id) as the
+      // option value, so it stays FK-valid for developments.developer_id and
+      // existing selections still match. resolveAccountId derives account_id.
+      supabaseAdmin
+        .from("accounts")
+        .select("legacy_developer_id, name")
+        .not("legacy_developer_id", "is", null)
+        .order("name"),
       supabaseAdmin
         .from("profiles")
         .select("id, full_name, interest_type")
@@ -157,9 +165,14 @@ export async function getListingEditData(
     photo_url: (a.photo_url as string) ?? "",
   }));
 
+  const developers: EditDeveloperOption[] = (developersResult.data ?? []).map((d) => ({
+    id: d.legacy_developer_id as string,
+    name: (d.name as string) ?? "",
+  }));
+
   return {
     existing: devResult.data ?? null,
-    developers: (developersResult.data ?? []) as EditDeveloperOption[],
+    developers,
     members,
     gallery,
     floorPlans,

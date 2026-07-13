@@ -27,12 +27,12 @@ export default async function PortalProfile() {
   const isDeveloperMember = (profile?.interest_type as string) === "Developer";
   let directoryOptedIn = false;
   if (isDeveloperMember) {
-    const { data: linkedDev } = await supabaseAdmin
-      .from("developers")
+    const { data: linkedAccount } = await supabaseAdmin
+      .from("accounts")
       .select("is_published")
-      .eq("profile_id", user.id)
+      .eq("user_id", user.id)
       .maybeSingle();
-    directoryOptedIn = Boolean(linkedDev?.is_published);
+    directoryOptedIn = Boolean(linkedAccount?.is_published);
   }
 
   return (

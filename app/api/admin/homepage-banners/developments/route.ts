@@ -13,7 +13,7 @@ export async function GET() {
 
   const { data, error } = await supabaseAdmin
     .from("developments")
-    .select("id, name, slug, suburb, state, developer:developers(name)")
+    .select("id, name, slug, suburb, state, developer:accounts!account_id(name)")
     .eq("is_published", true)
     .order("name", { ascending: true });
 

@@ -3,12 +3,13 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { z } from "zod";
 
 /**
- * CRUD for the developers directory. Auth is enforced by the global
- * middleware, which admits admins AND Developer/Agent portal members to
- * /api/admin/*. Unlike most admin routes there is deliberately no
- * in-handler requireAdmin here: portal members keeping access to this
- * route is intentional (product decision, 2026-07-14) — do not "fix"
- * this by adding a guard without checking first.
+ * CRUD for the developers directory, backed by the consolidated `accounts`
+ * table (type='Developer'). Auth is enforced by the global middleware, which
+ * admits admins AND Developer/Agent portal members to /api/admin/*. Unlike
+ * most admin routes there is deliberately no in-handler requireAdmin here:
+ * portal members keeping access to this route is intentional (product
+ * decision, 2026-07-14) — do not "fix" this by adding a guard without
+ * checking first.
  */
 
 const upsertSchema = z.object({
@@ -31,6 +32,20 @@ const upsertSchema = z.object({
   profile_id: z.string().uuid().nullable().optional(),
 });
 
+/**
+ * Map the developer-form payload onto `accounts` columns. The form still speaks
+ * the legacy shape: `suburb` → accounts.city (no dedicated suburb column) and
+ * `profile_id` (the linked login) → accounts.user_id. Only keys present in the
+ * payload are mapped, so PATCH stays a partial update.
+ */
+function toAccountRow(data: Record<string, unknown>): Record<string, unknown> {
+  const { suburb, profile_id, ...rest } = data;
+  const row: Record<string, unknown> = { ...rest };
+  if ("suburb" in data) row.city = suburb ?? null;
+  if ("profile_id" in data) row.user_id = profile_id ?? null;
+  return row;
+}
+
 const patchSchema = upsertSchema.partial().extend({
   id: z.string().uuid(),
 });
@@ -47,8 +62,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid data", issues: parsed.error.flatten() }, { status: 400 });
     }
     const { error, data } = await supabaseAdmin
-      .from("developers")
-      .insert(parsed.data)
+      .from("accounts")
+      .insert({ ...toAccountRow(parsed.data), type: "Developer" })
       .select()
       .single();
     if (error) {
@@ -70,8 +85,8 @@ export async function PATCH(req: Request) {
     }
     const { id, ...updates } = parsed.data;
     const { error, data } = await supabaseAdmin
-      .from("developers")
-      .update(updates)
+      .from("accounts")
+      .update(toAccountRow(updates))
       .eq("id", id)
       .select()
       .single();
@@ -92,10 +107,10 @@ export async function DELETE(req: Request) {
     if (!parsed.success) {
       return NextResponse.json({ error: "Invalid data" }, { status: 400 });
     }
-    // Any developments.developer_id pointing here will be auto-NULLed by the
-    // existing FK behaviour from migration 002.
+    // Deletes the consolidated account row. Any developments.account_id pointing
+    // here is cleared by the account_id FK's ON DELETE SET NULL behaviour.
     const { error } = await supabaseAdmin
-      .from("developers")
+      .from("accounts")
       .delete()
       .eq("id", parsed.data.id);
     if (error) {

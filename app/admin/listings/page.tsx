@@ -10,15 +10,17 @@ export default async function AdminListingsPage({ searchParams }: { searchParams
   const q = searchParams.q?.toLowerCase().trim() ?? "";
   const agencyId = searchParams.agency ?? "";
 
-  // If filtering by agency, look up their label
+  // If filtering by agency, look up their label. `agencyId` is a legacy
+  // agencies.id (developments.agency_id + the dropdown values), resolved
+  // against accounts.legacy_agency_id.
   let agencyLabel = "";
   if (agencyId) {
     const { data: agency } = await supabaseAdmin
-      .from("agencies")
-      .select("name, org_name")
-      .eq("id", agencyId)
+      .from("accounts")
+      .select("name")
+      .eq("legacy_agency_id", agencyId)
       .maybeSingle();
-    agencyLabel = agency?.org_name ?? agency?.name ?? "Agency";
+    agencyLabel = agency?.name ?? "Agency";
   }
 
   let listingsQuery = supabaseAdmin
@@ -33,12 +35,18 @@ export default async function AdminListingsPage({ searchParams }: { searchParams
   const [{ data: allData }, { count: enquiryCount }, { data: agenciesData }] = await Promise.all([
     listingsQuery,
     supabaseAdmin.from("enquiries").select("*", { count: "exact", head: true }),
-    supabaseAdmin.from("agencies").select("id, name, org_name").order("org_name"),
+    // Agency options come from accounts but return the legacy agencies.id
+    // (accounts.legacy_agency_id) so they stay FK-valid for developments.agency_id.
+    supabaseAdmin
+      .from("accounts")
+      .select("legacy_agency_id, name")
+      .not("legacy_agency_id", "is", null)
+      .order("name"),
   ]);
 
   const agencies = (agenciesData ?? []).map((a: any) => ({
-    id: a.id,
-    label: a.org_name || a.name || "—",
+    id: a.legacy_agency_id,
+    label: a.name || "—",
   }));
 
   const all = (allData ?? []) as any[];

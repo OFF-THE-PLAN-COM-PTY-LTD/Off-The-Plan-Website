@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { withMemberOrAdmin } from "@/lib/api/handler";
-import { setAccountPublished } from "@/lib/accounts/sync-account";
 import { z } from "zod";
 
 /**
@@ -55,16 +54,13 @@ export const POST = withMemberOrAdmin(async (req, { auth }) => {
       return NextResponse.json({ error: "Only developer-members can opt in to the directory." }, { status: 403 });
     }
 
-    // Dual-write: reflect the opt-in/out on the member's consolidated account.
-    try { await setAccountPublished(user.id, parsed.data.show); } catch (e) {
-      console.error("account publish sync (non-fatal):", e);
-    }
-
-    // Find existing linked row (if any).
+    // The public /developers directory reads the consolidated `accounts` table
+    // (type='Developer', published). Opt-in/out maps onto the member's account
+    // row (linked by accounts.user_id), refreshing its fields from the profile.
     const { data: existing } = await supabaseAdmin
-      .from("developers")
+      .from("accounts")
       .select("id, slug")
-      .eq("profile_id", user.id)
+      .eq("user_id", user.id)
       .maybeSingle();
 
     const synced = {
@@ -77,10 +73,10 @@ export const POST = withMemberOrAdmin(async (req, { auth }) => {
     };
 
     if (!parsed.data.show) {
-      // Opt-out path. If no row exists, nothing to do.
+      // Opt-out path. If no account exists, nothing to do.
       if (existing) {
         const { error } = await supabaseAdmin
-          .from("developers")
+          .from("accounts")
           .update({ is_published: false })
           .eq("id", existing.id);
         if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -88,11 +84,12 @@ export const POST = withMemberOrAdmin(async (req, { auth }) => {
       return NextResponse.json({ ok: true, optedIn: false });
     }
 
-    // Opt-in path.
+    // Opt-in path. Publishing also ensures the account is classified 'Developer'
+    // (the public read requires type='Developer').
     if (existing) {
       const { error } = await supabaseAdmin
-        .from("developers")
-        .update({ ...synced, is_published: true })
+        .from("accounts")
+        .update({ ...synced, type: "Developer", is_published: true })
         .eq("id", existing.id);
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
       return NextResponse.json({ ok: true, optedIn: true, id: existing.id });
@@ -103,8 +100,8 @@ export const POST = withMemberOrAdmin(async (req, { auth }) => {
     let slug = baseSlug;
     for (let attempt = 0; attempt < 6; attempt++) {
       const { error: insErr, data } = await supabaseAdmin
-        .from("developers")
-        .insert({ ...synced, slug, profile_id: user.id, is_published: true })
+        .from("accounts")
+        .insert({ ...synced, slug, type: "Developer", user_id: user.id, is_published: true })
         .select("id")
         .single();
       if (!insErr) {

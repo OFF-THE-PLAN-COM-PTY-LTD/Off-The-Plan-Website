@@ -34,10 +34,10 @@ export async function POST(req: NextRequest) {
   const origin = resolveOrigin(req);
   const scope = (body as { scope?: unknown })?.scope;
 
-  // ── Bulk: every non-archived agency email on file ─────────────────────
+  // ── Bulk: every non-archived account email on file ────────────────────
   if (scope === "all-members") {
     const { data, error } = await supabaseAdmin
-      .from("agencies")
+      .from("accounts")
       .select("email, archived")
       .not("email", "is", null);
     if (error) {

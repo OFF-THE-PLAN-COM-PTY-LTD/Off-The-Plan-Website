@@ -6,7 +6,7 @@ interface Props { params: { id: string } }
 
 export default async function AdminEditDeveloperPage({ params }: Props) {
   const [{ data: dev }, { data: profilesData }] = await Promise.all([
-    supabaseAdmin.from("developers").select("*").eq("id", params.id).maybeSingle(),
+    supabaseAdmin.from("accounts").select("*").eq("id", params.id).maybeSingle(),
     supabaseAdmin
       .from("profiles")
       .select("id, full_name, business_name, interest_type")
@@ -25,7 +25,7 @@ export default async function AdminEditDeveloperPage({ params }: Props) {
     website: (dev.website as string) ?? "",
     abn: (dev.abn as string) ?? "",
     state: (dev.state as string) ?? "",
-    suburb: (dev.suburb as string) ?? "",
+    suburb: (dev.city as string) ?? "",
     company_email: (dev.company_email as string) ?? "",
     phone: (dev.phone as string) ?? "",
     facebook: (dev.facebook as string) ?? "",
@@ -34,7 +34,7 @@ export default async function AdminEditDeveloperPage({ params }: Props) {
     pinterest: (dev.pinterest as string) ?? "",
     youtube: (dev.youtube as string) ?? "",
     is_published: Boolean(dev.is_published),
-    profile_id: (dev.profile_id as string) ?? null,
+    profile_id: (dev.user_id as string) ?? null,
   };
 
   const profiles: ProfileOption[] = (profilesData ?? []).map((p) => ({
