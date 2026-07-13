@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { getListingEditData } from "@/features/listings/edit-data";
-import { ListingForm } from "./listing-form";
+import { ListingForm } from "@/features/listings/admin-form/listing-form";
 
 // Bypass Next.js's App Router cache for this admin edit page. Without this,
 // navigating away and back within the router-cache TTL (~30s) serves the

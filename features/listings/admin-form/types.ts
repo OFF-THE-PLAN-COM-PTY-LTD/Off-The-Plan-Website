@@ -154,6 +154,19 @@ export interface ListingData {
   mini_stocklist?: MiniStocklistEntry[] | null;
 }
 
+// Props for the ListingForm orchestrator (features/listings/admin-form/
+// listing-form.tsx). Shape unchanged from the original in-app component.
+export interface ListingFormProps {
+  id: string;
+  existing?: ListingData;
+  developers: Developer[];
+  members: Member[];
+  gallery: GalleryImage[];
+  floorPlans: FloorPlan[];
+  agents: Omit<Agent, "isNew" | "saving" | "deleting">[];
+  isPortal?: boolean;
+}
+
 export interface Agent {
   id?: string;
   name: string;

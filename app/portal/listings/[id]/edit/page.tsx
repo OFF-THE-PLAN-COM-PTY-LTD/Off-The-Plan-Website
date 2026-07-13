@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getListingEditData } from "@/features/listings/edit-data";
-import { ListingForm } from "@/app/admin/listings/[id]/listing-form";
+import { ListingForm } from "@/features/listings/admin-form/listing-form";
 
 interface Props { params: { id: string } }
 
