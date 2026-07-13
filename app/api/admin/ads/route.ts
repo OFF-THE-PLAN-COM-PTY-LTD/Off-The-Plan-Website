@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { requireAdmin } from "@/lib/supabase/auth-guards";
+import { withAdmin, withValidation } from "@/lib/api/handler";
 import { z } from "zod";
 
 const schema = z.object({
@@ -21,10 +21,7 @@ function revalidateAll() {
   revalidatePath("/", "layout");
 }
 
-export async function GET() {
-  const auth = await requireAdmin();
-  if ("error" in auth) return auth.error;
-
+export const GET = withAdmin(async () => {
   const { data, error } = await supabaseAdmin
     .from("ads")
     .select("*")
@@ -33,35 +30,32 @@ export async function GET() {
     .order("created_at", { ascending: true });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json(data ?? []);
-}
+});
 
-export async function POST(req: Request) {
+export const POST = withAdmin(
+  withValidation(schema, async (_req, { data: parsed }) => {
+    try {
+      const { id: _id, ...data } = parsed;
+      const { data: row, error } = await supabaseAdmin
+        .from("ads")
+        .insert(data)
+        .select()
+        .single();
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+      revalidateAll();
+      return NextResponse.json(row, { status: 201 });
+    } catch {
+      return NextResponse.json({ error: "Server error" }, { status: 500 });
+    }
+  })
+);
+
+// PATCH keeps its body parsing inline (not withValidation): it checks `id`
+// with a distinct "Missing id" 400 before the partial-schema parse, and
+// rejects empty updates with "No valid fields to update" — responses the
+// generic wrapper can't reproduce.
+export const PATCH = withAdmin(async (req) => {
   try {
-    const auth = await requireAdmin();
-    if ("error" in auth) return auth.error;
-
-    const body = await req.json();
-    const parsed = schema.safeParse(body);
-    if (!parsed.success) return NextResponse.json({ error: "Invalid data" }, { status: 400 });
-    const { id: _id, ...data } = parsed.data;
-    const { data: row, error } = await supabaseAdmin
-      .from("ads")
-      .insert(data)
-      .select()
-      .single();
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    revalidateAll();
-    return NextResponse.json(row, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
-  }
-}
-
-export async function PATCH(req: Request) {
-  try {
-    const auth = await requireAdmin();
-    if ("error" in auth) return auth.error;
-
     const body = await req.json();
     const { id } = body;
     if (!id || typeof id !== "string") {
@@ -85,13 +79,10 @@ export async function PATCH(req: Request) {
   } catch {
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
-}
+});
 
-export async function DELETE(req: Request) {
+export const DELETE = withAdmin(async (req) => {
   try {
-    const auth = await requireAdmin();
-    if ("error" in auth) return auth.error;
-
     const { id } = await req.json();
     if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
     const { error } = await supabaseAdmin.from("ads").delete().eq("id", id);
@@ -101,4 +92,4 @@ export async function DELETE(req: Request) {
   } catch {
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
-}
+});
