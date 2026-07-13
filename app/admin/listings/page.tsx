@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { categorySlug } from "@/lib/listing-url";
 import { ListingRowActions } from "./listing-row-actions";
 
 interface SearchParams { q?: string; agency?: string }
@@ -281,6 +282,7 @@ function ListingSection({ title, listings, agencies }: { title: string; listings
                   <ListingRowActions
                     id={listing.id}
                     slug={listing.slug}
+                    category={categorySlug(listing.type)}
                     isPublished={listing.is_published}
                     isFeatured={listing.is_featured}
                     tier={listing.tier ?? null}

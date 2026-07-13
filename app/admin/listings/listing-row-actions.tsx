@@ -9,6 +9,8 @@ type AgencyOption = { id: string; label: string };
 interface Props {
   id: string;
   slug: string;
+  /** Canonical category slug for the public listing URL (e.g. "apartments"). */
+  category: string;
   isPublished: boolean;
   isFeatured: boolean;
   tier: string | null;
@@ -18,7 +20,7 @@ interface Props {
   agencies: AgencyOption[];
 }
 
-export function ListingRowActions({ id, slug, isPublished, isFeatured, tier, agencyId, orgName, listingName, agencies }: Props) {
+export function ListingRowActions({ id, slug, category, isPublished, isFeatured, tier, agencyId, orgName, listingName, agencies }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [tierValue, setTierValue] = useState(tier ?? "");
@@ -92,7 +94,7 @@ export function ListingRowActions({ id, slug, isPublished, isFeatured, tier, age
             Move
           </button>
           <a
-            href={`/listings/${slug}`}
+            href={`/${category}/${slug}`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex-1 text-center font-mono text-[10px] uppercase tracking-widest px-2 py-1.5 border border-line text-ink hover:border-navy hover:text-navy transition-colors whitespace-nowrap"

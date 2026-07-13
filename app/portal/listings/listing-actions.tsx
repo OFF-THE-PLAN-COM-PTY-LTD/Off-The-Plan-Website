@@ -7,6 +7,8 @@ import { useState } from "react";
 interface Props {
   id: string;
   slug: string;
+  /** Canonical category slug for the public listing URL (e.g. "apartments"). */
+  category: string;
   isPublished: boolean;
   isFeatured: boolean;
   status: string | null;
@@ -15,7 +17,7 @@ interface Props {
   canActivate: boolean;
 }
 
-export function PortalListingActions({ id, slug, isPublished, isFeatured, status, name, canActivate }: Props) {
+export function PortalListingActions({ id, slug, category, isPublished, isFeatured, status, name, canActivate }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [showArchiveModal, setShowArchiveModal] = useState(false);
@@ -48,10 +50,10 @@ export function PortalListingActions({ id, slug, isPublished, isFeatured, status
     <>
       <div className="flex flex-wrap gap-1.5">
         {/* View Listing only makes sense once the listing is publicly reachable —
-            drafts return 404 at /listings/<slug>, so the button was misleading. */}
+            drafts return 404 at /<category>/<slug>, so the button was misleading. */}
         {isPublished && (
           <a
-            href={`/listings/${slug}`}
+            href={`/${category}/${slug}`}
             target="_blank"
             rel="noopener noreferrer"
             className="font-mono text-[9px] uppercase tracking-widest px-2.5 py-1.5 border border-line text-ink/60 hover:border-navy hover:text-navy transition-colors whitespace-nowrap"

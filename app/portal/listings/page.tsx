@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { categorySlug } from "@/lib/listing-url";
 import { PortalListingActions } from "./listing-actions";
 
 interface SearchParams { q?: string }
@@ -216,6 +217,7 @@ function ListingSection({ title, listings }: { title: string; listings: any[] })
                   <PortalListingActions
                     id={l.id}
                     slug={l.slug}
+                    category={categorySlug(l.type)}
                     isPublished={l.is_published}
                     isFeatured={l.is_featured}
                     status={l.status ?? null}
