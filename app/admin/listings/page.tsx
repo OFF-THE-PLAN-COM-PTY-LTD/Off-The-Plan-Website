@@ -10,17 +10,22 @@ export default async function AdminListingsPage({ searchParams }: { searchParams
   const q = searchParams.q?.toLowerCase().trim() ?? "";
   const agencyId = searchParams.agency ?? "";
 
-  // If filtering by agency, look up their label. `agencyId` is a legacy
-  // agencies.id (developments.agency_id + the dropdown values), resolved
-  // against accounts.legacy_agency_id.
+  // If filtering by company, resolve the account by id — the "View Listings"
+  // link passes accounts.id. We also grab its legacy ids so we can match
+  // listings linked either as the developer (account_id / legacy developer_id)
+  // or as the selling agent (legacy agency_id).
   let agencyLabel = "";
+  let acctLegacyAgencyId: string | null = null;
+  let acctLegacyDeveloperId: string | null = null;
   if (agencyId) {
-    const { data: agency } = await supabaseAdmin
+    const { data: acct } = await supabaseAdmin
       .from("accounts")
-      .select("name")
-      .eq("legacy_agency_id", agencyId)
+      .select("name, legacy_agency_id, legacy_developer_id")
+      .eq("id", agencyId)
       .maybeSingle();
-    agencyLabel = agency?.name ?? "Agency";
+    agencyLabel = acct?.name ?? "Agency";
+    acctLegacyAgencyId = (acct?.legacy_agency_id as string | null) ?? null;
+    acctLegacyDeveloperId = (acct?.legacy_developer_id as string | null) ?? null;
   }
 
   let listingsQuery = supabaseAdmin
@@ -29,7 +34,12 @@ export default async function AdminListingsPage({ searchParams }: { searchParams
     .order("name");
 
   if (agencyId) {
-    listingsQuery = listingsQuery.eq("agency_id", agencyId);
+    // Match the company across every link type: developer (account_id or the
+    // legacy developer_id) and selling agent (legacy agency_id).
+    const ors = [`account_id.eq.${agencyId}`];
+    if (acctLegacyAgencyId) ors.push(`agency_id.eq.${acctLegacyAgencyId}`);
+    if (acctLegacyDeveloperId) ors.push(`developer_id.eq.${acctLegacyDeveloperId}`);
+    listingsQuery = listingsQuery.or(ors.join(","));
   }
 
   const [{ data: allData }, { count: enquiryCount }, { data: agenciesData }] = await Promise.all([
