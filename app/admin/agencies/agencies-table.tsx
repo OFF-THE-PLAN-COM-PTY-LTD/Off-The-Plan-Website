@@ -23,6 +23,9 @@ type Agency = {
   // auth user) live in Active/Inactive; the bulk set-password endpoint
   // creates a login for them on the fly on send.
   is_archived?: boolean;
+  // accounts.is_published — public /developers directory visibility. Only
+  // meaningful for Developer-type profiles (the Publish/Hide toggle).
+  is_published?: boolean;
 };
 
 type EmailFilter = "all" | "verified" | "unverified";
@@ -72,10 +75,25 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
   );
   const [savingInterestId, setSavingInterestId] = useState<string | null>(null);
 
+  // Per-row publish state (accounts.is_published) — drives the Developer-only
+  // Publish/Hide toggle. Optimistic like the role dropdown.
+  const [publishById, setPublishById] = useState<Record<string, boolean>>(
+    () => Object.fromEntries(agencies.map((a) => [a.id, a.is_published === true])),
+  );
+  const [savingPublishId, setSavingPublishId] = useState<string | null>(null);
+
   async function handleInterestChange(agencyId: string, newValue: string) {
     const prev = interestByAgency[agencyId] ?? null;
     const next = newValue === "" ? null : newValue;
     setInterestByAgency((m) => ({ ...m, [agencyId]: next }));
+    // Selecting Developer derives directory visibility on the server (an
+    // active, non-archived Developer becomes published). Mirror that here so
+    // the Publish/Hide toggle reflects the new state without a page refresh.
+    if (next === "Developer") {
+      const row = agencies.find((x) => x.id === agencyId);
+      const derivedPublished = row?.portal_status === "active" && !(row?.is_archived ?? row?.archived);
+      setPublishById((m) => ({ ...m, [agencyId]: derivedPublished }));
+    }
     setSavingInterestId(agencyId);
     try {
       const res = await fetch("/api/admin/agencies/interest-type", {
@@ -93,6 +111,29 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
       alert("Network error — role not saved.");
     } finally {
       setSavingInterestId(null);
+    }
+  }
+
+  async function handlePublishToggle(agencyId: string, next: boolean) {
+    const prev = publishById[agencyId] ?? false;
+    setPublishById((m) => ({ ...m, [agencyId]: next }));
+    setSavingPublishId(agencyId);
+    try {
+      const res = await fetch("/api/admin/agencies", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: agencyId, is_published: next }),
+      });
+      if (!res.ok) {
+        const { error } = await res.json().catch(() => ({ error: "Failed to save" }));
+        setPublishById((m) => ({ ...m, [agencyId]: prev }));
+        alert(error || "Failed to update directory visibility.");
+      }
+    } catch {
+      setPublishById((m) => ({ ...m, [agencyId]: prev }));
+      alert("Network error — visibility not saved.");
+    } finally {
+      setSavingPublishId(null);
     }
   }
 
@@ -509,6 +550,44 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
                   </select>
                   {savingInterestId === a.id && (
                     <p className="mt-1 font-mono text-[9px] uppercase tracking-widest text-ink/40">Saving…</p>
+                  )}
+                  {/* Developer-only directory Publish/Hide toggle. Mirrors the
+                      old developers table — an active, non-archived Developer
+                      shows on /developers only when published. */}
+                  {(interestByAgency[a.id] ?? "") === "Developer" && (
+                    <div className="mt-2 flex flex-col items-center gap-0.5">
+                      <div className="inline-flex border border-line">
+                        <button
+                          type="button"
+                          onClick={() => { if (!(publishById[a.id] ?? false)) handlePublishToggle(a.id, true); }}
+                          disabled={savingPublishId === a.id || (publishById[a.id] ?? false)}
+                          aria-pressed={publishById[a.id] ?? false}
+                          className={`font-mono text-[9px] uppercase tracking-widest px-2 py-1 transition-colors ${
+                            publishById[a.id]
+                              ? "bg-green-500 text-white cursor-default"
+                              : "bg-white text-ink/60 hover:bg-green-50 hover:text-green-700"
+                          }`}
+                        >
+                          Publish
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { if (publishById[a.id] ?? false) handlePublishToggle(a.id, false); }}
+                          disabled={savingPublishId === a.id || !(publishById[a.id] ?? false)}
+                          aria-pressed={!(publishById[a.id] ?? false)}
+                          className={`font-mono text-[9px] uppercase tracking-widest px-2 py-1 border-l border-line transition-colors ${
+                            !(publishById[a.id] ?? false)
+                              ? "bg-ink/70 text-white cursor-default"
+                              : "bg-white text-ink/60 hover:bg-cream/60 hover:text-ink"
+                          }`}
+                        >
+                          Hide
+                        </button>
+                      </div>
+                      <span className="font-mono text-[8px] uppercase tracking-widest text-ink/30">
+                        {savingPublishId === a.id ? "Saving…" : "Directory"}
+                      </span>
+                    </div>
                   )}
                 </td>
                 <td className="px-4 py-4 text-center font-sans text-sm text-ink/60">
