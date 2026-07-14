@@ -22,7 +22,7 @@ export default async function AdminAgenciesPage({ searchParams }: Props) {
 
   const { data: accounts } = await supabaseAdmin
     .from("accounts")
-    .select("id, name, first_name, last_name, email, phone, total_active_listings, email_verified, portal_status, archived, type")
+    .select("id, name, first_name, last_name, email, phone, total_active_listings, email_verified, portal_status, archived, type, is_published")
     .order("name", { ascending: true });
 
   const enrichedAll = (accounts ?? []).map((a) => ({
@@ -38,6 +38,7 @@ export default async function AdminAgenciesPage({ searchParams }: Props) {
     interest_type: (a.type as string) ?? null,
     archived: a.archived === true,
     is_archived: a.archived === true,
+    is_published: a.is_published === true,
   }));
 
   // Archived is exclusive: an archived row does NOT show under Active/Inactive/All.

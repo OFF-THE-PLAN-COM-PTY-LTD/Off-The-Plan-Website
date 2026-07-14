@@ -117,9 +117,12 @@ export async function PATCH(req: Request) {
       }
     }
 
-    // Re-derive directory visibility when status/archive changes (active,
-    // non-archived Developer shows; anything else is hidden).
-    if ("portal_status" in fields || "archived" in fields) {
+    // Directory visibility. An explicit is_published from the admin's Developer
+    // Publish/Hide toggle wins; otherwise re-derive it when status/archive change
+    // (an active, non-archived Developer shows; anything else is hidden).
+    if (typeof fields.is_published === "boolean") {
+      update.is_published = fields.is_published;
+    } else if ("portal_status" in fields || "archived" in fields) {
       const nextPortal = "portal_status" in fields ? fields.portal_status : current.portal_status;
       const nextArchived = "archived" in fields ? fields.archived === true : current.archived === true;
       update.is_published = current.type === "Developer" && nextPortal === "active" && !nextArchived;
