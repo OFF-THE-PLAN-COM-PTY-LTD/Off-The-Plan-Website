@@ -5,6 +5,12 @@ const config: Config = {
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    // Feature-owned components live here after the Phase 3 restructure. Without
+    // this glob Tailwind never scans them, so any utility used *only* inside
+    // features/ (e.g. the hero carousel's h-[65vh]) is silently dropped from
+    // the build — which collapsed the listing hero and pushed content under
+    // the fixed nav.
+    "./features/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
     extend: {
