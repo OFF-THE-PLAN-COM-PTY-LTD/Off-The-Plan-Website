@@ -1,5 +1,6 @@
 import {
   DEVELOPMENT_CARD_SELECT,
+  DEVELOPMENT_GRID_SELECT,
   DEVELOPMENT_DETAIL_SELECT,
   DEVELOPMENT_HERO_SELECT,
   DEVELOPMENT_META_SELECT,
@@ -13,6 +14,17 @@ describe("development select constants", () => {
     expect(DEVELOPMENT_CARD_SELECT).toBe(
       "*, developer:accounts!account_id(*), images:development_images(*), floor_plans:development_floor_plans(*)",
     );
+  });
+
+  it("grid select stays slim (no description_html / full embeds)", () => {
+    expect(DEVELOPMENT_GRID_SELECT).toBe(
+      "id, slug, name, suburb, state, price_from, price_display, beds_min, beds_max, completion_quarter, type, tag, tier, status, is_featured, summary, hero_image_url, developer:accounts!account_id(name, logo_url), images:development_images(url, is_hero), floor_plans:development_floor_plans(*)",
+    );
+    // Guard the whole point of the slim select: the heavy scraped-HTML column
+    // and full nested embeds must never sneak back into the grid payload.
+    expect(DEVELOPMENT_GRID_SELECT).not.toContain("description_html");
+    expect(DEVELOPMENT_GRID_SELECT).not.toContain("accounts!account_id(*)");
+    expect(DEVELOPMENT_GRID_SELECT.startsWith("*")).toBe(false);
   });
 
   it("detail select is the card select plus listing agents", () => {

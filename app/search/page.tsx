@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { PropertyCard } from "@/components/property-card";
 import { AdSlot } from "@/components/ad-slot";
+import { LazyGrid } from "./lazy-grid";
 import { supabase } from "@/lib/supabase/public";
 import { publishedDevelopmentCards } from "@/features/listings/queries";
 import { CATEGORY_TO_SLUG, categorySlug } from "@/lib/listing-url";
@@ -255,29 +256,37 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         </p>
 
         {results.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-            {(() => {
-              // Banner is admin-driven via Admin > Ads Management (page:
-              // "listings", position: "middle"). AdSlot returns null when no
-              // active ad is configured, so the grid simply gains/loses one
-              // tile depending on whether an ad is set — no broken layout.
-              const banner = (
-                <div key="otp-banner-slot" className="flex items-center justify-center">
-                  <AdSlot page="listings" position="middle" />
-                </div>
-              );
-              const cards: React.ReactNode[] = results.map((dev) => (
-                <PropertyCard key={dev.id} development={dev} layout="tall" imageHeight="aspect-[2/1]" />
-              ));
-              // Tim (PDF p.4): "This banner needs to be pos. 4 / Currently pos.9".
-              // Insert at index 3 so the banner is the 4th tile in the grid.
-              // If there are fewer than 4 results, append at the end so it
-              // still shows.
-              const insertAt = Math.min(3, cards.length);
-              cards.splice(insertAt, 0, banner);
-              return cards;
-            })()}
-          </div>
+          (() => {
+            // Banner is admin-driven via Admin > Ads Management (page:
+            // "listings", position: "middle"). AdSlot returns null when no
+            // active ad is configured, so the grid simply gains/loses one
+            // tile depending on whether an ad is set — no broken layout.
+            const banner = (
+              <div key="otp-banner-slot" className="flex items-center justify-center">
+                <AdSlot page="listings" position="middle" />
+              </div>
+            );
+            const cards: React.ReactNode[] = results.map((dev) => (
+              <PropertyCard key={dev.id} development={dev} layout="tall" imageHeight="aspect-[2/1]" />
+            ));
+            // Tim (PDF p.4): "This banner needs to be pos. 4 / Currently pos.9".
+            // Insert at index 3 so the banner is the 4th tile in the grid.
+            // If there are fewer than 4 results, append at the end so it
+            // still shows.
+            const insertAt = Math.min(3, cards.length);
+            cards.splice(insertAt, 0, banner);
+            // Reveal cards in batches as the user scrolls — mounting all ~88 at
+            // once made opening a preview feel slow (see LazyGrid). Key by the
+            // active filters so each new result set starts fresh at the first
+            // batch instead of inheriting the previous view's scroll depth.
+            return (
+              <LazyGrid
+                key={JSON.stringify(searchParams)}
+                items={cards}
+                className="grid grid-cols-1 md:grid-cols-2 gap-10"
+              />
+            );
+          })()
         ) : (
           <div className="text-center py-20">
             <p className="font-display text-section-lg font-light text-navy/30 mb-4">No results</p>
