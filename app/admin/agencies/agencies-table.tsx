@@ -29,7 +29,9 @@ type Agency = {
 };
 
 type EmailFilter = "all" | "verified" | "unverified";
-type TypeFilter = "all" | "Developer" | "Agent";
+// "empty" surfaces accounts that don't have an interest_type set yet
+// (legacy/imported rows), so an admin can find and assign them a role.
+type TypeFilter = "all" | "Developer" | "Agent" | "empty";
 
 /**
  * Tim's proposed migration password format (May 29 reply):
@@ -316,7 +318,10 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
     // Developers filter is on, row disappears without a page reload).
     const currentInterest = interestByAgency[a.id] ?? null;
     const matchesType =
-      typeFilter === "all" || (currentInterest ?? "") === typeFilter;
+      typeFilter === "all" ||
+      (typeFilter === "empty"
+        ? !currentInterest
+        : currentInterest === typeFilter);
     return matchesSearch && matchesEmail && matchesType;
   });
 
@@ -452,6 +457,7 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
                 <option value="all">All</option>
                 <option value="Developer">Developers</option>
                 <option value="Agent">Agencies</option>
+                <option value="empty">Empty</option>
               </select>
             </div>
           </>

@@ -11,6 +11,18 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 export const DEVELOPMENT_CARD_SELECT =
   "*, developer:accounts!account_id(*), images:development_images(*), floor_plans:development_floor_plans(*)";
 
+// Slim select for card GRIDS (search results, homepage tiers, developer
+// listings). PropertyCard only ever reads a handful of columns, a hero image,
+// and the per-category floor-plan rows — it never renders description_html,
+// mini_stocklist, lifestyle, agent contact fields, etc. Fetching `*` + full
+// nested embeds shipped ~550KB (mostly scraped description HTML) for a search
+// page rendering up to 500 rows, which made navigating to /search feel like
+// the click did nothing. This lists only the columns the card actually uses
+// so the grid payload stays small. Detail pages keep DEVELOPMENT_CARD_SELECT.
+// (Called out in docs/codebase-analysis.md.)
+export const DEVELOPMENT_GRID_SELECT =
+  "id, slug, name, suburb, state, price_from, price_display, beds_min, beds_max, completion_quarter, type, tag, tier, status, is_featured, summary, hero_image_url, developer:accounts!account_id(name, logo_url), images:development_images(url, is_hero), floor_plans:development_floor_plans(*)";
+
 export const DEVELOPMENT_DETAIL_SELECT =
   `${DEVELOPMENT_CARD_SELECT}, listing_agents:listing_agents(name, email, mobile, photo_url, sort_order)`;
 
@@ -27,7 +39,7 @@ export const DEVELOPMENT_META_SELECT =
 export function publishedDevelopmentCards(client: SupabaseClient) {
   return client
     .from("developments")
-    .select(DEVELOPMENT_CARD_SELECT)
+    .select(DEVELOPMENT_GRID_SELECT)
     .eq("is_published", true);
 }
 
