@@ -132,13 +132,12 @@ export default function AgencyProfileForm({ agency }: { agency: Agency }) {
     }
   }
 
-  // Hidden file inputs for the three image slots.
+  // Hidden file inputs for the two image slots (profile pic + the single logo).
   const profilePicRef = useRef<HTMLInputElement>(null);
   const orgLogoRef = useRef<HTMLInputElement>(null);
-  const devLogoRef = useRef<HTMLInputElement>(null);
   const [uploadingField, setUploadingField] = useState<string | null>(null);
 
-  async function uploadImage(field: "profile_pic" | "org_logo_url" | "dev_logo_url", file: File) {
+  async function uploadImage(field: "profile_pic" | "org_logo_url", file: File) {
     setUploadingField(field);
     try {
       const fd = new FormData();
@@ -324,68 +323,44 @@ export default function AgencyProfileForm({ agency }: { agency: Agency }) {
         </div>
       </div>
 
-      {/* Logos */}
+      {/* Logo — a single slot. The consolidated `accounts` table has one
+          logo column (logo_url); the old two-slot layout ("Company" and
+          "Developer") both wrote to that same column, so the boxes were
+          duplicates that overwrote each other. One slot now, one source of truth. */}
       <div className="bg-white border border-line mb-4">
         <div className="px-5 py-3 border-b border-line">
-          <h2 className="font-sans text-xs font-semibold uppercase tracking-widest text-ink">Logos</h2>
+          <h2 className="font-sans text-xs font-semibold uppercase tracking-widest text-ink">Logo</h2>
         </div>
-        <div className="grid grid-cols-2 divide-x divide-line">
-          <div className="p-5 text-center">
-            <p className="font-sans text-xs font-semibold uppercase tracking-widest text-ink mb-3">Your Company Logo</p>
-            {agency.org_logo_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={agency.org_logo_url} alt="Company logo" className="mx-auto max-h-24 max-w-full object-contain mb-3" />
-            ) : (
-              <div className="h-24 flex items-center justify-center text-ink/25 text-sm font-sans italic mb-3">No logo uploaded</div>
-            )}
-            <input
-              ref={orgLogoRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              className="hidden"
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) uploadImage("org_logo_url", f);
-                e.target.value = "";
-              }}
-            />
-            <button
-              type="button"
-              onClick={() => orgLogoRef.current?.click()}
-              disabled={uploadingField === "org_logo_url"}
-              className="font-sans text-xs font-semibold px-4 py-1.5 border border-black bg-white hover:bg-cream-alt transition-colors uppercase tracking-wide disabled:opacity-50"
-            >
-              {uploadingField === "org_logo_url" ? "Uploading…" : "Upload Logo"}
-            </button>
-          </div>
-          <div className="p-5 text-center">
-            <p className="font-sans text-xs font-semibold uppercase tracking-widest text-ink mb-3">Developer Logo</p>
-            {agency.dev_logo_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={agency.dev_logo_url} alt="Developer logo" className="mx-auto max-h-24 max-w-full object-contain mb-3" />
-            ) : (
-              <div className="h-24 flex items-center justify-center text-ink/25 text-sm font-sans italic mb-3">No logo uploaded</div>
-            )}
-            <input
-              ref={devLogoRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              className="hidden"
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) uploadImage("dev_logo_url", f);
-                e.target.value = "";
-              }}
-            />
-            <button
-              type="button"
-              onClick={() => devLogoRef.current?.click()}
-              disabled={uploadingField === "dev_logo_url"}
-              className="font-sans text-xs font-semibold px-4 py-1.5 border border-black bg-white hover:bg-cream-alt transition-colors uppercase tracking-wide disabled:opacity-50"
-            >
-              {uploadingField === "dev_logo_url" ? "Uploading…" : "Upload Logo"}
-            </button>
-          </div>
+        <div className="p-5 text-center">
+          <p className="font-sans text-xs font-semibold uppercase tracking-widest text-ink mb-3">Company Logo</p>
+          {agency.org_logo_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={agency.org_logo_url} alt="Company logo" className="mx-auto max-h-24 max-w-full object-contain mb-3" />
+          ) : (
+            <div className="h-24 flex items-center justify-center text-ink/25 text-sm font-sans italic mb-3">No logo uploaded</div>
+          )}
+          <input
+            ref={orgLogoRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) uploadImage("org_logo_url", f);
+              e.target.value = "";
+            }}
+          />
+          <button
+            type="button"
+            onClick={() => orgLogoRef.current?.click()}
+            disabled={uploadingField === "org_logo_url"}
+            className="font-sans text-xs font-semibold px-4 py-1.5 border border-black bg-white hover:bg-cream-alt transition-colors uppercase tracking-wide disabled:opacity-50"
+          >
+            {uploadingField === "org_logo_url" ? "Uploading…" : "Upload Logo"}
+          </button>
+          <p className="font-sans text-xs text-ink/40 mt-3 max-w-sm mx-auto">
+            Shown on the public developers directory and the developer&apos;s profile page.
+          </p>
         </div>
       </div>
 

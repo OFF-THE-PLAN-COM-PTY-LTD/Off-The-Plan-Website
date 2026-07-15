@@ -44,9 +44,8 @@ export default async function AgencyProfilePage({ params }: { params: { id: stri
     youtube_url: account.youtube,
     website_url: account.website,
     profile_pic: account.avatar_url,
-    // accounts consolidates both logo slots into a single logo_url column.
+    // accounts has a single logo_url column; the form exposes one logo slot.
     org_logo_url: account.logo_url,
-    dev_logo_url: account.logo_url,
   };
 
   return (

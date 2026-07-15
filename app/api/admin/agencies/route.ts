@@ -88,7 +88,7 @@ export async function PATCH(req: Request) {
       org_country: "country", org_state: "state", org_city: "city", org_postcode: "postcode",
       facebook_url: "facebook", twitter_url: "twitter", instagram_url: "instagram",
       linkedin_url: "linkedin", pinterest_url: "pinterest", youtube_url: "youtube", website_url: "website",
-      profile_pic: "avatar_url", org_logo_url: "logo_url", dev_logo_url: "logo_url",
+      profile_pic: "avatar_url", org_logo_url: "logo_url",
     };
 
     const update: Record<string, unknown> = { updated_at: new Date().toISOString() };
