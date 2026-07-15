@@ -7,6 +7,7 @@ import { ArticleShareRail } from "@/features/journal/components/article-share-ra
 import { ChevronLeftIcon, ChevronRightIcon } from "@/components/icons";
 import { supabase } from "@/lib/supabase/public";
 import { formatDate } from "@/lib/utils";
+import { sanitizeHtml } from "@/lib/sanitize-html";
 import type { JournalArticle } from "@/types/journal";
 
 interface Props { params: { slug: string } }
@@ -28,7 +29,7 @@ function escape(s: string): string {
 function bodyToHtml(raw: string | null | undefined): string {
   if (!raw) return "";
   const looksLikeHtml = /<(p|div|h[1-6]|ul|ol|li|br|blockquote|img|a)\b/i.test(raw);
-  if (looksLikeHtml) return raw;
+  if (looksLikeHtml) return sanitizeHtml(raw);
   // Plain text — split on blank lines, then linebreaks inside each block
   // become <br> so deliberate line breaks survive without inventing
   // paragraphs.

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { sanitizeHtml } from "@/lib/sanitize-html";
 
 interface ListingDescriptionProps {
   html: string;
@@ -13,12 +14,16 @@ interface ListingDescriptionProps {
  * each double-newline-separated paragraph in <p> tags.
  */
 function prepareHtml(raw: string): string {
-  if (/<(p|div|br|ul|ol|h[1-6])\b/i.test(raw)) return raw;
-  return raw
-    .split(/\n{2,}/)
-    .map((block) => `<p>${block.replace(/\n/g, "<br>")}</p>`)
-    .filter((p) => p !== "<p></p>")
-    .join("");
+  const html = /<(p|div|br|ul|ol|h[1-6])\b/i.test(raw)
+    ? raw
+    : raw
+        .split(/\n{2,}/)
+        .map((block) => `<p>${block.replace(/\n/g, "<br>")}</p>`)
+        .filter((p) => p !== "<p></p>")
+        .join("");
+  // The listing description is member-writable rich text rendered to the
+  // public via dangerouslySetInnerHTML — sanitize to prevent stored XSS.
+  return sanitizeHtml(html);
 }
 
 /**

@@ -1,4 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
+import type { CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -27,6 +28,20 @@ function defaultLandingFor(profile: { is_admin?: boolean | null; interest_type?:
 /** Profile member_status values that should block sign-in. Admins bypass
  *  this gate since `is_admin = true` is granted explicitly. */
 const SIGN_IN_BLOCKED_STATUSES = new Set(["pending", "rejected"]);
+
+/** interest_type values that make an account a portal *member* (Developer/
+ *  Agent). The pending/rejected approval gate only applies to members —
+ *  buyers (Buyer/Owner/Investor/null) are never subject to admin approval,
+ *  yet their profiles inherit the column default member_status='pending',
+ *  so gating everyone would permanently lock buyers out of their own
+ *  /saved and /account pages. */
+const MEMBER_INTEREST_TYPES = new Set(["Developer", "Agent"]);
+
+type ProfileRow = {
+  is_admin: boolean | null;
+  interest_type: string | null;
+  member_status: string | null;
+};
 
 export async function POST(request: Request) {
   const formData = await request.formData();
@@ -65,7 +80,7 @@ export async function POST(request: Request) {
     {
       cookies: {
         getAll() { return cookieStore.getAll(); },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
           cookiesToSet.forEach(({ name, value, options }) => {
             response.cookies.set(name, value, options);
           });
@@ -75,26 +90,41 @@ export async function POST(request: Request) {
   );
 
   const { data: signInData, error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) return NextResponse.redirect(errorUrl);
+  if (error) {
+    // Distinguish "email not confirmed" from bad credentials so a just-
+    // registered user isn't told their password is wrong (they'd retype it
+    // forever instead of checking their inbox).
+    const code = (error as { code?: string }).code;
+    const notConfirmed =
+      code === "email_not_confirmed" || /email not confirmed/i.test(error.message);
+    if (notConfirmed) {
+      return NextResponse.redirect(new URL("/login?error=unconfirmed", request.url));
+    }
+    return NextResponse.redirect(errorUrl);
+  }
 
   // Look up the profile up-front: we need is_admin + interest_type for
   // smart-routing AND member_status to gate pending/rejected accounts.
   const userId = signInData.user?.id;
-  let profile: { is_admin: boolean | null; interest_type: string | null; member_status: string | null } | null = null;
+  let profile: ProfileRow | null = null;
   if (userId) {
     const { data } = await supabase
       .from("profiles")
       .select("is_admin, interest_type, member_status")
       .eq("id", userId)
       .maybeSingle();
-    profile = data as typeof profile;
+    profile = (data as unknown as ProfileRow | null) ?? null;
   }
 
-  // Gate: pending or rejected accounts cannot sign in. Admins bypass this
-  // since they're granted access explicitly. We sign the user back out
-  // before redirecting so the cookies don't carry a half-authenticated state.
+  // Gate: pending or rejected *members* cannot sign in. Admins bypass this
+  // (granted explicitly), and so do buyers — the approval workflow only
+  // governs Developer/Agent portal members, but buyer profiles also default
+  // to member_status='pending', so gating on status alone would lock every
+  // buyer out. We sign the user back out before redirecting so the cookies
+  // don't carry a half-authenticated state.
   const status = (profile?.member_status ?? "").toLowerCase();
-  if (!profile?.is_admin && SIGN_IN_BLOCKED_STATUSES.has(status)) {
+  const isMember = MEMBER_INTEREST_TYPES.has(profile?.interest_type ?? "");
+  if (!profile?.is_admin && isMember && SIGN_IN_BLOCKED_STATUSES.has(status)) {
     await supabase.auth.signOut();
     const blockedUrl = new URL("/login", request.url);
     blockedUrl.searchParams.set("error", status); // "pending" or "rejected"

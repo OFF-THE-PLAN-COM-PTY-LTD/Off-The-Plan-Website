@@ -13,6 +13,10 @@ export default function LoginPage({ searchParams }: { searchParams: { redirect?:
         return "Your account is awaiting admin approval. We'll email you once approved.";
       case "rejected":
         return "Account access has been declined. Please contact us if you believe this is in error.";
+      case "unconfirmed":
+        return "Please confirm your email first — check your inbox for the confirmation link.";
+      case "confirmation":
+        return "Your confirmation link was invalid or has expired. Try signing in, or request a new link.";
       case "invalid":
       default:
         return "Incorrect email or password.";

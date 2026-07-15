@@ -51,19 +51,18 @@ export async function POST(req: NextRequest) {
   const projectId = object.metadata?.project_id;
 
   if (projectId) {
+    let update: Record<string, unknown> | null = null;
+
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
       // Payment succeeded → record the subscription and take the listing live.
-      await supabaseAdmin
-        .from("developments")
-        .update({
-          subscription_status: "active",
-          stripe_subscription_id:
-            typeof session.subscription === "string" ? session.subscription : null,
-          stripe_customer_id: typeof session.customer === "string" ? session.customer : null,
-          is_published: true,
-        })
-        .eq("id", projectId);
+      update = {
+        subscription_status: "active",
+        stripe_subscription_id:
+          typeof session.subscription === "string" ? session.subscription : null,
+        stripe_customer_id: typeof session.customer === "string" ? session.customer : null,
+        is_published: true,
+      };
     } else if (
       event.type === "customer.subscription.created" ||
       event.type === "customer.subscription.updated" ||
@@ -71,7 +70,7 @@ export async function POST(req: NextRequest) {
     ) {
       const sub = event.data.object as Stripe.Subscription;
       const periodEnd = (sub as unknown as { current_period_end?: number }).current_period_end;
-      const update: Record<string, unknown> = {
+      update = {
         subscription_status: sub.status,
         stripe_subscription_id: sub.id,
         stripe_customer_id: typeof sub.customer === "string" ? sub.customer : null,
@@ -91,7 +90,19 @@ export async function POST(req: NextRequest) {
       } else if (event.type === "customer.subscription.created" && sub.status === "active") {
         update.is_published = true;
       }
-      await supabaseAdmin.from("developments").update(update).eq("id", projectId);
+    }
+
+    if (update) {
+      const { error } = await supabaseAdmin
+        .from("developments")
+        .update(update)
+        .eq("id", projectId);
+      // Return 5xx so Stripe retries — otherwise a paid checkout could
+      // silently fail to publish the listing with no second delivery.
+      if (error) {
+        console.error("Stripe webhook DB update failed:", error, { projectId, type: event.type });
+        return NextResponse.json({ error: "Failed to persist subscription state" }, { status: 500 });
+      }
     }
   }
 

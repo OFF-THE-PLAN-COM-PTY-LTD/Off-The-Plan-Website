@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getStripe, PRICE_BY_TIER, isCheckoutTier, PLATFORM_TAG } from "@/lib/stripe/server";
 import { createClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 
 // Shape check over the query params this route reads. searchParams.get()
 // only ever yields string | null, so this cannot reject a request — it just
@@ -71,6 +72,33 @@ export async function GET(req: NextRequest) {
     userId = user?.id;
   } catch {
     // no session — continue as an anonymous checkout
+  }
+
+  // If a specific listing is being paid for, the webhook will force-publish
+  // that development and attach this subscription to it. Verify the caller
+  // actually owns the listing first — otherwise anyone could pay to publish
+  // (or, on cancel, unpublish) someone else's listing.
+  if (projectId) {
+    if (!userId) {
+      return NextResponse.json(
+        { error: "You must be signed in to pay for a specific listing." },
+        { status: 401 },
+      );
+    }
+    const { data: dev } = await supabaseAdmin
+      .from("developments")
+      .select("owner_user_id")
+      .eq("id", projectId)
+      .maybeSingle();
+    if (!dev) {
+      return NextResponse.json({ error: "Listing not found." }, { status: 404 });
+    }
+    if ((dev.owner_user_id as string | null) !== userId) {
+      return NextResponse.json(
+        { error: "You do not have permission to pay for this listing." },
+        { status: 403 },
+      );
+    }
   }
 
   const metadata: Record<string, string> = { platform: PLATFORM_TAG, tier };

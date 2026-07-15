@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { syncAccountFromProfile } from "@/lib/accounts/sync-account";
 
 export async function POST(request: Request) {
   const supabase = createClient();
@@ -54,6 +55,16 @@ export async function POST(request: Request) {
     .eq("id", user.id);
 
   if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 });
+
+  // Mirror the new logo onto the linked `accounts` row so the public
+  // directory and property-card developer lockup update immediately.
+  // Non-fatal, same pattern as /api/portal/profile — the profile save
+  // already succeeded, so a sync failure must not fail the upload.
+  try {
+    await syncAccountFromProfile(user.id);
+  } catch (err) {
+    console.error("Account sync after logo upload failed (non-fatal):", err);
+  }
 
   return NextResponse.json({ url: publicUrl });
 }

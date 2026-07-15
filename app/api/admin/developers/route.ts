@@ -1,16 +1,45 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { requireMemberOrAdmin } from "@/lib/supabase/auth-guards";
 import { z } from "zod";
 
 /**
  * CRUD for the developers directory, backed by the consolidated `accounts`
- * table (type='Developer'). Auth is enforced by the global middleware, which
- * admits admins AND Developer/Agent portal members to /api/admin/*. Unlike
- * most admin routes there is deliberately no in-handler requireAdmin here:
- * portal members keeping access to this route is intentional (product
- * decision, 2026-07-14) — do not "fix" this by adding a guard without
- * checking first.
+ * table (type='Developer'). Portal members keeping access to this route is
+ * intentional (product decision, 2026-07-14) — so we authenticate with
+ * requireMemberOrAdmin rather than requireAdmin.
+ *
+ * BUT authentication is not authorization: a member may reach the route, yet
+ * must only touch their OWN linked account (accounts.user_id === their user
+ * id). Admins retain full CRUD over every developer record. Without this
+ * per-object scoping any member could PATCH/DELETE any developer's directory
+ * entry by supplying its id (BOLA). Non-admins are pinned to self via
+ * requireOwnAccount below.
  */
+
+/**
+ * For a non-admin caller, ensure the target account row exists AND is linked
+ * to their own user id. Returns null when the caller owns it (proceed) or a
+ * 403/404 NextResponse to return otherwise. Admins always get null (bypass).
+ */
+async function requireOwnAccount(
+  accountId: string,
+  auth: { isAdmin: boolean; user: { id: string } },
+): Promise<NextResponse | null> {
+  if (auth.isAdmin) return null;
+  const { data } = await supabaseAdmin
+    .from("accounts")
+    .select("user_id")
+    .eq("id", accountId)
+    .maybeSingle();
+  if (!data) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+  if ((data.user_id as string | null) !== auth.user.id) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+  return null;
+}
 
 const upsertSchema = z.object({
   slug: z.string().min(1),
@@ -56,14 +85,23 @@ const deleteSchema = z.object({
 
 export async function POST(req: Request) {
   try {
+    const auth = await requireMemberOrAdmin();
+    if ("error" in auth) return auth.error;
+
     const body = await req.json();
     const parsed = upsertSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json({ error: "Invalid data", issues: parsed.error.flatten() }, { status: 400 });
     }
+    // Non-admins can only create their own directory record: pin user_id to
+    // themselves and ignore any client-supplied profile_id/user_id.
+    const row = toAccountRow(parsed.data);
+    if (!auth.isAdmin) {
+      row.user_id = auth.user.id;
+    }
     const { error, data } = await supabaseAdmin
       .from("accounts")
-      .insert({ ...toAccountRow(parsed.data), type: "Developer" })
+      .insert({ ...row, type: "Developer" })
       .select()
       .single();
     if (error) {
@@ -78,12 +116,21 @@ export async function POST(req: Request) {
 
 export async function PATCH(req: Request) {
   try {
+    const auth = await requireMemberOrAdmin();
+    if ("error" in auth) return auth.error;
+
     const body = await req.json();
     const parsed = patchSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json({ error: "Invalid data", issues: parsed.error.flatten() }, { status: 400 });
     }
     const { id, ...updates } = parsed.data;
+    const denied = await requireOwnAccount(id, auth);
+    if (denied) return denied;
+    // Non-admins must not be able to re-link a record to another login.
+    if (!auth.isAdmin) {
+      delete (updates as Record<string, unknown>).profile_id;
+    }
     const { error, data } = await supabaseAdmin
       .from("accounts")
       .update(toAccountRow(updates))
@@ -102,11 +149,16 @@ export async function PATCH(req: Request) {
 
 export async function DELETE(req: Request) {
   try {
+    const auth = await requireMemberOrAdmin();
+    if ("error" in auth) return auth.error;
+
     const body = await req.json();
     const parsed = deleteSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json({ error: "Invalid data" }, { status: 400 });
     }
+    const denied = await requireOwnAccount(parsed.data.id, auth);
+    if (denied) return denied;
     // Deletes the consolidated account row. Any developments.account_id pointing
     // here is cleared by the account_id FK's ON DELETE SET NULL behaviour.
     const { error } = await supabaseAdmin
