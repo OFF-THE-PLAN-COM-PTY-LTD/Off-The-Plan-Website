@@ -86,7 +86,21 @@ export function ListingsTabs({ groups, agencies }: { groups: ListingGroup[]; age
                 <td className="px-4 py-3 max-w-[220px]">
                   <p className="font-sans text-sm font-semibold text-orange leading-tight mb-0.5">{listing.name}</p>
                   {listing.developer?.name && (
-                    <p className="font-sans text-xs text-ink/50">By: {listing.developer.name}</p>
+                    <p className="font-sans text-xs text-ink/50">
+                      Created by:{" "}
+                      {listing.developer.id ? (
+                        <a
+                          href={`/admin/agencies/${listing.developer.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-orange hover:underline"
+                        >
+                          {listing.developer.name}
+                        </a>
+                      ) : (
+                        listing.developer.name
+                      )}
+                    </p>
                   )}
                   <p className="font-sans text-xs text-ink/40">{listing.suburb}, {listing.state}</p>
                 </td>
