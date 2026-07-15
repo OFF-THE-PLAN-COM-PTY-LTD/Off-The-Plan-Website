@@ -629,8 +629,8 @@ export function ManageProfileForm({
 
       {/* ── Logos ── */}
       <div className="grid grid-cols-2 border border-[#dde1e9] border-t-0">
-        <LogoPanel field="company_logo_url" title="Your Company Logo" currentUrl={profile.company_logo_url} />
-        <LogoPanel field="developer_logo_url" title="Developer Logo" currentUrl={profile.developer_logo_url} className="border-l border-[#dde1e9]" />
+        <LogoPanel field="company_logo_url" title="Profile Logo" currentUrl={profile.company_logo_url} />
+        <LogoPanel field="developer_logo_url" title="Listings Logo" currentUrl={profile.developer_logo_url} className="border-l border-[#dde1e9]" />
       </div>
 
       {/* ── Social Reach ── */}
