@@ -5,9 +5,15 @@
  *
  *   node scripts/backfill-development-account-id.mjs          # dry run
  *   node scripts/backfill-development-account-id.mjs --apply  # write
+ *
+ * Writes are ATTRIBUTED: each one lands in audit_log with
+ * actor_hint = 'script:backfill-development-account-id', so a listing that
+ * changed hands can be traced back to this run rather than to an anonymous
+ * `service_role`. See docs/audit-log.md.
  */
 import { createClient } from "@supabase/supabase-js";
 import { config as loadEnv } from "dotenv";
+import { attributedWriter } from "./lib/attributed-write.mjs";
 loadEnv({ path: ".env.local" });
 loadEnv();
 
@@ -15,6 +21,9 @@ const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.
   auth: { persistSession: false },
 });
 const APPLY = process.argv.includes("--apply");
+
+// Declare who is acting, once. Every write below goes through this.
+const as = attributedWriter(supabase, "script:backfill-development-account-id");
 
 async function loadAll(table, cols) {
   const rows = [];
@@ -47,7 +56,7 @@ async function main() {
     }
     toUpdate++;
     if (APPLY) {
-      const { error } = await supabase.from("developments").update({ account_id: acct }).eq("id", d.id);
+      const { error } = await as.updateDevelopment(d.id, { account_id: acct });
       if (error) { console.error(`update ${d.id}: ${error.message}`); process.exit(1); }
     }
   }

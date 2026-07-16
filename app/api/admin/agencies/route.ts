@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/supabase/auth-guards";
+import { updateAccountAttributed } from "@/lib/supabase/attributed-writes";
 import { revalidatePublicTables } from "@/lib/cache-tags";
 import { sendEmail } from "@/lib/email/send";
 import { accountApprovedTemplate, accountRejectedTemplate } from "@/lib/email/templates";
@@ -143,7 +144,9 @@ export async function PATCH(req: Request) {
       update.is_published = current.type === "Developer" && nextPortal === "active" && !nextArchived;
     }
 
-    const { error } = await supabaseAdmin.from("accounts").update(update).eq("id", id);
+    // Attributed write: records the acting admin in audit_log. `auth.user.id`
+    // comes from requireAdmin()'s verified session, never from the request body.
+    const { error } = await updateAccountAttributed(id, update, { uid: auth.user.id });
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     revalidatePublicTables(["accounts"]);
 
