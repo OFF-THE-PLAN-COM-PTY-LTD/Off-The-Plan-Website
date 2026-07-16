@@ -23,5 +23,8 @@ export default async function NewsEditPage({ params }: Props) {
     existing = data;
   }
 
-  return <NewsForm id={params.id} existing={existing} />;
+  // key={params.id} remounts the form (incl. the rich-text editor, which only
+  // reads its initial content once) when navigating between articles, so a
+  // client [id]→[id] navigation doesn't show the previous article's fields.
+  return <NewsForm key={params.id} id={params.id} existing={existing} />;
 }

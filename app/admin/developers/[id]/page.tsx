@@ -48,7 +48,9 @@ export default async function AdminEditDeveloperPage({ params }: Props) {
         <h1 className="font-display font-light text-navy text-section-lg">Edit developer</h1>
         <p className="font-sans text-sm text-ink/40 uppercase tracking-widest">{initial.name}</p>
       </div>
-      <DeveloperForm initial={initial} profiles={profiles} mode="edit" />
+      {/* key={initial.id} remounts the form when switching between developers,
+          so its prop-seeded field state doesn't carry over from the previous one. */}
+      <DeveloperForm key={initial.id} initial={initial} profiles={profiles} mode="edit" />
     </div>
   );
 }

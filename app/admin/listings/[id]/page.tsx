@@ -18,8 +18,14 @@ export default async function AdminListingEditPage({ params }: Props) {
 
   if (!isNew && !data.existing) notFound();
 
+  // key={params.id} remounts the form when switching listings. The form seeds
+  // every field/gallery/floor-plan slice from props on mount (see
+  // use-listing-form-state.ts), so without a remount a client [id]→[id]
+  // navigation keeps the previous listing's values. This is the client-side
+  // half of the freshness fix; `force-dynamic` above handles the server half.
   return (
     <ListingForm
+      key={params.id}
       id={params.id}
       existing={data.existing ?? undefined}
       developers={data.developers}

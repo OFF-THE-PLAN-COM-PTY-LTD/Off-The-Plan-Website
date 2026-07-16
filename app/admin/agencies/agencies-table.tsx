@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -83,6 +83,19 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
     () => Object.fromEntries(agencies.map((a) => [a.id, a.is_published === true])),
   );
   const [savingPublishId, setSavingPublishId] = useState<string | null>(null);
+
+  // Re-seed the per-row maps whenever the server hands us a new `agencies`
+  // array — i.e. on a status-tab switch (?status=… navigation) or after
+  // router.refresh(). The App Router reuses this same component instance across
+  // those navigations, so the useState initializers above run only once. Without
+  // this, rows belonging to a newly-selected tab have no entry in the maps and
+  // their role dropdown / Publish toggle render blank until a hard refresh.
+  // `agencies` only changes identity on those server-driven re-renders (not on
+  // local edits like search/typing), so this never clobbers optimistic updates.
+  useEffect(() => {
+    setInterestByAgency(Object.fromEntries(agencies.map((a) => [a.id, a.interest_type ?? null])));
+    setPublishById(Object.fromEntries(agencies.map((a) => [a.id, a.is_published === true])));
+  }, [agencies]);
 
   async function handleInterestChange(agencyId: string, newValue: string) {
     const prev = interestByAgency[agencyId] ?? null;
