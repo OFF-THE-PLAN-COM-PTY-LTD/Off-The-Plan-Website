@@ -97,6 +97,20 @@ export async function PATCH(req: Request) {
       if (k in fields) update[col] = fields[k] ?? null;
     }
 
+    // Archiving revokes portal access (migration 052). The DB trigger enforces
+    // this on `accounts` for every writer, but it cannot reach across to
+    // `profiles` — so we set it explicitly here too, which routes the change
+    // through the syncAccountMemberStatus() mirror below and keeps the login
+    // gate (profiles.member_status) in sync. Archive wins over any
+    // portal_status sent alongside it. Un-archiving is deliberately NOT the
+    // inverse: it never auto-reactivates.
+    const archiving = "archived" in fields && fields.archived === true;
+    if (archiving) update.portal_status = "inactive";
+
+    // The portal_status this request will land on, if it changes one at all.
+    const nextPortalStatus: string | undefined =
+      archiving ? "inactive" : "portal_status" in fields ? fields.portal_status : undefined;
+
     const { data: current } = await supabaseAdmin
       .from("accounts")
       .select("email, user_id, type, portal_status, archived, name, first_name, last_name")
@@ -124,7 +138,7 @@ export async function PATCH(req: Request) {
     if (typeof fields.is_published === "boolean") {
       update.is_published = fields.is_published;
     } else if ("portal_status" in fields || "archived" in fields) {
-      const nextPortal = "portal_status" in fields ? fields.portal_status : current.portal_status;
+      const nextPortal = nextPortalStatus ?? current.portal_status;
       const nextArchived = "archived" in fields ? fields.archived === true : current.archived === true;
       update.is_published = current.type === "Developer" && nextPortal === "active" && !nextArchived;
     }
@@ -135,11 +149,11 @@ export async function PATCH(req: Request) {
 
     // Mirror portal_status → profiles.member_status (the login gate) and email
     // the applicant on the initial approve/reject transition. Best-effort.
-    if ("portal_status" in fields) {
+    if (nextPortalStatus !== undefined) {
       try {
         await syncAccountMemberStatus(
           current as { email: string | null; user_id: string | null; name: string | null; first_name?: string | null; last_name?: string | null },
-          fields.portal_status,
+          nextPortalStatus,
         );
       } catch (e) {
         console.error("member_status mirror / approval email (non-fatal):", e);
