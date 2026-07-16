@@ -708,7 +708,10 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
                       </button>
                     )}
                     {/* Archive Profile — soft-deletes to the Archived tab.
-                        Non-destructive: sets agencies.archived=true. */}
+                        Sets accounts.archived=true AND revokes portal access
+                        (portal_status='inactive'); enforced by the PATCH route
+                        and, as a backstop, by migration 052's trigger.
+                        Reversible: unarchive restores the row, but not access. */}
                     <button
                       onClick={() => setModal({ agency: a, action: "archive" })}
                       className="w-full font-mono text-[10px] uppercase tracking-widest px-2 py-1.5 border border-ink/60 text-ink/70 hover:bg-ink hover:text-white hover:border-ink transition-colors"
@@ -757,9 +760,9 @@ export default function AgenciesTable({ agencies, activeStatus, counts }: Props)
                 : modal.action === "activate"
                 ? `This will reactivate the portal for ${modal.agency.name ?? modal.agency.email}.`
                 : modal.action === "archive"
-                ? `This will move ${modal.agency.name ?? modal.agency.email} to the Archived tab. Their portal status doesn't change — the profile is just hidden from Active/Inactive views. You can unarchive them any time.`
+                ? `This will move ${modal.agency.name ?? modal.agency.email} to the Archived tab and set their portal status to Inactive — they will lose portal access and will not be able to sign in. You can unarchive them any time, but that does not restore access on its own.`
                 : modal.action === "unarchive"
-                ? `This will restore ${modal.agency.name ?? modal.agency.email} to the Active or Inactive tab depending on their current portal status.`
+                ? `This will restore ${modal.agency.name ?? modal.agency.email} to the Inactive tab. Their portal status stays Inactive — unarchiving does not restore portal access. Use Activate Portal if you want them to be able to sign in again.`
                 : `This will reject ${modal.agency.name ?? modal.agency.email}'s application. They will receive a decline email and will not be able to sign in.`}
             </p>
             <p className="font-sans text-sm text-ink mb-2">
