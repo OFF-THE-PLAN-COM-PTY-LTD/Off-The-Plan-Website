@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { requireMemberOrAdmin } from "@/lib/supabase/auth-guards";
+import { updateDevelopmentAttributed } from "@/lib/supabase/attributed-writes";
 import { revalidatePublicTables } from "@/lib/cache-tags";
 
 function slugify(input: string) {
@@ -275,7 +276,9 @@ export async function POST(req: Request) {
       } else {
         data.slug = await uniqueSlug(slugify(String(data.slug)), id);
       }
-      const { error } = await supabaseAdmin.from("developments").update(data).eq("id", id);
+      // Attributed write — `data` may carry account_id (moving the listing to a
+      // different profile), which is the change the client most wants traced.
+      const { error } = await updateDevelopmentAttributed(id, data, { uid: auth.user.id });
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
       const fpErr = await syncFloorPlans(id, floor_plans ?? []);
       if (fpErr) return NextResponse.json({ error: fpErr }, { status: 500 });
@@ -378,7 +381,9 @@ export async function PATCH(req: Request) {
       if (acctId) fields.account_id = acctId;
     }
 
-    const { error } = await supabaseAdmin.from("developments").update(fields).eq("id", id);
+    // Attributed write — `fields` may carry account_id (listing transfer).
+    // auth.user.id is the verified session (admin or the owning member).
+    const { error } = await updateDevelopmentAttributed(id, fields, { uid: auth.user.id });
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     revalidateAll();
     return NextResponse.json({ ok: true });

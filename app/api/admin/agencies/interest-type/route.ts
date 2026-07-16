@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/supabase/auth-guards";
+import { updateAccountAttributed } from "@/lib/supabase/attributed-writes";
 import { revalidatePublicTables } from "@/lib/cache-tags";
 
 /**
@@ -68,10 +69,13 @@ export async function PATCH(req: Request) {
     // non-archived Developer shows on /developers; anything else is hidden.
     const isPublished =
       interestType === "Developer" && account.portal_status === "active" && account.archived !== true;
-    const { error: updErr } = await supabaseAdmin
-      .from("accounts")
-      .update({ type: interestType, is_published: isPublished })
-      .eq("id", account.id);
+    // Attributed write: records the acting admin in audit_log (a `type` change
+    // also re-derives directory visibility, so both columns land in one row).
+    const { error: updErr } = await updateAccountAttributed(
+      account.id as string,
+      { type: interestType, is_published: isPublished },
+      { uid: auth.user.id },
+    );
     if (updErr) {
       return NextResponse.json({ error: updErr.message }, { status: 500 });
     }

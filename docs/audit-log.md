@@ -46,8 +46,8 @@ Each change appends one row to `public.audit_log`:
 | `old_row`         | whole row before (null on INSERT)                              |
 | `new_row`         | whole row after (null on DELETE)                               |
 | `db_role`         | `auth.role()`, e.g. `service_role` / `authenticated`           |
-| `actor_uid`       | `auth.uid()` — **NULL for every service-role write**           |
-| `actor_hint`      | app-declared actor, read from `current_setting('app.actor')`   |
+| `actor_uid`       | the acting user's uuid — `auth.uid()`, else the actor declared by the app (054) |
+| `actor_hint`      | readable actor label: `user:<email>` or `script:<name>` (054)  |
 
 Notes:
 
@@ -64,80 +64,178 @@ Notes:
   through PostgREST can forge, amend, or erase an audit row. The trigger is
   `security definer`, so it writes regardless.
 
-## ⚠️ The `app.actor` caveat — read this before trusting `actor_uid`
+## Actor attribution — how "who" actually gets recorded
 
-**Right now, admin writes are attributed only as `service_role`.**
+`supabase/migrations/054_audit_actor_attribution.sql` wires this up. Read this
+section before adding a new mutation.
 
-Every admin and portal write in this app goes through the service-role client
-(`lib/supabase/admin.ts`), and the maintenance scripts in `scripts/*.mjs` use the
-service-role key too. The service role's JWT is a key, not a human, so
-`auth.uid()` is **NULL** for all of those writes. Left as-is, the audit log
-answers "a service-role caller did it" — which is exactly the answer that was not
-good enough in July 2026.
+Every admin and portal write goes through the service-role client
+(`lib/supabase/admin.ts`), and `scripts/*.mjs` use the service-role key. The
+service role's JWT is a key, not a human, so `auth.uid()` is **NULL** for all of
+them. Left alone, the log answers "a service-role caller did it" — exactly the
+answer that was not good enough in July 2026.
 
-`actor_hint` is the way out. The application declares the acting admin for the
-transaction before it writes; the trigger reads it back out of the session. This
-migration does **not** wire that up — that's the follow-up below.
+054 fixes that with a pair of RPCs that declare the actor **and** perform the
+write in one function body:
 
-### The snippet a developer needs to add
+| RPC                          | Table          | Used by                                          |
+| ---------------------------- | -------------- | ------------------------------------------------ |
+| `admin_update_account`       | `accounts`     | `app/api/admin/agencies/route.ts`, `.../interest-type/route.ts` |
+| `admin_update_development`   | `developments` | `app/api/admin/listings/route.ts`                |
 
-Before an admin write, in the same session/transaction, declare the actor. The
-`true` third argument makes it transaction-local, so it can't leak to another
-request on a pooled connection:
-
-```sql
-select set_config('app.actor', '<user id or email>', true);
-```
-
-Via supabase-js you need an RPC to run it, since the JS client can't issue raw
-SQL. Add a small helper function:
-
-```sql
--- Migration: expose set_config to the service role.
-create or replace function public.set_audit_actor(actor text)
-returns void as $$
-  select set_config('app.actor', actor, true);
-$$ language sql;
-```
-
-then call it immediately before the write:
+From app code, use the wrappers rather than the raw RPC:
 
 ```ts
-// Declare who is acting, then write. Must be the same connection.
-await supabaseAdmin.rpc("set_audit_actor", { actor: session.user.email });
-await supabaseAdmin.from("accounts").update({ archived: true }).eq("id", id);
+import { updateAccountAttributed } from "@/lib/supabase/attributed-writes";
+
+const auth = await requireAdmin();          // verified session
+if ("error" in auth) return auth.error;
+await updateAccountAttributed(id, { archived: true }, { uid: auth.user.id });
 ```
 
-**Caveat on the caveat:** `set_config(..., true)` is transaction-local, and
-PostgREST runs each request in its own transaction. Two separate supabase-js
-calls are two transactions, so the setting will **not** carry from the `rpc()`
-into the `update()`. Doing this properly means one of:
+From a script:
 
-1. **A single RPC per mutation** that sets the actor and performs the write in one
-   function body (most robust, most work).
-2. **`set_config(..., false)`** (session-local) — works, but is unsafe on a pooled
-   connection: the value leaks to whoever gets that connection next.
-3. **Passing the actor into a wrapper RPC** that does both.
+```js
+import { attributedWriter } from "./lib/attributed-write.mjs";
+const as = attributedWriter(supabase, "script:my-backfill");
+await as.updateDevelopment(id, { account_id: acct });
+```
 
-Option 1 is the right answer for the writes that matter (archive/unarchive,
-publish, move listing). Don't ship option 2.
+### ⚠️ The transaction trap — why it must be ONE call
 
-### Follow-up task
+This is the part that bites. The obvious wiring does **not** work:
 
-- [ ] Add `set_audit_actor` and route the high-value admin mutations
-      (archive/unarchive, publish/unpublish, move listing) through a single RPC
-      that declares the actor and performs the write in one transaction.
-- [ ] Have `scripts/*.mjs` declare an actor (e.g. `script:backfill-accounts`) so
-      bulk runs are attributable to a script rather than an anonymous
-      `service_role`.
-- [ ] Consider an `/admin` UI to read the trail.
+```ts
+// BROKEN — do not do this.
+await supabaseAdmin.rpc("set_audit_actor", { actor: email });     // transaction 1
+await supabaseAdmin.from("accounts").update({ archived: true });  // transaction 2
+```
 
-Until the first item lands, `actor_hint` will be NULL and `db_role` will read
-`service_role` for admin writes.
+`set_config(..., true)` is **transaction-local**, and PostgREST runs every
+request in its own transaction. The actor is discarded when the first request
+ends, so the trigger in the second sees nothing. It fails **silently**: the write
+succeeds and `actor_hint` is simply NULL — you don't find out until someone asks
+who did it, which is the whole problem this table exists to solve.
 
-## Querying it
+Verified against the local DB: two-transaction ⇒ `actor_hint` NULL;
+same-transaction ⇒ `actor_hint` captured.
 
-Reconstruct one row's history:
+The other tempting fix — `set_config(..., false)` (session-local) — survives
+across the two calls and is **worse**: Supabase pools connections, so the value
+sticks to the connection and leaks into whatever unrelated request picks it up
+next, silently mis-attributing someone else's write to you. Never ship it.
+
+Hence: the actor is declared inside the same function body as the `update`. One
+RPC, one transaction, one audit row.
+
+### Spoofing
+
+Two independent locks:
+
+1. **Reachability.** The RPCs are `execute`-granted to `service_role` **only**
+   (revoked from `public`/`anon`/`authenticated`). A browser client cannot call
+   them through PostgREST at all — verified: `permission denied for function`.
+   The only caller is our own server, which takes the actor from the verified
+   session (`requireAdmin()` / `requireMemberOrAdmin()`), never from the body.
+2. **Underivability.** A human is named by **uuid**; the `user:<email>` label is
+   looked up from `auth.users` inside the database. Callers cannot pass a
+   human-readable actor string at all — free text is regex-restricted to
+   `script:<name>`. So even a compromised route cannot invent
+   `tim@offtheplan.com`; it can only name a uid that really exists.
+
+**Do not** later expose a bare `set_config`/`set_actor` RPC to `authenticated` —
+that would hand any logged-in user the ability to stamp `app.actor` with whatever
+they like and defeat lock #2.
+
+### Adding attribution to another mutation
+
+The pattern for any further table: swap the `.update()` for an RPC that calls
+`audit_declare_actor(p_actor_uid, p_actor_label)` and then writes, in the same
+function body; revoke execute from `public, anon, authenticated`; grant it to
+`service_role`; pass the uid from the verified session. Copy
+`admin_update_account` in 054 — the jsonb-patch shape is a drop-in for a
+supabase-js `.update()` and keeps one human action as one audit row.
+
+### What is NOT attributed yet
+
+- **INSERTs and DELETEs** on both tables (listing create/delete, signup). They
+  are still logged, just as an anonymous `service_role`.
+- **Other `scripts/*.mjs`.** The mechanism is available to all of them via
+  `scripts/lib/attributed-write.mjs`; only
+  `backfill-development-account-id.mjs` currently uses it.
+- **Writes made by hand** in the Supabase dashboard/SQL editor — logged with
+  `db_role`/`session_user`, no human label. Unavoidable at this layer.
+- **Other tables.** Only `accounts` and `developments` are audited at all.
+
+## Querying it — "who changed this?"
+
+Run these in the Supabase SQL editor. `actor_hint` is the answer to "who":
+`user:<email>` is a human, `script:<name>` is a bulk run, and NULL means the
+write did not go through an attributed path (see *What is NOT attributed yet*).
+
+### The history of one account
+
+Everything that ever happened to it, most recent first. `updated_at` is filtered
+out of the display because a `set_updated_at` trigger puts it on nearly every row.
+
+```sql
+select changed_at,
+       op,
+       array_remove(changed_columns, 'updated_at') as changed,
+       coalesce(actor_hint, '(unattributed ' || db_role || ')') as who
+  from audit_log
+ where table_name = 'accounts'
+   and row_id = '<account uuid>'
+ order by changed_at desc;
+```
+
+### The history of one listing — including who moved it between profiles
+
+This is the client's core question. `account_id` changing is a listing being
+re-attributed from one developer/agency profile to another.
+
+```sql
+select a.changed_at,
+       coalesce(a.actor_hint, '(unattributed ' || a.db_role || ')') as who,
+       old_acct.name as moved_from,
+       new_acct.name as moved_to
+  from audit_log a
+  left join accounts old_acct on old_acct.id = (a.old_row ->> 'account_id')::uuid
+  left join accounts new_acct on new_acct.id = (a.new_row ->> 'account_id')::uuid
+ where a.table_name = 'developments'
+   and a.row_id = '<listing uuid>'
+   and 'account_id' = any(a.changed_columns)
+ order by a.changed_at desc;
+```
+
+Find the listing's uuid by slug first:
+`select id, name from developments where slug = '<slug>';`
+
+### Who archived this account, and when
+
+```sql
+select changed_at, coalesce(actor_hint, '(unattributed ' || db_role || ')') as who
+  from audit_log
+ where table_name = 'accounts'
+   and row_id = '<account uuid>'
+   and 'archived' = any(changed_columns)
+   and new_row ->> 'archived' = 'true'
+ order by changed_at desc
+ limit 1;
+```
+
+### Everything one person did
+
+```sql
+select changed_at, table_name, row_id,
+       array_remove(changed_columns, 'updated_at') as changed
+  from audit_log
+ where actor_hint = 'user:tim@example.com'   -- or 'script:archived-to-inactive'
+ order by changed_at desc
+ limit 100;
+```
+
+### Reconstruct one row's history (raw)
 
 ```sql
 select changed_at, op, changed_columns, db_role, actor_uid, actor_hint
