@@ -49,6 +49,7 @@ export default async function AdminListingsPage({ searchParams }: { searchParams
       .from("accounts")
       .select("legacy_agency_id, name")
       .not("legacy_agency_id", "is", null)
+      .eq("archived", false)
       .order("name"),
   ]);
 

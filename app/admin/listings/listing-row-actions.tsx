@@ -144,39 +144,46 @@ export function ListingRowActions({ id, slug, category, isPublished, isFeatured,
       {/* Move modal */}
       {showMove && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white border border-line w-full max-w-md p-6 shadow-lg">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-sans font-semibold text-navy text-base">Move Listing To New Agency/Developer</h2>
-              <button onClick={() => setShowMove(false)} className="text-ink/40 hover:text-ink text-lg leading-none">×</button>
+          <div className="bg-white border border-line w-full max-w-2xl p-8 shadow-lg">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="font-sans font-semibold text-navy text-lg">Move Listing To New Agency/Developer</h2>
+              <button onClick={() => setShowMove(false)} className="text-ink/40 hover:text-ink text-2xl leading-none">×</button>
             </div>
 
-            <div className="mb-4 border-b border-line pb-4">
+            <div className="mb-5 border-b border-line pb-5">
               <p className="font-sans text-sm font-semibold text-ink mb-1">Current Listing:</p>
               <p className="font-sans text-sm text-ink/70">Project name: <span className="font-semibold text-ink">{listingName}</span></p>
               <p className="font-sans text-sm text-ink/70">By (Org name): <span className="font-semibold text-ink">{currentAgencyLabel}</span></p>
             </div>
 
-            <p className="font-sans text-sm text-orange mb-3">
+            <p className="font-sans text-sm text-orange mb-4">
               Select Agency/Developer below to move this listing to a new Agency/Developer.
             </p>
 
-            <p className="font-sans text-xs text-ink/50 uppercase tracking-wider mb-1">Agency/Developer:</p>
+            <div className="flex items-center justify-between mb-1.5">
+              <p className="font-sans text-xs text-ink/50 uppercase tracking-wider">Agency/Developer:</p>
+              <p className="font-sans text-xs text-ink/40">{filteredAgencies.length} active</p>
+            </div>
             <input
               type="text"
               placeholder="Search..."
               value={agencySearch}
               onChange={e => setAgencySearch(e.target.value)}
-              className="w-full border border-line px-3 py-2 text-sm font-sans text-ink focus:outline-none focus:border-navy mb-1"
+              className="w-full border border-line px-3 py-2.5 text-sm font-sans text-ink focus:outline-none focus:border-navy mb-2"
             />
             <select
-              size={6}
+              size={12}
               value={selectedAgency}
               onChange={e => setSelectedAgency(e.target.value)}
-              className="w-full border border-line text-sm font-sans text-ink focus:outline-none focus:border-navy mb-4"
+              className="w-full border border-line text-sm font-sans text-ink focus:outline-none focus:border-navy mb-5 [&>option]:px-2 [&>option]:py-1.5"
             >
-              {filteredAgencies.map(a => (
-                <option key={a.id} value={a.id}>{a.label}</option>
-              ))}
+              {filteredAgencies.length === 0 ? (
+                <option disabled>No active agencies/developers found</option>
+              ) : (
+                filteredAgencies.map(a => (
+                  <option key={a.id} value={a.id}>{a.label}</option>
+                ))
+              )}
             </select>
 
             <div className="flex justify-end gap-3">
