@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 
 type AgencyOption = { id: string; label: string };
 
@@ -30,6 +30,14 @@ export function ListingRowActions({ id, slug, category, isPublished, isFeatured,
   const [moving, setMoving] = useState(false);
   const [showInactivate, setShowInactivate] = useState(false);
   const [confirmText, setConfirmText] = useState("");
+
+  // Reflect the server tier after a router.refresh() / table re-render. The row
+  // instance is reused (keyed by listing id), so the initializer above runs once
+  // and the dropdown would otherwise keep a stale tier. Optimistic edits already
+  // set tierValue before refresh, so the incoming prop matches and won't flicker.
+  useEffect(() => {
+    setTierValue(tier ?? "");
+  }, [tier]);
 
   async function patch(fields: Record<string, unknown>) {
     setLoading(true);

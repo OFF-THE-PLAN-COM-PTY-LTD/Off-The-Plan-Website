@@ -22,5 +22,7 @@ export default async function AdminJournalEditPage({ params }: Props) {
     existing = data as unknown as JournalArticle;
   }
 
-  return <JournalForm id={params.id} existing={existing} />;
+  // key={params.id} remounts the form when navigating between articles so its
+  // prop-seeded field state doesn't carry over from the previously edited one.
+  return <JournalForm key={params.id} id={params.id} existing={existing} />;
 }

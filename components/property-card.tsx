@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Pill } from "@/components/pill";
@@ -59,6 +59,15 @@ export function PropertyCard({
   const [loading, setLoading] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [enquireOpen, setEnquireOpen] = useState(false);
+
+  // Keep the local heart in sync when the parent passes a new isSaved value.
+  // The App Router reuses this card instance across navigation and parent
+  // re-renders, so the useState initializer alone would freeze the saved
+  // state to whatever it was on first mount (e.g. a card that scrolls back
+  // into the saved list, or a parent-controlled saved set).
+  useEffect(() => {
+    setSaved(initialSaved);
+  }, [initialSaved]);
 
   const handleShare = (e: React.MouseEvent) => {
     e.preventDefault();

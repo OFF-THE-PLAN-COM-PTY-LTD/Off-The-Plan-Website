@@ -57,7 +57,11 @@ export default async function AgencyProfilePage({ params }: { params: { id: stri
       >
         ← All Agencies
       </Link>
-      <AgencyProfileForm agency={agency} />
+      {/* key={agency.id} forces a remount when navigating between two
+          profiles — the form seeds its fields from props on mount, so without
+          it a client [id]→[id] navigation would keep the previous agency's
+          values (App Router reuses the component instance). */}
+      <AgencyProfileForm key={agency.id} agency={agency} />
     </div>
   );
 }

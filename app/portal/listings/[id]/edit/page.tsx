@@ -23,8 +23,12 @@ export default async function PortalListingEditPage({ params }: Props) {
     data.existing.name = "";
   }
 
+  // key={params.id} remounts the form when switching listings so its
+  // prop-seeded field/gallery/floor-plan state doesn't carry over (App Router
+  // reuses the component instance across [id]→[id] navigation otherwise).
   return (
     <ListingForm
+      key={params.id}
       id={params.id}
       existing={data.existing}
       developers={data.developers}
