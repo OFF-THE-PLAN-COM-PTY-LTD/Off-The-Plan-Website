@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { revalidatePublicTables } from "@/lib/cache-tags";
 import { z } from "zod";
 
 /**
@@ -70,6 +71,7 @@ export async function POST(req: Request) {
       console.error("Developer insert error:", error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+    revalidatePublicTables(["accounts"]);
     return NextResponse.json({ developer: data }, { status: 201 });
   } catch {
     return NextResponse.json({ error: "Server error" }, { status: 500 });
@@ -94,6 +96,7 @@ export async function PATCH(req: Request) {
       console.error("Developer update error:", error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+    revalidatePublicTables(["accounts"]);
     return NextResponse.json({ developer: data });
   } catch {
     return NextResponse.json({ error: "Server error" }, { status: 500 });
@@ -117,6 +120,7 @@ export async function DELETE(req: Request) {
       console.error("Developer delete error:", error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+    revalidatePublicTables(["accounts"]);
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: "Server error" }, { status: 500 });

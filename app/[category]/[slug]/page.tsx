@@ -17,8 +17,7 @@ import { ViewTracker } from "@/features/listings/components/view-tracker";
 import { formatListingTitle } from "@/lib/utils";
 import { categorySlug, isValidCategorySlug } from "@/lib/listing-url";
 import { GalleryGrid } from "@/features/listings/components/gallery-grid";
-import { supabase } from "@/lib/supabase/public";
-import { getDevelopmentBySlug, getDevelopmentMetaBySlug } from "@/features/listings/queries";
+import { getCachedDevelopmentBySlug, getCachedDevelopmentMetaBySlug } from "@/lib/cached-reads";
 import type { Development, DevelopmentFloorPlan } from "@/types/development";
 
 interface Props {
@@ -28,7 +27,7 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!isValidCategorySlug(params.category)) return { title: "Not Found" };
 
-  const { data: dev } = await getDevelopmentMetaBySlug(supabase, params.slug);
+  const dev = await getCachedDevelopmentMetaBySlug(params.slug);
   if (!dev) return { title: "Not Found" };
   const d = dev as unknown as Development;
   return {
@@ -48,7 +47,7 @@ export default async function DossierPage({ params }: Props) {
   // hitting the database and pretending to be listings).
   if (!isValidCategorySlug(params.category)) notFound();
 
-  const { data: rawDev } = await getDevelopmentBySlug(supabase, params.slug);
+  const rawDev = await getCachedDevelopmentBySlug(params.slug);
 
   if (!rawDev) notFound();
   const dev = rawDev as unknown as Development;

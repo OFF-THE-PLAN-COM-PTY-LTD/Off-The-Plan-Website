@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { requireMemberOrAdmin } from "@/lib/supabase/auth-guards";
+import { revalidatePublicTables } from "@/lib/cache-tags";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 function validEmailOrNull(value: unknown): { ok: true; value: string | null } | { ok: false } {
@@ -49,6 +50,7 @@ export async function POST(req: Request) {
       .select("id")
       .single();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    revalidatePublicTables(["listing_agents"]);
     return NextResponse.json({ ok: true, id: data.id });
   } catch {
     return NextResponse.json({ error: "Unexpected error." }, { status: 500 });
@@ -84,6 +86,7 @@ export async function PATCH(req: Request) {
       })
       .eq("id", id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    revalidatePublicTables(["listing_agents"]);
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ error: "Unexpected error." }, { status: 500 });
@@ -107,6 +110,7 @@ export async function DELETE(req: Request) {
 
     const { error } = await supabaseAdmin.from("listing_agents").delete().eq("id", id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    revalidatePublicTables(["listing_agents"]);
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ error: "Unexpected error." }, { status: 500 });

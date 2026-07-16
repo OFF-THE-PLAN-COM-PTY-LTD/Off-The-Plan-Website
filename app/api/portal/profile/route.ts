@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { syncAccountFromProfile } from "@/lib/accounts/sync-account";
+import { revalidatePublicTables } from "@/lib/cache-tags";
 
 const ALLOWED_FIELDS = new Set([
   "first_name", "last_name", "phone",
@@ -42,6 +43,7 @@ export async function PATCH(req: Request) {
     // so their public /developers entry updates from a single profile edit.
     try { await syncAccountFromProfile(user.id); } catch (e) { console.error("account sync (non-fatal):", e); }
 
+    revalidatePublicTables(["accounts"]);
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ error: "Server error" }, { status: 500 });

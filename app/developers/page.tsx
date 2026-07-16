@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { supabase } from "@/lib/supabase/public";
+import {
+  getCachedPublishedDevelopers,
+  getCachedPublishedDevelopmentAccountIds,
+} from "@/lib/cached-reads";
 import type { Developer } from "@/types/developer";
 
 // Render on every request so admin changes (publishing a developer, syncing
@@ -29,20 +32,12 @@ export default async function DevelopersPage() {
   // The public directory now reads the consolidated `accounts` table directly
   // (type='Developer', published, active, not archived) — no more `developers`
   // projection / agency_id filter. Listing counts come from developments.account_id.
-  const [{ data: accData }, { data: devsDevsData }] = await Promise.all([
-    supabase
-      .from("accounts")
-      .select("*")
-      .eq("type", "Developer")
-      .eq("is_published", true)
-      .eq("archived", false)
-      .eq("portal_status", "active")
-      .order("name"),
-    supabase.from("developments").select("id, account_id").eq("is_published", true),
+  const [accData, allDevelopments] = await Promise.all([
+    getCachedPublishedDevelopers(),
+    getCachedPublishedDevelopmentAccountIds(),
   ]);
 
-  const developers = (accData ?? []) as unknown as Developer[];
-  const allDevelopments = devsDevsData ?? [];
+  const developers = accData as unknown as Developer[];
 
   return (
     <div className="min-h-screen bg-cream pt-16">
@@ -70,6 +65,14 @@ export default async function DevelopersPage() {
               <Link
                 key={dev.id}
                 href={`/developers/${dev.slug}`}
+                // prefetch={false}: the target profile page is force-dynamic and
+                // renders its listings after an async query. Next's prefetch of
+                // such a page returns a PARTIAL RSC that stops before the listings
+                // section; on Next 14.2 (staleTimes unreliable) the router then
+                // serves that partial on click, so the profile shows "No published
+                // listings" until a hard refresh. Disabling prefetch makes the
+                // click do a full navigation fetch, which includes the listings.
+                prefetch={false}
                 className="group p-6 border border-line bg-cream-alt hover:border-orange transition-colors flex flex-col h-full"
               >
                 {/* Logo slot — fixed container, logo capped at 80% width / 80% height

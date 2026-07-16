@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { getStripe, PLATFORM_TAG } from "@/lib/stripe/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { revalidatePublicTables } from "@/lib/cache-tags";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -64,6 +65,7 @@ export async function POST(req: NextRequest) {
           is_published: true,
         })
         .eq("id", projectId);
+      revalidatePublicTables(["developments"]);
     } else if (
       event.type === "customer.subscription.created" ||
       event.type === "customer.subscription.updated" ||
@@ -92,6 +94,7 @@ export async function POST(req: NextRequest) {
         update.is_published = true;
       }
       await supabaseAdmin.from("developments").update(update).eq("id", projectId);
+      revalidatePublicTables(["developments"]);
     }
   }
 

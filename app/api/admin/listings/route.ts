@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { requireMemberOrAdmin } from "@/lib/supabase/auth-guards";
+import { revalidatePublicTables } from "@/lib/cache-tags";
 
 function slugify(input: string) {
   return input
@@ -60,6 +61,7 @@ function revalidateAll() {
   revalidatePath("/map");
   revalidatePath("/listings", "layout");
   revalidatePath("/admin/listings");
+  revalidatePublicTables(["developments", "development_floor_plans"]);
 }
 
 function buildListingData(fields: Record<string, unknown>) {
