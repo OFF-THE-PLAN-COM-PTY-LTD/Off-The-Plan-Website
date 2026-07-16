@@ -70,6 +70,14 @@ export default async function DevelopersPage() {
               <Link
                 key={dev.id}
                 href={`/developers/${dev.slug}`}
+                // prefetch={false}: the target profile page is force-dynamic and
+                // renders its listings after an async query. Next's prefetch of
+                // such a page returns a PARTIAL RSC that stops before the listings
+                // section; on Next 14.2 (staleTimes unreliable) the router then
+                // serves that partial on click, so the profile shows "No published
+                // listings" until a hard refresh. Disabling prefetch makes the
+                // click do a full navigation fetch, which includes the listings.
+                prefetch={false}
                 className="group p-6 border border-line bg-cream-alt hover:border-orange transition-colors flex flex-col h-full"
               >
                 {/* Logo slot — fixed container, logo capped at 80% width / 80% height
