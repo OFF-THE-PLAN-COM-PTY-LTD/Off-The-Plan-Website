@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { requireMemberOrAdmin } from "@/lib/supabase/auth-guards";
+import { revalidatePublicTables } from "@/lib/cache-tags";
 
 async function ownsListing(userId: string, developmentId: string) {
   const { data } = await supabaseAdmin
@@ -40,6 +41,7 @@ export async function POST(req: Request) {
       .single();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     revalidatePath("/listings", "layout");
+    revalidatePublicTables(["development_images"]);
     return NextResponse.json({ ok: true, id: data.id });
   } catch {
     return NextResponse.json({ error: "Unexpected error." }, { status: 500 });
@@ -70,6 +72,7 @@ export async function PATCH(req: Request) {
       )
     );
     revalidatePath("/listings", "layout");
+    revalidatePublicTables(["development_images"]);
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ error: "Unexpected error." }, { status: 500 });
@@ -94,6 +97,7 @@ export async function DELETE(req: Request) {
     const { error } = await supabaseAdmin.from("development_images").delete().eq("id", id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     revalidatePath("/listings", "layout");
+    revalidatePublicTables(["development_images"]);
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ error: "Unexpected error." }, { status: 500 });

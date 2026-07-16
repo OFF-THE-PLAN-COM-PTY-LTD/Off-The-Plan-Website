@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { withAdmin, withValidation } from "@/lib/api/handler";
+import { revalidatePublicTables } from "@/lib/cache-tags";
 import { z } from "zod";
 
 const schema = z.object({
@@ -19,6 +20,7 @@ const schema = z.object({
 
 function revalidateAll() {
   revalidatePath("/", "layout");
+  revalidatePublicTables(["ads"]);
 }
 
 export const GET = withAdmin(async () => {

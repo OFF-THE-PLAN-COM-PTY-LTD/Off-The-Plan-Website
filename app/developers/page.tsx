@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { supabase } from "@/lib/supabase/public";
+import {
+  getCachedPublishedDevelopers,
+  getCachedPublishedDevelopmentAccountIds,
+} from "@/lib/cached-reads";
 import type { Developer } from "@/types/developer";
 
 // Render on every request so admin changes (publishing a developer, syncing
@@ -29,20 +32,12 @@ export default async function DevelopersPage() {
   // The public directory now reads the consolidated `accounts` table directly
   // (type='Developer', published, active, not archived) — no more `developers`
   // projection / agency_id filter. Listing counts come from developments.account_id.
-  const [{ data: accData }, { data: devsDevsData }] = await Promise.all([
-    supabase
-      .from("accounts")
-      .select("*")
-      .eq("type", "Developer")
-      .eq("is_published", true)
-      .eq("archived", false)
-      .eq("portal_status", "active")
-      .order("name"),
-    supabase.from("developments").select("id, account_id").eq("is_published", true),
+  const [accData, allDevelopments] = await Promise.all([
+    getCachedPublishedDevelopers(),
+    getCachedPublishedDevelopmentAccountIds(),
   ]);
 
-  const developers = (accData ?? []) as unknown as Developer[];
-  const allDevelopments = devsDevsData ?? [];
+  const developers = accData as unknown as Developer[];
 
   return (
     <div className="min-h-screen bg-cream pt-16">

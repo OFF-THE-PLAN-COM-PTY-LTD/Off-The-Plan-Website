@@ -3,8 +3,11 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { PropertyCard } from "@/components/property-card";
 import { DeveloperContactForm } from "@/features/developers/components/developer-contact-form";
-import { supabase } from "@/lib/supabase/public";
-import { publishedDevelopmentCards } from "@/features/listings/queries";
+import {
+  getCachedDeveloperBySlug,
+  getCachedDeveloperMetaBySlug,
+  getCachedDevelopmentsByAccount,
+} from "@/lib/cached-reads";
 import type { Developer } from "@/types/developer";
 import type { Development } from "@/types/development";
 
@@ -16,12 +19,7 @@ interface Props { params: { slug: string } }
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { data: dev } = await supabase
-    .from("accounts")
-    .select("name, description")
-    .eq("slug", params.slug)
-    .eq("type", "Developer")
-    .maybeSingle();
+  const dev = await getCachedDeveloperMetaBySlug(params.slug);
   if (!dev) return { title: "Not Found" };
   return { title: `${dev.name} — Developer`, description: dev.description ?? undefined };
 }
@@ -64,25 +62,14 @@ export default async function DeveloperProfilePage({ params }: Props) {
   // Read the consolidated account directly. It already holds the canonical
   // company data (merged from the old agency/developer/profile fields at
   // backfill time), so there's no profile-overlay coalesce anymore.
-  const { data: rawAcc } = await supabase
-    .from("accounts")
-    .select("*")
-    .eq("slug", params.slug)
-    .eq("type", "Developer")
-    .eq("is_published", true)
-    .eq("archived", false)
-    .eq("portal_status", "active")
-    .maybeSingle();
+  const rawAcc = await getCachedDeveloperBySlug(params.slug);
 
   if (!rawAcc) notFound();
   const dev = rawAcc as unknown as Developer;
   const acc = rawAcc as Record<string, unknown>;
 
   // Listings now link via developments.account_id.
-  const { data: devsData } = await publishedDevelopmentCards(supabase).eq(
-    "account_id",
-    acc.id as string,
-  );
+  const devsData = await getCachedDevelopmentsByAccount(acc.id as string);
 
   const devDevelopments = (devsData ?? []) as unknown as Development[];
 

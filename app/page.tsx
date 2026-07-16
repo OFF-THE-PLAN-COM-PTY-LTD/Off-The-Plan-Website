@@ -9,7 +9,8 @@ import { AdSlot } from "@/components/ad-slot";
 import { formatDate } from "@/lib/utils";
 import { categorySlug } from "@/lib/listing-url";
 import { supabase } from "@/lib/supabase/public";
-import { getDevelopmentCardsByTier, getCategoryHeroImage } from "@/features/listings/queries";
+import { getCategoryHeroImage } from "@/features/listings/queries";
+import { getCachedDevelopmentCardsByTier } from "@/lib/cached-reads";
 import type { Development } from "@/types/development";
 import type { JournalArticle } from "@/types/journal";
 
@@ -86,8 +87,8 @@ function pickImage(dev: { hero_image_url?: string | null; images?: { url: string
 export default async function HomePage() {
   const [
     { data: heroBannerData },
-    { data: tier1Data },
-    { data: tier2Data },
+    tier1Data,
+    tier2Data,
     { data: articlesData },
     { data: newAptData },
     { data: thData },
@@ -101,8 +102,8 @@ export default async function HomePage() {
       .order("sort_order", { ascending: true })
       .limit(1)
       .maybeSingle(),
-    getDevelopmentCardsByTier(supabase, "1st Tier", 6),
-    getDevelopmentCardsByTier(supabase, "2nd Tier", 8),
+    getCachedDevelopmentCardsByTier("1st Tier", 6),
+    getCachedDevelopmentCardsByTier("2nd Tier", 8),
     supabase
       .from("journal_articles")
       .select("*")

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/supabase/auth-guards";
+import { revalidatePublicTables } from "@/lib/cache-tags";
 import { sendEmail } from "@/lib/email/send";
 import { accountApprovedTemplate, accountRejectedTemplate } from "@/lib/email/templates";
 
@@ -130,6 +131,7 @@ export async function PATCH(req: Request) {
 
     const { error } = await supabaseAdmin.from("accounts").update(update).eq("id", id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    revalidatePublicTables(["accounts"]);
 
     // Mirror portal_status → profiles.member_status (the login gate) and email
     // the applicant on the initial approve/reject transition. Best-effort.

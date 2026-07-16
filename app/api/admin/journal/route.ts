@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/supabase/auth-guards";
+import { revalidatePublicTables } from "@/lib/cache-tags";
 import { z } from "zod";
 
 const schema = z.object({
@@ -35,6 +36,7 @@ export async function POST(req: Request) {
     }
     revalidatePath("/");
     revalidatePath("/journal");
+    revalidatePublicTables(["journal_articles"]);
     return NextResponse.json({ success: true }, { status: 201 });
   } catch {
     return NextResponse.json({ error: "Server error" }, { status: 500 });
@@ -65,6 +67,7 @@ export async function PATCH(req: Request) {
     }
     revalidatePath("/");
     revalidatePath("/journal");
+    revalidatePublicTables(["journal_articles"]);
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: "Server error" }, { status: 500 });

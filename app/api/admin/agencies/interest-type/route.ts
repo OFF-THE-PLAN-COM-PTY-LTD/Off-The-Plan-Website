@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/supabase/auth-guards";
+import { revalidatePublicTables } from "@/lib/cache-tags";
 
 /**
  * PATCH /api/admin/agencies/interest-type
@@ -74,6 +75,7 @@ export async function PATCH(req: Request) {
     if (updErr) {
       return NextResponse.json({ error: updErr.message }, { status: 500 });
     }
+    revalidatePublicTables(["accounts"]);
 
     // Mirror onto the linked profile so the member portal gate reflects the
     // role (profiles.interest_type gates auth-guards / middleware / portal).

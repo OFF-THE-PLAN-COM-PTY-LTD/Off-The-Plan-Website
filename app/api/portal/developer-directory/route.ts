@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { withMemberOrAdmin } from "@/lib/api/handler";
+import { revalidatePublicTables } from "@/lib/cache-tags";
 import { z } from "zod";
 
 /**
@@ -81,6 +82,7 @@ export const POST = withMemberOrAdmin(async (req, { auth }) => {
           .eq("id", existing.id);
         if (error) return NextResponse.json({ error: error.message }, { status: 500 });
       }
+      revalidatePublicTables(["accounts"]);
       return NextResponse.json({ ok: true, optedIn: false });
     }
 
@@ -92,6 +94,7 @@ export const POST = withMemberOrAdmin(async (req, { auth }) => {
         .update({ ...synced, type: "Developer", is_published: true })
         .eq("id", existing.id);
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+      revalidatePublicTables(["accounts"]);
       return NextResponse.json({ ok: true, optedIn: true, id: existing.id });
     }
 
@@ -105,6 +108,7 @@ export const POST = withMemberOrAdmin(async (req, { auth }) => {
         .select("id")
         .single();
       if (!insErr) {
+        revalidatePublicTables(["accounts"]);
         return NextResponse.json({ ok: true, optedIn: true, id: data.id, slug });
       }
       // 23505 = unique_violation. Retry with a short suffix.
