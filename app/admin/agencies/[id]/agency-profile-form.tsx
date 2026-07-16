@@ -331,7 +331,7 @@ export default function AgencyProfileForm({ agency }: { agency: Agency }) {
         </div>
         <div className="grid grid-cols-2 divide-x divide-line">
           <div className="p-5 text-center">
-            <p className="font-sans text-xs font-semibold uppercase tracking-widest text-ink mb-3">Your Company Logo</p>
+            <p className="font-sans text-xs font-semibold uppercase tracking-widest text-ink mb-3">Profile Logo</p>
             {agency.org_logo_url ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={agency.org_logo_url} alt="Company logo" className="mx-auto max-h-24 max-w-full object-contain mb-3" />
@@ -359,7 +359,7 @@ export default function AgencyProfileForm({ agency }: { agency: Agency }) {
             </button>
           </div>
           <div className="p-5 text-center">
-            <p className="font-sans text-xs font-semibold uppercase tracking-widest text-ink mb-3">Developer Logo</p>
+            <p className="font-sans text-xs font-semibold uppercase tracking-widest text-ink mb-3">Listings Logo</p>
             {agency.dev_logo_url ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={agency.dev_logo_url} alt="Developer logo" className="mx-auto max-h-24 max-w-full object-contain mb-3" />

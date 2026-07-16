@@ -235,8 +235,8 @@ export default async function PortalDashboard() {
           </Link>
         </div>
         <div className="flex gap-8">
-          <LogoUploader field="company_logo_url" label="Company Logo" currentUrl={companyLogoUrl} />
-          <LogoUploader field="developer_logo_url" label="Developer Logo" currentUrl={developerLogoUrl} />
+          <LogoUploader field="company_logo_url" label="Profile Logo" currentUrl={companyLogoUrl} />
+          <LogoUploader field="developer_logo_url" label="Listings Logo" currentUrl={developerLogoUrl} />
         </div>
       </div>
     </div>
