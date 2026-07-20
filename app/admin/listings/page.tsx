@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { ListingsTabs } from "./listings-tabs";
+import { LEGACY_BASELINE, withBaseline } from "@/lib/legacy-baseline";
 
 interface SearchParams { q?: string; agency?: string }
 
@@ -75,9 +76,17 @@ export default async function AdminListingsPage({ searchParams }: { searchParams
   const cancelledCount = all.filter((l) => l.status === "Cancelled").length;
   const archivedCount = all.filter((l) => l.status === "Archived").length;
 
-  const totalViews = all.reduce((sum, l) => sum + (l.view_count ?? 0), 0);
-  const totalPhoneClicks = all.reduce((sum, l) => sum + (l.phone_click_count ?? 0), 0);
-  const totalShares = all.reduce((sum, l) => sum + (l.share_count ?? 0), 0);
+  // The legacy carry-over baseline is a site-wide figure, so it only applies to
+  // the unfiltered view — adding it to a single agency would credit that agency
+  // with the whole site's legacy history. See lib/legacy-baseline.ts.
+  const base = agencyId
+    ? { views: 0, enquiries: 0, phoneClicks: 0, shares: 0 }
+    : LEGACY_BASELINE;
+
+  const totalViews = withBaseline(all.reduce((sum, l) => sum + (l.view_count ?? 0), 0), base.views);
+  const totalPhoneClicks = withBaseline(all.reduce((sum, l) => sum + (l.phone_click_count ?? 0), 0), base.phoneClicks);
+  const totalShares = withBaseline(all.reduce((sum, l) => sum + (l.share_count ?? 0), 0), base.shares);
+  const totalEnquiries = withBaseline(enquiryCount ?? 0, base.enquiries);
 
   const stats = [
     { label: "All Listing", count: totalCount },
@@ -127,7 +136,7 @@ export default async function AdminListingsPage({ searchParams }: { searchParams
         <div className="bg-white border border-line p-5 flex items-center justify-between">
           <div>
             <p className="font-sans text-sm text-ink/60 mb-1">Total Enquiries</p>
-            <p className="font-sans text-xl font-semibold text-orange">{(enquiryCount ?? 0).toLocaleString()}</p>
+            <p className="font-sans text-xl font-semibold text-orange">{totalEnquiries.toLocaleString()}</p>
           </div>
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-navy/20">
             <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.8 19.79 19.79 0 01.22 1.18 2 2 0 012.18 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.09a16 16 0 006 6l.56-.56a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z" />

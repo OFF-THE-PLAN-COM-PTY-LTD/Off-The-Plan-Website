@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Eye, Phone, Share2, MessageSquare, TrendingUp, Sparkles } from "lucide-react";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { LEGACY_BASELINE, withBaseline } from "@/lib/legacy-baseline";
 import DashboardTable from "@/features/admin/components/dashboard-table";
 import ListingsTable from "@/features/admin/components/listings-table";
 import { LiveDate, LiveMotivational } from "@/components/dashboard-greeting-date";
@@ -48,11 +49,13 @@ export default async function AdminDashboard() {
   const totalPhoneClicks = (analyticsData ?? []).reduce((s, d) => s + (d.phone_click_count ?? 0), 0);
   const totalShares = (analyticsData ?? []).reduce((s, d) => s + (d.share_count ?? 0), 0);
 
+  // Site-wide totals include the legacy carry-over baseline — see
+  // lib/legacy-baseline.ts for why these offsets exist and when to remove them.
   const topStats = [
-    { label: "Total Views",     value: totalViews,        icon: Eye,            scrollTo: null },
-    { label: "Total Enquiries", value: enquiryCount ?? 0, icon: MessageSquare,  scrollTo: "enquiries" },
-    { label: "Phone Clicks",    value: totalPhoneClicks,  icon: Phone,          scrollTo: null },
-    { label: "Total Share",     value: totalShares,       icon: Share2,         scrollTo: null },
+    { label: "Total Views",     value: withBaseline(totalViews, LEGACY_BASELINE.views),             icon: Eye,           scrollTo: null },
+    { label: "Total Enquiries", value: withBaseline(enquiryCount ?? 0, LEGACY_BASELINE.enquiries),  icon: MessageSquare, scrollTo: "enquiries" },
+    { label: "Phone Clicks",    value: withBaseline(totalPhoneClicks, LEGACY_BASELINE.phoneClicks), icon: Phone,         scrollTo: null },
+    { label: "Total Share",     value: withBaseline(totalShares, LEGACY_BASELINE.shares),           icon: Share2,        scrollTo: null },
   ];
 
   return (
