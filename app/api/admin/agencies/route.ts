@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/supabase/auth-guards";
 import { updateAccountAttributed } from "@/lib/supabase/attributed-writes";
@@ -51,6 +52,138 @@ async function syncAccountMemberStatus(
       ? accountApprovedTemplate({ full_name: fullName })
       : accountRejectedTemplate({ full_name: fullName });
     await sendEmail({ to: account.email, ...tmpl });
+  }
+}
+
+/**
+ * Create payload for the trimmed "+ Add profile" form. Company name and type
+ * are the only hard requirements — everything else is optional and editable
+ * afterwards. Field names match the legacy agency-form shape the edit form
+ * already speaks (org_name, mobile, …) so both forms stay consistent.
+ */
+const createSchema = z.object({
+  org_name: z.string().trim().min(1, "Company name is required").max(200),
+  type: z.enum(["Developer", "Agent"]),
+  first_name: z.string().trim().max(100).optional().default(""),
+  last_name: z.string().trim().max(100).optional().default(""),
+  email: z.string().trim().email("Invalid email format").max(200).optional().or(z.literal("")),
+  mobile: z.string().trim().max(50).optional().default(""),
+  org_phone: z.string().trim().max(50).optional().default(""),
+  org_state: z.string().trim().max(50).optional().default(""),
+});
+
+const slugify = (name: string): string =>
+  name.toLowerCase().trim()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60);
+
+/**
+ * accounts.slug is UNIQUE NOT NULL, so a create has to pick a free one. Probe
+ * for a gap rather than relying on the insert to fail, then let POST's retry
+ * loop handle the race where someone takes the slug between check and insert.
+ */
+async function uniqueAccountSlug(base: string): Promise<string> {
+  const root = base || "account";
+  let candidate = root;
+  for (let n = 2; n <= 200; n++) {
+    const { data } = await supabaseAdmin
+      .from("accounts").select("id").eq("slug", candidate).limit(1);
+    if (!(data ?? []).length) return candidate;
+    candidate = `${root}-${n}`;
+  }
+  return `${root}-${Date.now()}`;
+}
+
+/**
+ * Admin-created profile (the "+ Add profile" button on /admin/agencies).
+ *
+ * Deliberately record-only: it inserts an `accounts` row and does NOT create a
+ * Supabase Auth user or send any email (product decision, 23 Jul 2026). The
+ * company shows up in All Profiles and can be linked to listings straight away;
+ * giving them a login is a separate, later step. That mirrors the Developer
+ * create flow in /api/admin/developers.
+ *
+ * Logos, socials and address detail are intentionally not accepted here — the
+ * create form is trimmed to what a valid record needs, and the rest is filled
+ * in afterwards on the existing edit page.
+ */
+export async function POST(req: Request) {
+  try {
+    const auth = await requireAdmin();
+    if ("error" in auth) return auth.error;
+
+    const body = await req.json();
+    const parsed = createSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Invalid data", issues: parsed.error.flatten() },
+        { status: 400 },
+      );
+    }
+    const { org_name, first_name, last_name, email, mobile, org_phone, org_state, type } = parsed.data;
+
+    // An account with a login attached must not be shadowed by a second row
+    // carrying the same address — that is exactly the desync the accounts
+    // consolidation (046) set out to remove.
+    if (email) {
+      // Escape LIKE metacharacters before the case-insensitive match — an
+      // unescaped "_" is a single-character wildcard, so john_smith@x.com
+      // would otherwise collide with johnXsmith@x.com and be refused.
+      const pattern = email.replace(/([\\%_])/g, "\\$1");
+      const { data: clash } = await supabaseAdmin
+        .from("accounts").select("id, name").ilike("email", pattern).limit(1);
+      if ((clash ?? []).length) {
+        return NextResponse.json(
+          { error: `A profile with that email already exists (${clash![0].name ?? "unnamed"}).` },
+          { status: 409 },
+        );
+      }
+    }
+
+    // slugify() strips everything non-[a-z0-9], so a wholly non-Latin company
+    // name yields "" — fall back through the contact name to a fixed root so
+    // the slug can never start with a stray "-".
+    const base =
+      slugify(org_name) ||
+      slugify([first_name, last_name].filter(Boolean).join(" ")) ||
+      "account";
+    const row = {
+      type,
+      name: org_name,
+      first_name: first_name || null,
+      last_name: last_name || null,
+      email: email || null,
+      phone: mobile || null,
+      company_phone: org_phone || null,
+      state: org_state || null,
+      // Admin-created records start unpublished and inactive: publishing and
+      // portal access are explicit follow-up actions on the edit page, so a
+      // half-filled profile can never appear in the public directory.
+      is_published: false,
+      portal_status: "inactive" as const,
+      archived: false,
+    };
+
+    // Retry on unique-slug collision (23505) in case of a concurrent insert.
+    let slug = await uniqueAccountSlug(base);
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const { data, error } = await supabaseAdmin
+        .from("accounts").insert({ ...row, slug }).select("id").single();
+      if (!error) {
+        revalidatePublicTables(["accounts"]);
+        return NextResponse.json({ id: data.id }, { status: 201 });
+      }
+      if (error.code !== "23505") {
+        console.error("Profile insert error:", error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+      slug = `${base}-${Date.now().toString(36)}${attempt}`;
+    }
+    return NextResponse.json({ error: "Could not allocate a unique slug." }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Unexpected error." }, { status: 500 });
   }
 }
 

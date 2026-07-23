@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import AgenciesTable from "./agencies-table";
 
@@ -61,7 +62,10 @@ export default async function AdminAgenciesPage({ searchParams }: Props) {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-display font-light text-navy text-section-lg">All Profiles</h1>
-        <p className="font-sans text-sm font-semibold text-ink uppercase tracking-widest">{counts.all} total</p>
+        <div className="flex items-center gap-4">
+          <p className="font-sans text-sm font-semibold text-ink uppercase tracking-widest">{counts.all} total</p>
+          <Link href="/admin/agencies/new" className="btn-primary">+ Add profile</Link>
+        </div>
       </div>
       <AgenciesTable
         agencies={rowsForTab as any}
